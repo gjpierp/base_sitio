@@ -1,0 +1,22 @@
+[Casos de Uso] Descripción textual
+
+Actores:
+- Administrador del sistema
+- Beneficiario (personal FACH o externo)
+- Familiar
+- Proveedor de servicios
+- Inspector
+
+Casos de uso principales:
+1. Solicitar vivienda o pieza
+2. Registrar y actualizar beneficiarios y familiares
+3. Asignar vivienda/pieza
+4. Registrar y gestionar seguros sobre bienes muebles e inmuebles
+5. Gestionar servicios básicos y facturación
+6. Generar y firmar contratos/documentos
+7. Realizar inspecciones y registrar mantenimientos
+8. Consultar y auditar historiales
+9. Gestionar parametrización (tipos, motivos, plantillas, etc.)
+10. Automatizar generación de documentos
+
+Para el diagrama visual, usar herramientas UML o Draw.io siguiendo esta estructura.

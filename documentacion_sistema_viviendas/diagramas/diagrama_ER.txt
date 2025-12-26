@@ -1,0 +1,13 @@
+[ER] Diagrama Entidad-Relación (descripción textual)
+
+- Vivienda (1) --- (N) Asignacion (N) --- (1) Beneficiario
+- Vivienda (1) --- (N) Servicios_Basicos (1) --- (N) Factura_Servicio
+- Vivienda (1) --- (N) Pabellon (1) --- (N) Pieza (1) --- (N) Ocupante_Pieza (N) --- (1) Beneficiario
+- Beneficiario (1) --- (N) Familiar
+- Beneficiario (1) --- (N) Beneficiario_Seguro (N) --- (1) Seguro
+- Vivienda (1) --- (N) Documento (N) --- (1) Beneficiario
+- Documento (1) --- (1) Contrato
+- Plantilla_Documento (1) --- (N) Documento
+- Tablas de historial relacionadas a cada entidad principal
+
+Para el diagrama visual, usar herramientas como dbdiagram.io, Lucidchart o Draw.io siguiendo esta estructura.
