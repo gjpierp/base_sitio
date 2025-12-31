@@ -1,0 +1,30 @@
+/* Igualar el aspecto de los <select> de SweetAlert2 a los <input> personalizados */
+.swal2-input,
+.swal2-input[type='text'],
+.swal2-input[type='email'],
+.swal2-input[type='password'] {
+  /* ...estilos base de input... */
+}
+
+.swal2-input select,
+.swal2-input[type='select'],
+select.swal2-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--color-elev-2); /* igual que .input */
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 1rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+select.swal2-input:focus {
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+}

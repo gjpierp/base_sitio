@@ -1,0 +1,15 @@
+<span
+  class="ui-avatar"
+  [ngClass]="shape"
+  [ngStyle]="{ width: size, height: size, 'font-size': 'calc(' + size + ' / 2)' }"
+>
+  @if (src && !error) {
+  <img [src]="src" [alt]="alt" [style.width]="size" [style.height]="size" (error)="onError()" />
+  } @else { @if (fallback) {
+  <img [src]="fallback" [alt]="alt" [style.width]="size" [style.height]="size" />
+  } @else if (initials) {
+  <span class="ui-avatar-initials">{{ initials }}</span>
+  } @else {
+  <span class="ui-avatar-fallback">?</span>
+  } }
+</span>

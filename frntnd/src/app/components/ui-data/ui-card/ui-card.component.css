@@ -1,0 +1,35 @@
+@import '../../../../assets/design-system/variables.css';
+:host {
+  display: block;
+}
+
+.card {
+  background: var(--bg-card, #fff8e1);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow, 0 2px 12px rgba(60, 60, 60, 0.08));
+  border: 1px solid var(--color-border, #e0cda5);
+  color: var(--color-text, #3e2723);
+  margin-bottom: 1.5rem;
+}
+.card-pad {
+  padding: 1.5rem;
+}
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.card-subtitle {
+  font-size: 1rem;
+  color: var(--color-muted, #a67c52);
+  margin-bottom: 0.5rem;
+}
+.content {
+  font-size: 1rem;
+}

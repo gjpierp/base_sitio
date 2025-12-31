@@ -1,0 +1,19 @@
+<div class="ui-dropdowns" [class.disabled]="disabled">
+  <button class="dropdown-btn" [disabled]="disabled" (click)="toggle()" [attr.aria-expanded]="open">
+    <span>{{ selectedLabel }}</span>
+    <span class="material-symbols-outlined">expand_more</span>
+  </button>
+  @if (open) {
+  <ul class="dropdown-list">
+    @for (option of options; track option.value) {
+    <li
+      (click)="select(option)"
+      [class.selected]="option.value === value"
+      [class.disabled]="option.disabled"
+    >
+      {{ option.label }}
+    </li>
+    }
+  </ul>
+  }
+</div>

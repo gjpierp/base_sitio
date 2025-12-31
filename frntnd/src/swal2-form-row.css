@@ -1,0 +1,24 @@
+.swal2-form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 18px;
+}
+.swal2-form-row:last-child {
+  margin-bottom: 0;
+}
+.swal2-form-row label {
+  font-weight: 500;
+  min-width: 120px;
+  max-width: 180px;
+  text-align: right;
+  white-space: nowrap;
+}
+.swal2-form-row .swal2-input,
+.swal2-form-row .input {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}

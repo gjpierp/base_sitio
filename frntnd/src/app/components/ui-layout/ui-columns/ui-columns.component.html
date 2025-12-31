@@ -1,0 +1,10 @@
+<div
+  class="ui-columns"
+  [ngStyle]="{
+    'grid-template-columns': 'repeat(' + columns + ', 1fr)',
+    gap: gap,
+    'align-items': align
+  }"
+>
+  <ng-content></ng-content>
+</div>

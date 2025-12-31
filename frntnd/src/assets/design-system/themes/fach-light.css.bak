@@ -1,0 +1,49 @@
+:root {
+  --bg-active: var(--bg-sidebar-active, var(--color-accent));
+  --bg-card: #ffffff;
+  --bg-images: var(--bg-card);
+  --bg-logo: var(--color-accent);
+  --bg-main: #f5f8fa;
+  /* Fondo en degradado para capas principales (FACH light) */
+  --bg-gradient: linear-gradient(180deg, #ffffff, #eef4fb 60%);
+  --bg-overlay: rgba(20, 20, 20, 0.9);
+  --bg-sidebar: #003a8f;
+  --bg-sidebar-active: #00296b;
+  --border-radius: 10px;
+  --breadcrumb-active: #fff;
+  --breadcrumb-bg: #003a8f;
+  --breadcrumb-separator: var(--color-primary);
+  --breadcrumb-text: #ffd700;
+  --color-accent: #ffd700;
+  --color-bg: var(--bg-main, #fff);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-btn: var(--color-primary);
+  --color-danger: #b3261e;
+  --color-elev-1: var(--bg-card, var(--color-bg));
+  --color-elev-2: rgba(255, 255, 255, 0.6);
+  --color-header-bg: #003a8f;
+  --color-header-text: var(--color-accent);
+  --color-info: #1976d2;
+  --color-primary: #003a8f;
+  --color-secondary: #e5e5e5;
+  --color-success: #2e7d32;
+  --color-text: #0f1724;
+  --color-text-inverse: #fff;
+  --color-text-muted: rgba(0, 0, 0, 0.6);
+  --focus-ring: var(--color-accent);
+  --radius-lg: 0.5rem;
+  --radius-md: var(--border-radius, 0.375rem);
+  --radius-sm: 0.25rem;
+  --shadow: 0 2px 12px rgba(60, 60, 60, 0.08);
+  --shadow-1: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.06));
+  --sidebar-text: var(--color-header-text, #ffd700);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  /* Select backgrounds */
+  --select-bg: var(--color-elev-2);
+  --select-disabled-bg: rgba(0, 0, 0, 0.04);
+}

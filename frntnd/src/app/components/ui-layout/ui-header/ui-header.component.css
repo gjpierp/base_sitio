@@ -1,0 +1,45 @@
+.ui-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-sidebar, #232946);
+  color: var(--color-text-inverse, #fff);
+}
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.center {
+  flex: 1;
+  max-width: 560px;
+}
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.title {
+  font-weight: 700;
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #4f46e5;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}

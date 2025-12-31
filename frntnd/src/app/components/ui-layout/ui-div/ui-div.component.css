@@ -1,0 +1,7 @@
+.ui-div {
+  display: flex;
+  flex-direction: column;
+}
+.ui-div.center {
+  align-items: center;
+}

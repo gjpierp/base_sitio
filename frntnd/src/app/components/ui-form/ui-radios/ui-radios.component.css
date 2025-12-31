@@ -1,0 +1,45 @@
+@import '../../../../assets/design-system/variables.css';
+.ui-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.label {
+  font-size: 14px;
+  color: var(--color-label, #232946);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.radio-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  position: relative;
+  font-size: 15px;
+  user-select: none;
+}
+.radio-item input[type='radio'] {
+  accent-color: var(--color-primary, #4f46e5);
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+.radio-item.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.radiomark {
+  display: none;
+}
+.error {
+  color: #e53e3e;
+  font-size: 13px;
+  margin-top: 2px;
+}

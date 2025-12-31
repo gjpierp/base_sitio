@@ -1,0 +1,14 @@
+@if (label) {
+<label class="label" [attr.for]="inputId">{{ label }}</label>
+}
+<input
+  class="input"
+  [type]="type"
+  [placeholder]="placeholder"
+  [value]="value"
+  (input)="valueChange.emit($any($event.target).value)"
+  [id]="inputId"
+  [name]="inputName"
+  [disabled]="disabled"
+  autocomplete="off"
+/>

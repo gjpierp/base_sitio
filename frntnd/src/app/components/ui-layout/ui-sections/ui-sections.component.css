@@ -1,0 +1,10 @@
+.ui-sections {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 2rem;
+}
+
+.ui-sections section {
+  width: 100%;
+}

@@ -1,0 +1,62 @@
+<ui-header-public></ui-header-public>
+<div class="login-wrap">
+  <div class="card">
+    <h2>Acceder</h2>
+    <p class="muted">Ingresa tus credenciales para continuar</p>
+
+    <div class="field">
+      <ui-input
+        label="Email"
+        type="email"
+        placeholder="tucorreo@dominio.com"
+        [value]="email"
+        (valueChange)="email = $event"
+      ></ui-input>
+    </div>
+    <div class="field">
+      <ui-input
+        label="Contraseña"
+        type="password"
+        placeholder="••••••••"
+        [value]="password"
+        (valueChange)="password = $event"
+      ></ui-input>
+    </div>
+
+    <div class="actions">
+      <div class="primary">
+        <ui-button
+          [label]="loading ? 'Accediendo…' : 'Acceder'"
+          [disabled]="loading"
+          variant="primary"
+          (pressed)="onLogin()"
+        ></ui-button>
+      </div>
+
+      <div class="social">
+        <div class="providers">
+          <ui-button
+            iconUrl="/icons/google.svg"
+            [label]="''"
+            [disabled]="loading || !googleReady"
+            variant="secondary"
+            ariaLabel="Iniciar sesión con Google"
+            (pressed)="onGoogle()"
+          ></ui-button>
+          <ui-button
+            iconUrl="/icons/facebook.svg"
+            [label]="''"
+            [disabled]="loading || !facebookReady"
+            variant="secondary"
+            ariaLabel="Iniciar sesión con Facebook"
+            (pressed)="onFacebook()"
+          ></ui-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="register-action">
+      <ui-button label="Regístrate" variant="outline" (pressed)="onRegister()"></ui-button>
+    </div>
+  </div>
+</div>

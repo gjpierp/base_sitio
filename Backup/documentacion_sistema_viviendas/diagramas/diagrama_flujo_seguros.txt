@@ -1,0 +1,11 @@
+[Flujo] Gestión de Seguros sobre Bienes Muebles e Inmuebles
+
+1. Identificación de bien mueble/inmueble asociado a beneficiario o vivienda
+2. Selección de tipo de seguro (mueble/inmueble)
+3. Registro de póliza y datos del seguro
+4. Validación de vigencia y requisitos
+5. Asociación de seguro a bien y beneficiario
+6. Renovación, modificación o baja de seguro
+7. Registro en historial de seguros
+
+Para el diagrama visual, usar BPMN o Draw.io siguiendo este flujo.

@@ -1,0 +1,22 @@
+<div class="card">
+  <div class="card-pad">
+    @if (title || subtitle) {
+    <div class="spread">
+      <div>
+        @if (title) {
+        <div class="card-title">{{ title }}</div>
+        } @if (subtitle) {
+        <div class="card-subtitle">{{ subtitle }}</div>
+        }
+      </div>
+      <ng-content select="[card-header]"></ng-content>
+      <ng-content select="[card-media]"></ng-content>
+      <ng-content select="[actions]"></ng-content>
+    </div>
+    }
+    <div class="content">
+      <ng-content></ng-content>
+      <ng-content select="[card-actions]"></ng-content>
+    </div>
+  </div>
+</div>

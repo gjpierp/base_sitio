@@ -1,0 +1,62 @@
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--breadcrumb-text, #003a8f);
+  background: var(--breadcrumb-bg);
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.breadcrumbs .crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 150ms ease, max-width 150ms ease;
+}
+.breadcrumbs a {
+  color: var(--breadcrumb-text, #003a8f);
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  max-width: clamp(120px, 20vw, 280px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  transition: background 0.2s, color 0.2s;
+}
+.breadcrumbs a:hover {
+  background: var(--breadcrumb-active);
+  color: var(--color-primary, #003a8f);
+}
+.breadcrumbs .current {
+  color: var(--breadcrumb-active, #f9d923);
+  font-weight: 700;
+  max-width: clamp(160px, 30vw, 420px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+.breadcrumbs .current:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.25);
+  outline-offset: 2px;
+  border-radius: 6px;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.6);
+}
+.breadcrumbs .sep {
+  color: var(--breadcrumb-separator, #b0b8c9);
+  opacity: 0.6;
+  font-size: 15px;
+  user-select: none;
+  transition: opacity 150ms ease;
+}
+.breadcrumbs a:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+.breadcrumbs a:focus-visible + .sep {
+  opacity: 1;
+}

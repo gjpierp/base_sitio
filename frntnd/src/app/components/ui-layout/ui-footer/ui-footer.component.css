@@ -1,0 +1,21 @@
+.ui-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-sidebar, #232946);
+  color: var(--color-text-inverse, #fff);
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+.ui-footer a {
+  color: #ddd;
+  text-decoration: none;
+}
+.ui-footer a:hover {
+  text-decoration: underline;
+}

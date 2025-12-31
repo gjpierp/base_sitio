@@ -1,0 +1,29 @@
+<div
+  class="ui-widget"
+  [ngStyle]="{
+    background: background,
+    padding: padding,
+    'border-radius': radius,
+    'box-shadow': shadow ? '0 2px 8px rgba(0,0,0,0.08)' : 'none'
+  }"
+>
+  @if (title || icon) {
+  <div class="ui-widget-header">
+    @if (icon) {
+    <span class="ui-widget-icon" [ngStyle]="{ color: color }">
+      <ui-icons [name]="icon" [color]="color" size="2em"></ui-icons>
+    </span>
+    }
+    <div>
+      @if (title) {
+      <div class="ui-widget-title">{{ title }}</div>
+      } @if (subtitle) {
+      <div class="ui-widget-subtitle">{{ subtitle }}</div>
+      }
+    </div>
+  </div>
+  }
+  <div class="ui-widget-content">
+    <ng-content></ng-content>
+  </div>
+</div>

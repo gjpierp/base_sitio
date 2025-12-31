@@ -1,0 +1,23 @@
+<div class="ui-selects">
+  @if (label) {
+  <label class="label" [attr.for]="selectId">{{ label }}</label>
+  }
+  <select
+    class="select"
+    [disabled]="disabled"
+    [ngModel]="value"
+    (change)="onChange($event)"
+    [attr.id]="selectId"
+    [attr.name]="selectName"
+  >
+    <option [ngValue]="null" disabled selected hidden>{{ placeholder }}</option>
+    @for (option of options; track option.value) {
+    <option [ngValue]="option.value" [disabled]="option.disabled">
+      {{ option.label }}
+    </option>
+    }
+  </select>
+  @if (error) {
+  <div class="error">{{ error }}</div>
+  }
+</div>

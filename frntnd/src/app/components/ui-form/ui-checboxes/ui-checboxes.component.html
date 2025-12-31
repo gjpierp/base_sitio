@@ -1,0 +1,26 @@
+<div class="ui-checboxes">
+  <fieldset>
+    @if (label) {
+    <legend class="label">{{ label }}</legend>
+    }
+    <div class="checkbox-list">
+      @for (option of options; track option.value) {
+      <label class="checkbox-item" [class.disabled]="disabled || option.disabled">
+        <input
+          type="checkbox"
+          [checked]="isChecked(option)"
+          [disabled]="disabled || option.disabled"
+          (change)="toggle(option)"
+          [attr.name]="name || 'ui-checboxes-group'"
+          [attr.id]="id ? id + '-' + option.value : 'ui-checboxes-' + option.value"
+        />
+        <span class="checkmark"></span>
+        <span class="option-label">{{ option.label }}</span>
+      </label>
+      }
+    </div>
+  </fieldset>
+  @if (error) {
+  <div class="error">{{ error }}</div>
+  }
+</div>

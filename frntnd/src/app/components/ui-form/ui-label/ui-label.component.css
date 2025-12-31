@@ -1,0 +1,9 @@
+.ui-label {
+  font-weight: 600;
+  display: inline-block;
+  margin-right: 8px;
+}
+.ui-label.muted {
+  color: var(--color-text-muted, #6b7280);
+  font-weight: 400;
+}

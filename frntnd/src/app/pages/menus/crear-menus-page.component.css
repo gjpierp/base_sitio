@@ -1,0 +1,50 @@
+.form {
+  display: block;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.text-success {
+  color: #198754;
+}
+.text-danger {
+  color: #dc3545;
+}
+.mt-2 {
+  margin-top: 8px;
+}
+/* responsive-table (copiado de usuarios) */
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.responsive-table th,
+.responsive-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e9ecef;
+  text-align: left;
+}
+@media (max-width: 768px) {
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tr {
+    display: block;
+    margin-bottom: 12px;
+  }
+  .responsive-table td {
+    display: block;
+    text-align: right;
+    position: relative;
+    padding-left: 50%;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 12px;
+    width: calc(50% - 24px);
+    text-align: left;
+    font-weight: 600;
+  }
+}

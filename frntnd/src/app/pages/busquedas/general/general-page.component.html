@@ -1,0 +1,43 @@
+<ui-card [title]="title">
+  <div class="toolbar">
+    <ui-button label="Nuevo" variant="primary" (pressed)="onNuevo()"></ui-button>
+  </div>
+  <div>
+    <table class="responsive-table" aria-describedby="busquedas-desc">
+      <caption id="busquedas-desc">
+        {{
+          title
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Etiqueta</th>
+          <th scope="col">Valor</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of data; track r.id) {
+        <tr>
+          <td [attr.data-label]="'Etiqueta'">{{ r['nombre'] }}</td>
+          <td [attr.data-label]="'Valor'">{{ r['id'] }}</td>
+          <td class="actions" [attr.data-label]="'Acciones'">
+            <ui-button
+              variant="outline"
+              ariaLabel="Editar"
+              (pressed)="onEdit(r)"
+              label="Editar"
+            ></ui-button>
+            <ui-button
+              variant="danger"
+              ariaLabel="Eliminar"
+              (pressed)="onRemove(r)"
+              label="Eliminar"
+            ></ui-button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</ui-card>

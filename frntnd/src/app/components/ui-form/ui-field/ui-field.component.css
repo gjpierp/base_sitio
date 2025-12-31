@@ -1,0 +1,26 @@
+.ui-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.75rem;
+}
+.ui-field .field-label {
+  min-width: 160px;
+  font-weight: 600;
+}
+.ui-field .control {
+  flex: 1 1 auto;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 599px) {
+  .ui-field {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ui-field .field-label {
+    min-width: auto;
+    margin-bottom: 0.35rem;
+  }
+}

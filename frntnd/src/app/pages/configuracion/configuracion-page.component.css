@@ -1,0 +1,14 @@
+/* Estilos mínimos para la página de configuración */
+.responsive-table td,
+.responsive-table th {
+  padding: 8px 10px;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.form-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}

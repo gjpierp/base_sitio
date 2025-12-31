@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "API-Sitios-Aplicaciones",
+    "_postman_id": "a1b2c3d4-sitios-aplicaciones-0001",
+    "description": "Colección para gestionar Sitios y Aplicaciones. Usa variables {{baseUrl}} y {{x-token}}. Carpetas con emojis para representar color/icono.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Añade header x-token y x-db-profile si existen en variables",
+          "const token = pm.variables.get('x-token') || pm.environment.get('x-token');",
+          "if (token && !pm.request.headers.get('x-token')) pm.request.headers.add({ key: 'x-token', value: token });",
+          "const dbProfile = pm.variables.get('x-db-profile') || pm.environment.get('x-db-profile') || 'admin';",
+          "if (dbProfile && !pm.request.headers.get('x-db-profile')) pm.request.headers.add({ key: 'x-db-profile', value: dbProfile });"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3005", "type": "string" },
+    { "key": "x-token", "value": "", "type": "string" },
+    { "key": "x-db-profile", "value": "admin", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🌐 Sitios — Gestión de Sitios",
+      "description": "Carpeta para CRUD de Sitios (icono web / sitio).",
+      "item": [
+        {
+          "name": "📋 Listar Sitios",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔍 Obtener Sitio por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "➕ Crear Sitio",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mi Sitio\",\n  \"codigo\": \"mi-sitio\",\n  \"descripcion\": \"Descripción del sitio\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✏️ Actualizar Sitio",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mi Sitio Mod\",\n  \"codigo\": \"mi-sitio\",\n  \"descripcion\": \"Descripción actualizada\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ Eliminar Sitio",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧩 Aplicaciones — Gestión de Aplicaciones",
+      "description": "Carpeta para CRUD de Aplicaciones por Sitio (icono app / módulo).",
+      "item": [
+        {
+          "name": "📋 Listar Aplicaciones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔍 Obtener Aplicación por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "➕ Crear Aplicación",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_sitio\": 1,\n  \"nombre\": \"Mi App\",\n  \"clave\": \"mi-app\",\n  \"descripcion\": \"Descripción de la aplicación\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✏️ Actualizar Aplicación",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_sitio\": 1,\n  \"nombre\": \"Mi App Mod\",\n  \"clave\": \"mi-app\",\n  \"descripcion\": \"Descripción actualizada\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ Eliminar Aplicación",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

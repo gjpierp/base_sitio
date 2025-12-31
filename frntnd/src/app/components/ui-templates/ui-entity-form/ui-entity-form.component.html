@@ -1,0 +1,44 @@
+<ui-div maxWidth="60%" centered="true">
+  <form class="form-container" (submit)="onSubmit($event)">
+    <div class="form-grid">
+      @for (f of fields; track f.key) {
+      <div class="form-row">
+        <ui-label [for]="f.key">{{ f.label }}</ui-label>
+        @if(f.type === 'select') {
+        <ui-selects
+          [id]="f.key"
+          [name]="f.key"
+          [options]="f.options || []"
+          [(value)]="model[f.key]"
+          style="width: 100%"
+        ></ui-selects>
+        } @else {
+        <ui-input
+          [id]="f.key"
+          [name]="f.key"
+          [(value)]="model[f.key]"
+          [type]="f.type || 'text'"
+          placeholder="{{ f.label }}"
+          style="width: 100%"
+        ></ui-input>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="form-actions">
+      <ui-button
+        [label]="submitLabel"
+        variant="primary"
+        (pressed)="onSubmit()"
+        [disabled]="loading"
+      ></ui-button>
+    </div>
+
+    @if (errorMsg) {
+    <div class="msg-error">{{ errorMsg }}</div>
+    } @if (successMsg) {
+    <div class="msg-success">{{ successMsg }}</div>
+    }
+  </form>
+</ui-div>

@@ -1,0 +1,8 @@
+.ui-th {
+  text-align: left;
+  font-weight: 700;
+  padding: 8px;
+}
+.ui-th[role='button'] {
+  cursor: pointer;
+}

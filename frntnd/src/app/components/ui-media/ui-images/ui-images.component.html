@@ -1,0 +1,23 @@
+@if (!error) {
+<img
+  [src]="src"
+  [alt]="alt"
+  [style.width]="width"
+  [style.height]="height"
+  [style.object-fit]="fit"
+  [style.border-radius]="radius"
+  [attr.loading]="loading"
+  (error)="onError()"
+/>
+} @else { @if (fallback) {
+<img
+  [src]="fallback"
+  [alt]="alt"
+  [style.width]="width"
+  [style.height]="height"
+  [style.object-fit]="fit"
+  [style.border-radius]="radius"
+/>
+} @else {
+<span class="ui-images-fallback">Imagen no disponible</span>
+} }

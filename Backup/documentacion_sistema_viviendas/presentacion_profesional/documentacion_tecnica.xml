@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SistemaViviendasFiscales>
+	<Resumen>
+		<Nombre>
+			db_viviendas_fiscales
+		</Nombre>
+		<Descripcion>
+			Gestión integral de viviendas fiscales, pabellones, asignación por puntaje, integración digital, automatización documental y trazabilidad total.
+		</Descripcion>
+		<Caracteristicas>
+			<Caracteristica>
+				Gestión de viviendas y pabellones (individual y compartido)
+			</Caracteristica>
+			<Caracteristica>
+				Asignación por puntaje diferenciado (Oficiales y PCP)
+			</Caracteristica>
+			<Caracteristica>
+				Integración digital: UF, facturas, SIAP/SISREM
+			</Caracteristica>
+			<Caracteristica>
+				Automatización documental con IA y plantillas
+			</Caracteristica>
+			<Caracteristica>
+				Trazabilidad total: historiales, pagos, cambios de estado
+			</Caracteristica>
+		</Caracteristicas>
+	</Resumen>
+	<CasosDeUso>
+						<Caracteristica>
+							Integración digital: UF, facturas, SIAP/SISREM
+						</Caracteristica>
+						<Caracteristica>Pagos: porcentaje, fijo, UF</Caracteristica>
+			</Nombre>
+			<Descripcion>
+				Cálculo de puntaje y asignación según normativa FACH
+			</Descripcion>
+			<ActorPrincipal>
+				Administrador / Solicitante
+			</ActorPrincipal>
+		</Caso>
+		<Caso>
+			<Nombre>
+				Cobro por Remuneración
+			</Nombre>
+			<Descripcion>
+				Envío de descuentos mensuales a SISREM
+			</Descripcion>
+			<ActorPrincipal>
+				Sistema (Integración)
+			</ActorPrincipal>
+		</Caso>
+		<Caso>
+			<Nombre>
+				Gestión de Suministros
+			</Nombre>
+			<Descripcion>
+				Registro y pago de servicios básicos en periodos de vacancia
+			</Descripcion>
+			<ActorPrincipal>
+				Sistema / Finanzas
+			</ActorPrincipal>
+		</Caso>
+		<Caso>
+			<Nombre>
+				Contratación de Seguros
+			</Nombre>
+			<Descripcion>
+				Registro de pólizas sobre bienes muebles e inmuebles en UF/CLP
+			</Descripcion>
+			<ActorPrincipal>
+				Beneficiario
+			</ActorPrincipal>
+		</Caso>
+	</CasosDeUso>
+	<FlujoLogico>
+						<ActorPrincipal>
+							Beneficiario / Área VVFF en vacancia
+						</ActorPrincipal>
+		<Paso>
+			Calificación: El sistema calcula puntaje (Oficial vs PCP).
+		</Paso>
+		<Paso>
+						Solicitud: El usuario (extraído de SIAP) solicita vivienda o arrendador externo en caso de vacancia.
+		</Paso>
+		<Paso>
+			Legalización: Generación automática de contrato y carga de documentos.
+		</Paso>
+		<Paso>
+			Ciclo de Vida: Registro de servicios, seguros y descuentos vía SISREM.
+		</Paso>
+	</FlujoLogico>
+	<ModeloDatos>
+		<Descripcion>
+			Incluye el esquema completo con comentarios descriptivos para MySQL, Oracle y PostgreSQL.
+		</Descripcion>
+	</ModeloDatos>
+	<ModeloNoSQL>
+		<Descripcion>
+			Para almacenamiento flexible de documentos y aprendizaje de contratos, se recomienda una colección MongoDB.
+		</Descripcion>
+	</ModeloNoSQL>
+	<APIEndpoints>
+		<Endpoint>
+			<Metodo>
+				GET
+			</Metodo>
+			<Ruta>
+				/api/v1/integracion/siap/{rut}
+			</Ruta>
+			<Descripcion>
+				Obtiene datos del personal y cargas familiares.
+			</Descripcion>
+		</Endpoint>
+		<Endpoint>
+			<Metodo>
+				POST
+			</Metodo>
+			<Ruta>
+				/api/v1/integracion/sisrem/descuento
+			</Ruta>
+			<Descripcion>
+				Envía la instrucción de descuento mensual de arriendo/seguros.
+			</Descripcion>
+		</Endpoint>
+		<Endpoint>
+			<Metodo>
+				GET
+			</Metodo>
+			<Ruta>
+				/api/v1/externo/uf
+			</Ruta>
+			<Descripcion>
+				Conexión con el Banco Central o SBIF para actualización diaria de la UF.
+			</Descripcion>
+		</Endpoint>
+		<Endpoint>
+			<Metodo>
+				POST
+			</Metodo>
+			<Ruta>
+				/api/v1/viviendas/asignar
+			</Ruta>
+					<Endpoint>
+						<Metodo>
+							POST
+						</Metodo>
+						<Ruta>
+							/api/v1/servicios/registrar
+						</Ruta>
+						<Descripcion>
+							Registro y pago de servicios básicos, integración con empresas externas.
+						</Descripcion>
+					</Endpoint>
+			<Descripcion>
+				Ejecuta la lógica de negocio de asignación y genera el contrato automático.
+			</Descripcion>
+		</Endpoint>
+	</APIEndpoints>
+	<ConsideracionesAdicionales>
+		<ModuloMantencionUsuarios>
+			<Descripcion>
+				Tablas vvff_usuarios, vvff_roles y vvff_permisos para controlar edición de puntajes y validación de facturas.
+			</Descripcion>
+		</ModuloMantencionUsuarios>
+		<Auditoria>
+			<Descripcion>
+				Tabla vvff_auditoria para registrar usuario_id, accion, tabla_afectada y timestamp.
+			</Descripcion>
+		</Auditoria>
+		<Alertas>
+			<Descripcion>
+				Sistema de notificaciones para viviendas desocupadas con alto gasto en servicios básicos.
+			</Descripcion>
+		</Alertas>
+		<Normativas>
+			<Descripcion>
+				Acceso a plantillas legales y normativas actualizadas vía portal de Transparencia FACH.
+			</Descripcion>
+		</Normativas>
+	</ConsideracionesAdicionales>
+</SistemaViviendasFiscales>

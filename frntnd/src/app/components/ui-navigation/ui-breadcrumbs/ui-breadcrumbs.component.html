@@ -1,0 +1,12 @@
+<nav class="breadcrumbs" aria-label="Ruta de navegación">
+  @for (c of crumbs; track c.url; let i = $index) {
+  <span class="crumb">
+    @if (i === crumbs.length - 1) {
+    <span class="current" aria-current="page" tabindex="0" [title]="c.label">{{ c.label }}</span>
+    } @else {
+    <a [routerLink]="c.url" [title]="c.label">{{ c.label }}</a>
+    <span class="sep">/</span>
+    }
+  </span>
+  }
+</nav>

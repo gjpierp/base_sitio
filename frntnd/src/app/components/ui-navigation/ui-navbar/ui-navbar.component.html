@@ -1,0 +1,19 @@
+<nav class="ui-navbar">
+  <div class="left">
+    <button class="menu-btn" (click)="onMenuToggle()" aria-label="Abrir menú">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <span class="brand">
+      <span class="logo">{{ logo }}</span>
+      <span class="name">{{ title }}</span>
+    </span>
+  </div>
+  <div class="center">
+    @for (link of links; track link.url) {
+    <a [routerLink]="link.url" class="nav-link">{{ link.label }}</a>
+    }
+  </div>
+  <div class="right">
+    <ng-content select="[navbar-actions]"></ng-content>
+  </div>
+</nav>

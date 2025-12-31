@@ -1,0 +1,47 @@
+.ui-tolltip-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.ui-tolltip {
+  visibility: hidden;
+  opacity: 0;
+  background: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 0.4em 0.8em;
+  position: absolute;
+  z-index: 10;
+  transition: opacity 0.2s, visibility 0.2s;
+  font-size: 0.95em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.ui-tolltip.show {
+  visibility: visible;
+  opacity: 1;
+}
+.ui-tolltip.top {
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0.5em;
+}
+.ui-tolltip.bottom {
+  top: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.5em;
+}
+.ui-tolltip.left {
+  right: 120%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 0.5em;
+}
+.ui-tolltip.right {
+  left: 120%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 0.5em;
+}

@@ -1,0 +1,40 @@
+:root {
+  --form-gap: 1rem;
+  --field-gap: 0.5rem;
+  --field-min-width: 220px;
+  --input-border: 1px solid #d0d7de;
+  --input-radius: 6px;
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+.ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--form-gap);
+}
+.ui-form .fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--field-min-width), 1fr));
+  gap: var(--field-gap);
+}
+.ui-form .control input,
+.ui-form .control select,
+.ui-form .control textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: var(--input-border);
+  border-radius: var(--input-radius);
+  box-sizing: border-box;
+}
+.ui-form .control input:focus,
+.ui-form .control select:focus,
+.ui-form .control textarea:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.ui-form .label {
+  font-weight: 600;
+}
+.ui-form .help {
+  font-size: 0.875rem;
+  color: #6b7280;
+}

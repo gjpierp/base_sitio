@@ -1,0 +1,12 @@
+<ui-card>
+  <form (submit)="onSubmit($event)" role="form" class="ui-form">
+    <div class="fields">
+      @for (f of fields; track f.key) {
+      <ui-field [field]="f" [model]="model" (modelChange)="model = $event"></ui-field>
+      }
+    </div>
+    <div class="actions">
+      <ui-button [variant]="'primary'" (pressed)="onSubmit()" [label]="submitLabel"></ui-button>
+    </div>
+  </form>
+</ui-card>

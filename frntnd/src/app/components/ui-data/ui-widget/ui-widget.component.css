@@ -1,0 +1,65 @@
+@import '../../../../assets/design-system/variables.css';
+.ui-widget {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+}
+.ui-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 0.7em;
+}
+.ui-widget-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+}
+.ui-widget-title {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.ui-widget-subtitle {
+  font-size: 1em;
+  color: var(--color-text-muted);
+}
+.ui-widget-content {
+  width: 100%;
+}
+.ui-widget {
+  width: 100%;
+  box-sizing: border-box;
+  transition: box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.ui-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 0.7em;
+}
+.ui-widget-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+}
+.ui-widget-title {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.ui-widget-subtitle {
+  font-size: 1em;
+  color: var(--color-text-muted);
+}
+.ui-widget-content {
+  width: 100%;
+}

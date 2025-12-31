@@ -1,0 +1,19 @@
+<div class="ui-textareas">
+  @if (label) {
+  <label class="label" [attr.for]="textareaId">{{ label }}</label>
+  }
+  <textarea
+    class="textarea"
+    [attr.placeholder]="placeholder"
+    [rows]="rows"
+    [disabled]="disabled"
+    [attr.maxlength]="maxlength"
+    [(ngModel)]="value"
+    (input)="onInput($event)"
+    [attr.id]="textareaId"
+    [attr.name]="textareaName"
+  ></textarea>
+  @if (error) {
+  <div class="error">{{ error }}</div>
+  }
+</div>

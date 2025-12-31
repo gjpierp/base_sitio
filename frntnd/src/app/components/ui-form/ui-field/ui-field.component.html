@@ -1,0 +1,21 @@
+<div class="ui-field">
+  <ui-label class="field-label" [for]="field.key">{{ field.label }}</ui-label>
+  <div class="control">
+    @if (field.type === 'select') {
+    <ui-selects
+      [id]="field.key"
+      [name]="field.key"
+      [options]="field.options || []"
+      [value]="model[field.key]"
+      (valueChange)="onChange($event)"
+    ></ui-selects>
+    } @if (field.type !== 'select') {
+    <ui-input
+      [type]="field.type || 'text'"
+      [id]="field.key"
+      [value]="model[field.key]"
+      (valueChange)="onChange($event)"
+    ></ui-input>
+    }
+  </div>
+</div>

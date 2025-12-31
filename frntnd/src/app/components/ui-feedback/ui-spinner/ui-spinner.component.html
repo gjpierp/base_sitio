@@ -1,0 +1,9 @@
+<div class="loading-box" role="status" aria-live="polite" [attr.aria-label]="label">
+  <span
+    class="spinner"
+    [class.sm]="size === 'sm'"
+    [class.lg]="size === 'lg'"
+    aria-hidden="true"
+  ></span>
+  <span class="sr-only">{{ label }}</span>
+</div>

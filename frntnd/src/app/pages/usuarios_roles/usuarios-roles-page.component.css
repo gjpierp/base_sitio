@@ -1,0 +1,7 @@
+.usuarios-roles-page {
+  padding: 1rem;
+}
+.error {
+  color: var(--color-danger, #c00);
+  margin-top: 1rem;
+}

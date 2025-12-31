@@ -1,9 +1,0 @@
-# Diagrama de Flujo: Puntuación Oficiales y PCP (descripción textual)
-
-1. Identificación del beneficiario (Oficial o PCP)
-2. Selección de periodo de evaluación
-3. Ingreso de criterios y cálculo de puntaje
-4. Registro de puntuación y observaciones
-5. Uso del puntaje para priorización en asignación de vivienda
-
-Para el diagrama visual, usar BPMN o Draw.io siguiendo este flujo.

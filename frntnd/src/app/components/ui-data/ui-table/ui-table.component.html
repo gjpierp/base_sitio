@@ -1,0 +1,141 @@
+@if (enableFilter) {
+<div style="margin-bottom: 12px; width: 100%">
+  <ui-input
+    label="Filtrar"
+    [value]="filterText"
+    (valueChange)="setFilter($event)"
+    placeholder="Buscar..."
+    id="ui-table-filter"
+  ></ui-input>
+</div>
+}
+
+<table class="table">
+  @if (paged.length > 0) {
+  <ui-thead>
+    <ui-tr>
+      @for (col of visibleColumns; track col.key) {
+      <ui-th
+        scope="col"
+        (click)="toggleSort(col)"
+        [attr.role]="enableSort ? 'button' : null"
+        [attr.tabindex]="enableSort ? 0 : null"
+        (keydown.enter)="toggleSort(col)"
+        (keydown.space)="toggleSort(col)"
+        [attr.aria-sort]="
+          sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+        "
+        [attr.aria-label]="
+          'Ordenar por ' +
+          col.label +
+          '. Estado: ' +
+          (sortKey === col.key ? (sortDir === 'asc' ? 'ascendente' : 'descendente') : 'sin ordenar')
+        "
+      >
+        {{ col.label }}
+        @if (sortKey === col.key && sortDir) {
+        <span class="muted">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+        }
+      </ui-th>
+      } @if (showActions) {
+      <ui-th scope="col">Acciones</ui-th>
+      }
+    </ui-tr>
+  </ui-thead>
+  }
+  <ui-tbody>
+    @if (paged.length > 0) { @for (row of paged; track $index) {
+    <ui-tr>
+      @for (col of visibleColumns; track col.key) {
+      <ui-td>
+        @if (col.type === 'image') {
+        <img
+          [src]="row[col.key] || '/api/uploads/usuarios/no-img.png'"
+          [attr.alt]="col.label"
+          style="
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border);
+          "
+        />
+        } @else {
+        {{ row[col.key] }}
+        }
+      </ui-td>
+      } @if (showActions) {
+      <ui-td>
+        <div style="display: flex; gap: 8px">
+          <ui-button label="Editar" variant="success" (pressed)="emitEdit(row)"></ui-button>
+          <ui-button label="Eliminar" variant="danger" (pressed)="emitRemove(row)"></ui-button>
+        </div>
+      </ui-td>
+      }
+    </ui-tr>
+    } } @else {
+    <ui-tr>
+      <ui-td [attr.colspan]="visibleColumns.length + (showActions ? 1 : 0)" class="muted">
+        No hay resultados
+      </ui-td>
+    </ui-tr>
+    }
+  </ui-tbody>
+</table>
+
+@if (shouldShowPagination) {
+<div
+  style="display: flex; align-items: center; gap: 8px; margin-top: 8px"
+  role="status"
+  aria-live="polite"
+>
+  <span class="muted">Página {{ page }} de {{ totalPages }}</span>
+  <span class="muted"
+    >Mostrando {{ pageStartIndex }}–{{ pageEndIndex }} de
+    {{ totalRecords !== undefined ? totalRecords : filtered.length }}</span
+  >
+  <ui-button
+    label="Primera"
+    variant="outline"
+    (pressed)="firstPage()"
+    [disabled]="page === 1"
+  ></ui-button>
+  <ui-button
+    label="Anterior"
+    variant="outline"
+    (pressed)="prevPage()"
+    [disabled]="page === 1"
+  ></ui-button>
+  <ui-button
+    label="Siguiente"
+    variant="outline"
+    (pressed)="nextPage()"
+    [disabled]="page === totalPages"
+  ></ui-button>
+  <ui-button
+    label="Última"
+    variant="outline"
+    (pressed)="lastPage()"
+    [disabled]="page === totalPages"
+  ></ui-button>
+  <span class="muted" style="margin-left: auto">Tamaño:</span>
+  <select
+    [value]="pageSize"
+    (change)="changePageSize(+$any($event.target).value)"
+    id="ui-table-page-size"
+    name="ui-table-page-size"
+    aria-label="Tamaño de página"
+    style="
+      padding: 6px;
+      background: var(--color-elev-1);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      border-radius: var(--radius-sm);
+    "
+  >
+    @for (opt of pageSizeOptions; track opt) {
+    <option [value]="opt">{{ opt }} por página</option>
+    }
+  </select>
+</div>
+}

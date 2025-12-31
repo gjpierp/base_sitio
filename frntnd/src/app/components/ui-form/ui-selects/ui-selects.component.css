@@ -1,0 +1,119 @@
+@import '../../../../assets/design-system/variables.css';
+.ui-selects {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.label {
+  font-size: 14px;
+  color: var(--color-label, #232946);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--color-text, #232946);
+  background: var(--select-bg, var(--color-elev-2, #fff));
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Contraste especial para selects en temas oscuros FACH */
+[data-theme='fach-dark'] .select {
+  background: #003a8f;
+  color: var(--color-text-inverse, #fff);
+}
+[data-theme='fach-dark'] .select option {
+  background: #003a8f;
+  color: var(--color-text-inverse, #fff);
+}
+[data-theme='fach-dark'] .select option:disabled {
+  color: #aaa;
+  background: #00296b;
+}
+
+/* Contraste especial para selects en temas claros FACH */
+[data-theme='fach-light'] .select {
+  background: #fff;
+  color: #003a8f;
+}
+[data-theme='fach-light'] .select option {
+  background: #fff;
+  color: #003a8f;
+}
+[data-theme='fach-light'] .select option:disabled {
+  color: #aaa;
+  background: #e5e5e5;
+}
+
+.select:focus {
+  outline: 2px solid var(--color-primary, #003a8f);
+  border-color: var(--color-primary, #003a8f);
+}
+.select:focus-visible {
+  outline: 2px solid var(--color-primary, #4f46e5);
+  border-color: var(--color-primary, #4f46e5);
+}
+.select:disabled {
+  opacity: 0.6;
+  background: var(--select-disabled-bg, #f3f3f3);
+  cursor: not-allowed;
+}
+.error {
+  color: #e53e3e;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+/* Contraste general para selects y opciones */
+.select {
+  background: var(--select-bg, var(--color-elev-2, #fff));
+  color: var(--color-text, #232946);
+}
+.select option {
+  background: var(--select-bg, var(--color-elev-2, #fff));
+  color: var(--color-text, #232946);
+}
+.select option:disabled {
+  color: #aaa;
+  background: var(--select-disabled-bg, #f3f3f3);
+}
+
+/* Contraste para temas oscuros */
+[data-theme='dark'] .select,
+[data-theme='modern'] .select {
+  --select-bg: #232946;
+  --select-disabled-bg: #181a1b;
+  color: #fff;
+}
+[data-theme='dark'] .select option,
+[data-theme='modern'] .select option {
+  --select-bg: #232946;
+  color: #fff;
+}
+[data-theme='dark'] .select option:disabled,
+[data-theme='modern'] .select option:disabled {
+  color: #aaa;
+  --select-disabled-bg: #181a1b;
+}
+
+/* Contraste para temas claros */
+[data-theme='light'] .select,
+[data-theme='material'] .select {
+  --select-bg: #ffffff;
+  --select-disabled-bg: #e3e8f0;
+  color: #1976d2;
+}
+[data-theme='light'] .select option,
+[data-theme='material'] .select option {
+  --select-bg: #ffffff;
+  color: #1976d2;
+}
+[data-theme='light'] .select option:disabled,
+[data-theme='material'] .select option:disabled {
+  color: #aaa;
+  --select-disabled-bg: #e3e8f0;
+}

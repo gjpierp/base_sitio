@@ -1,0 +1,20 @@
+<ui-card [title]="'Crear Menú'" maxWidth="60%" centered="true" padding="1rem">
+  <ng-container *ngIf="formVisible">
+    <ui-entity-form
+      [fields]="fields"
+      [model]="nuevo"
+      [loading]="loading"
+      submitLabel="Guardar"
+      (submit)="crear()"
+    ></ui-entity-form>
+  </ng-container>
+  <div style="margin-top: 0.75rem">
+    @if (loading) {
+    <ui-spinner label="Procesando"></ui-spinner>
+    } @if (successMsg) {
+    <div class="success">{{ successMsg }}</div>
+    } @if (errorMsg) {
+    <div class="error">{{ errorMsg }}</div>
+    }
+  </div>
+</ui-card>

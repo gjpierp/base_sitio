@@ -1,0 +1,23 @@
+<ng-container [ngSwitch]="set">
+  <span
+    *ngSwitchCase="'material'"
+    class="material-icons"
+    [ngStyle]="{ 'font-size': size, color: color }"
+    >{{ name }}</span
+  >
+  <i
+    *ngSwitchCase="'bootstrap'"
+    class="bi"
+    [ngClass]="'bi-' + name"
+    [ngStyle]="{ 'font-size': size, color: color }"
+  ></i>
+  <i
+    *ngSwitchCase="'fontawesome'"
+    class="fa"
+    [ngClass]="'fa-' + name"
+    [ngStyle]="{ 'font-size': size, color: color }"
+  ></i>
+  <span *ngSwitchDefault class="material-icons" [ngStyle]="{ 'font-size': size, color: color }">{{
+    name
+  }}</span>
+</ng-container>

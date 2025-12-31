@@ -1,0 +1,22 @@
+/*
+  VARIABLES DE DISEÑO VVFF
+  ------------------------
+  Este archivo importa todos los temas y centraliza las variables.
+  El tema activo se selecciona por [data-theme=...] en el body.
+*/
+
+@import './themes/modern.css';
+@import './themes/classic.css';
+@import './themes/minimalist.css';
+@import './themes/material.css';
+@import './themes/neumorphism.css';
+@import './themes/glassmorphism.css';
+@import './themes/flat.css';
+@import './themes/dark.css';
+@import './themes/light.css';
+@import './themes/retro.css';
+@import './themes/elegant.css';
+@import './themes/futuristic.css';
+
+@import './themes/fach-light.css';
+@import './themes/fach-dark.css';

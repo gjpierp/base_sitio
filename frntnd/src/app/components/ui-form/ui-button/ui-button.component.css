@@ -1,0 +1,186 @@
+:host {
+  display: inline-flex;
+}
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+}
+button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.icon-img {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  font-weight: 600;
+}
+
+.button.icon-only {
+  padding: 6px;
+  width: 34px;
+  height: 34px;
+  justify-content: center;
+  gap: 0;
+}
+.button.icon-only .material-symbols-outlined,
+.button.icon-only .icon-img,
+.button.icon-only i {
+  font-size: 18px;
+  line-height: 18px;
+}
+
+/* Ensure projected <i> icons are visible and sized */
+.button.icon-only i {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  vertical-align: middle;
+  color: inherit;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* Icon-only buttons: transparent background, visible border and colored icon */
+.button.icon-only {
+  background: transparent !important;
+  border-color: var(--color-border, #e0e0e0) !important;
+  box-shadow: none !important;
+}
+.button.icon-only.button-outline {
+  /* keep outline appearance */
+  background: transparent;
+}
+.button.icon-only.button-danger {
+  background: transparent !important;
+  border-color: var(--color-danger, #b3261e) !important;
+  color: var(--color-danger, #b3261e) !important;
+}
+.button.icon-only.button-success {
+  background: transparent !important;
+  border-color: var(--color-success, #2e7d32) !important;
+  color: var(--color-success, #2e7d32) !important;
+}
+.button.icon-only.button-primary {
+  background: transparent !important;
+  border-color: var(--color-primary, #1976d2) !important;
+  color: var(--color-primary, #1976d2) !important;
+}
+.button.icon-only:hover {
+  transform: none;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+}
+.button:hover {
+  transform: translateY(-1px);
+}
+.button:active {
+  transform: translateY(0);
+}
+/* Hover reforzado para éxito y peligro en todos los temas */
+.button-success:hover,
+.button-danger:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+/* En modos outline (temas con override), refuerza el borde en hover */
+:host-context([data-theme='light']) .button-success:hover,
+:host-context([data-theme='material']) .button-success:hover,
+:host-context([data-theme='minimalist']) .button-success:hover,
+:host-context([data-theme='dark']) .button-success:hover,
+:host-context([data-theme='retro']) .button-success:hover {
+  border-width: 2px;
+}
+/* Acción principal */
+.button-primary {
+  background: var(--color-primary);
+  color: var(--color-text-inverse, #fff);
+}
+/* Acción secundaria */
+.button-secondary {
+  background: var(--color-secondary);
+  color: var(--color-text-inverse, #fff);
+}
+/* Acción de advertencia */
+.button-warning {
+  background: var(--color-warning);
+  color: var(--color-text-inverse, #fff);
+}
+/* Acción de éxito */
+.button-success {
+  background: var(--color-success);
+  color: var(--color-text-inverse, #fff);
+}
+/* Acción de peligro */
+.button-danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse, #fff);
+}
+/* Botón solo borde */
+.button-outline {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-primary);
+}
+.button-outline:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Tema claro: convertir éxito a outline para mejor contraste */
+:host-context([data-theme='light']) .button-success {
+  background: transparent;
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+/* Tema material: éxito como outline para coherencia visual */
+:host-context([data-theme='material']) .button-success {
+  background: transparent;
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+/* Tema minimalist: éxito outline con fallback por si no hay variable definida */
+:host-context([data-theme='minimalist']) .button-success {
+  background: transparent;
+  border-color: var(--color-success, #2e7d32);
+  color: var(--color-success, #2e7d32);
+}
+
+/* Tema minimalist: peligro (eliminar) como outline para suavizar contraste */
+:host-context([data-theme='minimalist']) .button-danger {
+  background: transparent;
+  border-color: var(--color-danger, #b3261e);
+  color: var(--color-danger, #b3261e);
+}
+
+/* Tema dark: éxito outline para consistencia */
+:host-context([data-theme='dark']) .button-success {
+  background: transparent;
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+/* Tema retro: éxito outline con fallback (el tema no define success) */
+:host-context([data-theme='retro']) .button-success {
+  background: transparent;
+  border-color: var(--color-success, #4caf50);
+  color: var(--color-success, #4caf50);
+}

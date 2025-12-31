@@ -1,0 +1,12 @@
+@if(type === 'spinner'){
+<div
+  class="ui-loader-spinner"
+  [ngStyle]="{ width: size, height: size, 'border-top-color': color }"
+></div>
+} @if(type === 'dots'){
+<div class="ui-loader-dots" [ngStyle]="{ height: size }">
+  <span [ngStyle]="{ background: color, width: '0.7em', height: '0.7em' }"></span>
+  <span [ngStyle]="{ background: color, width: '0.7em', height: '0.7em' }"></span>
+  <span [ngStyle]="{ background: color, width: '0.7em', height: '0.7em' }"></span>
+</div>
+}

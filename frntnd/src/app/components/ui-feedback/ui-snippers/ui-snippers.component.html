@@ -1,0 +1,13 @@
+<div class="ui-snippers">
+  <div
+    *ngFor="let _ of linesArray; let i = index"
+    class="snipper-line"
+    [ngStyle]="{
+      width: width,
+      height: height,
+      'border-radius': borderRadius,
+      background: color,
+      margin: margin
+    }"
+  ></div>
+</div>

@@ -1,0 +1,8 @@
+.ui-td {
+  padding: 8px;
+  vertical-align: middle;
+}
+.ui-td img {
+  max-width: 100%;
+  display: block;
+}

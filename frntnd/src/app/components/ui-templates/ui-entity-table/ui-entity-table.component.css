@@ -1,0 +1,76 @@
+.entity-table {
+  --table-gap: 0.5rem;
+}
+.entity-table .table-wrap {
+  overflow: auto;
+}
+.entity-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.entity-table th,
+.entity-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e6e6e6;
+  text-align: left;
+}
+.entity-table tbody tr:hover {
+  background: var(--table-row-hover, #fafafa);
+}
+
+/* Responsive: show data-label before cell content on narrow screens */
+@media (max-width: 720px) {
+  .entity-table table,
+  .entity-table thead,
+  .entity-table tbody,
+  .entity-table th,
+  .entity-table td,
+  .entity-table tr {
+    display: block;
+  }
+  .entity-table thead {
+    display: none;
+  }
+  .entity-table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+  }
+  .entity-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+}
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.responsive-table th,
+.responsive-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.actions-col {
+  display: flex;
+  width: 20%;
+  gap: 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.actions-col ui-button {
+  margin: 0 4px;
+}
+
+.actions-col ui-button {
+  padding: 0; /* Sin padding para evitar espacio extra */
+  border: none; /* Opcional, dependiendo del estilo que quieras */
+  background: none; /* Eliminar el fondo si es necesario */
+}
+
+.actions-col i {
+  font-size: 1.5rem; /* Ajusta el tamaño del ícono según sea necesario */
+}

@@ -1,0 +1,42 @@
+<aside class="ui-sidebar" [class.collapsed]="collapsed">
+  <div class="brand" [attr.aria-busy]="loading ? 'true' : null">
+    <span class="logo">AP</span>
+    <span class="name">Admin Sitio</span>
+    <button
+      type="button"
+      class="icon-btn"
+      (click)="reloadMenu(true)"
+      [disabled]="loading"
+      aria-label="Recargar menú"
+      title="Recargar menú"
+      style="margin-left: auto"
+    >
+      <span class="material-symbols-outlined">refresh</span>
+    </button>
+  </div>
+  <nav role="navigation" aria-label="Navegación lateral">
+    @if (loading) {
+    <div class="section">Cargando menú…</div>
+    } @else if (errorMsg) {
+    <div class="section" style="color: #f87171">{{ errorMsg }}</div>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    } @else if (!isLoggedIn) {
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    } @else { @if (menuItems.length) { @for (item of menuItems; track $index) {
+    <ui-sidebar-item
+      [item]="item"
+      [level]="0"
+      (expandedChange)="onExpandedChange($event)"
+    ></ui-sidebar-item>
+    } } @else {
+    <div class="section">Sin menús disponibles</div>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="material-symbols-outlined">dashboard</span><span>Dashboard</span>
+    </a>
+    } }
+  </nav>
+</aside>

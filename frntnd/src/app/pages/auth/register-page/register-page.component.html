@@ -1,0 +1,62 @@
+<section class="container" style="max-width: 520px; margin-top: var(--space-6)">
+  <h1>Crear cuenta</h1>
+  <p class="muted">Regístrate para administrar el sistema.</p>
+
+  <form (submit)="$event.preventDefault(); submit()">
+    <ui-input
+      label="Nombres"
+      placeholder="Tu nombre"
+      [value]="nombres"
+      (valueChange)="nombres = $event"
+    ></ui-input>
+    <ui-input
+      label="Apellidos"
+      placeholder="Tus apellidos"
+      [value]="apellidos"
+      (valueChange)="apellidos = $event"
+    ></ui-input>
+    <ui-input
+      label="Correo electrónico"
+      placeholder="tucorreo@dominio.com"
+      [value]="correo_electronico"
+      (valueChange)="correo_electronico = $event"
+    ></ui-input>
+    <ui-input
+      label="Usuario"
+      placeholder="Nombre de usuario"
+      [value]="nombre_usuario"
+      (valueChange)="nombre_usuario = $event"
+    ></ui-input>
+    <ui-input
+      label="Contraseña"
+      type="password"
+      placeholder="••••••"
+      [value]="contrasena"
+      (valueChange)="contrasena = $event"
+    ></ui-input>
+    <ui-input
+      label="Confirmar contraseña"
+      type="password"
+      placeholder="••••••"
+      [value]="contrasena_confirm"
+      (valueChange)="contrasena_confirm = $event"
+    ></ui-input>
+
+    @if (error) {
+    <div class="alert alert-danger">{{ error }}</div>
+    } @if (success) {
+    <div class="alert alert-success">{{ success }}</div>
+    }
+
+    <div style="display: flex; gap: 10px; margin-top: 12px">
+      <ui-button
+        label="Registrarse"
+        variant="primary"
+        icon="person_add"
+        [disabled]="loading"
+        (pressed)="submit()"
+      ></ui-button>
+      <ui-button label="Cancelar" variant="outline" routerLink="/login"></ui-button>
+    </div>
+  </form>
+</section>

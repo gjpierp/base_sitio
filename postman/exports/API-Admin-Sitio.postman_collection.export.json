@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "API-Admin-Sitio",
+    "_postman_id": "f0f0c2a1-aaaa-bbbb-cccc-admin-sitio",
+    "description": "Colección de endpoints del Admin del Sitio VVFF. Usa variables {{baseUrl}} y {{x-token}}. Las carpetas tienen iconos y colores (emojis) y cada endpoint tiene icono.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Añade automáticamente headers opcionales (x-token y x-db-profile)",
+          "const token = pm.variables.get(\u0027x-token\u0027) || pm.environment.get(\u0027x-token\u0027);",
+          "if (token) {",
+          "  const existing = pm.request.headers.get(\u0027x-token\u0027);",
+          "  if (!existing) pm.request.headers.add({ key: \u0027x-token\u0027, value: token });",
+          "}",
+          "const dbProfile = pm.variables.get(\u0027x-db-profile\u0027) || pm.environment.get(\u0027x-db-profile\u0027) || \u0027admin\u0027;",
+          "if (dbProfile) {",
+          "  const existingDb = pm.request.headers.get(\u0027x-db-profile\u0027);",
+          "  if (!existingDb) pm.request.headers.add({ key: \u0027x-db-profile\u0027, value: dbProfile });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Mantener consistencia: mostrar estado y cuerpo mínimo",
+          "pm.test(\u0027Estado HTTP válido\u0027, function () {",
+          "  pm.expect(pm.response.code).to.be.within(200, 404);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "baseurl",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "base_url",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "x-token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "x-db-profile",
+      "value": "admin",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🟦 Autenticación 🔐",
+      "description": "Endpoints de autenticación",
+      "item": [
+        {
+          "name": "🔑 Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@example.com\",\n  \"contrasena\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+... (file truncated, full copy saved to disk)

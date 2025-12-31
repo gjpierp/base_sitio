@@ -1,0 +1,43 @@
+<ui-card [title]="title">
+  <div class="toolbar">
+    <ui-button label="Nuevo" variant="primary" (pressed)="onNuevo()"></ui-button>
+  </div>
+  <div>
+    <table class="responsive-table" aria-describedby="uploads-usuarios-desc">
+      <caption id="uploads-usuarios-desc">
+        {{
+          title
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Correo</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of data; track u.id) {
+        <tr>
+          <td [attr.data-label]="'Nombre'">{{ u.nombre }}</td>
+          <td [attr.data-label]="'Correo'">{{ u['correo_electronico'] }}</td>
+          <td class="actions" [attr.data-label]="'Acciones'">
+            <ui-button
+              variant="outline"
+              ariaLabel="Editar"
+              (pressed)="onEdit(u)"
+              label="Editar"
+            ></ui-button>
+            <ui-button
+              variant="danger"
+              ariaLabel="Eliminar"
+              (pressed)="onRemove(u)"
+              label="Eliminar"
+            ></ui-button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</ui-card>

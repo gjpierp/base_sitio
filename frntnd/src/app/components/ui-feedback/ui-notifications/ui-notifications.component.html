@@ -1,0 +1,14 @@
+<div class="notifications">
+  @for (n of items; track n.id) {
+  <div
+    class="toast"
+    [class.info]="n.type === 'info'"
+    [class.success]="n.type === 'success'"
+    [class.warning]="n.type === 'warning'"
+    [class.error]="n.type === 'error'"
+  >
+    <span class="text">{{ n.text }}</span>
+    <button type="button" class="close" (click)="dismiss(n.id)" aria-label="Cerrar">×</button>
+  </div>
+  }
+</div>

@@ -1,0 +1,9 @@
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+}

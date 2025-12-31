@@ -1,0 +1,30 @@
+/* Estilos mínimos para mi perfil */
+.avatar {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.06);
+}
+
+.profile-header h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.btn-upload {
+  display: inline-block;
+  padding: 8px 12px;
+  background: var(--color-primary, #1976d2);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-upload input {
+  display: none;
+}
+.form-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr;
+}

@@ -1,0 +1,13 @@
+<span class="ui-tolltip-wrapper">
+  <ng-content></ng-content>
+  <span
+    class="ui-tolltip"
+    [class.show]="show"
+    [class.top]="position === 'top'"
+    [class.bottom]="position === 'bottom'"
+    [class.left]="position === 'left'"
+    [class.right]="position === 'right'"
+  >
+    {{ text }}
+  </span>
+</span>

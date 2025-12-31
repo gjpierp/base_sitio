@@ -1,0 +1,43 @@
+<header class="ui-header">
+  <div class="left">
+    <button class="icon-btn" aria-label="Toggle menu" (click)="menuToggle.emit()">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <span class="title">Admin Sitio</span>
+  </div>
+  <div class="center">
+    <ui-input label="" placeholder="Buscar..."></ui-input>
+  </div>
+  <div class="right">
+    <app-theme-selector></app-theme-selector>
+    <ui-button label="Ayuda" variant="outline"></ui-button>
+    @if (isLoggedIn) {
+    <div
+      class="user"
+      title="Usuario actual"
+      aria-label="Usuario actual"
+      style="display: flex; align-items: center; gap: 8px"
+    >
+      <div class="avatar">{{ userInitials }}</div>
+      <div class="user-info" style="display: flex; flex-direction: column; line-height: 1">
+        <span class="user-name">{{ userName || 'Usuario' }}</span>
+        <span class="user-email muted">{{ userEmail || '' }}</span>
+      </div>
+    </div>
+    <ui-button
+      label="Cerrar sesión"
+      variant="secondary"
+      icon="logout"
+      (pressed)="logout()"
+    ></ui-button>
+    } @else {
+    <ui-button label="Login" variant="primary" icon="login" (pressed)="goLogin()"></ui-button>
+    <ui-button
+      label="Registrarse"
+      variant="secondary"
+      icon="person_add"
+      routerLink="/register"
+    ></ui-button>
+    }
+  </div>
+</header>

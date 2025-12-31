@@ -1,0 +1,12 @@
+<div class="app-shell">
+  <ui-sidebar [collapsed]="collapsed"></ui-sidebar>
+  <section class="content">
+    <ui-header (menuToggle)="toggleSidebar()"></ui-header>
+    <ui-breadcrumbs></ui-breadcrumbs>
+    <main class="main">
+      <router-outlet></router-outlet>
+    </main>
+    <ui-notifications></ui-notifications>
+    <ui-footer></ui-footer>
+  </section>
+</div>

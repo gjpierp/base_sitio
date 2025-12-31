@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card, #fff8e1);
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow, 0 2px 12px rgba(60, 60, 60, 0.08));
+  border: 1px solid var(--color-border, #e0cda5);
+  color: var(--color-text, #3e2723);
+  margin-bottom: 1.5rem;
+}
+.table th,
+.table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e0cda5);
+  text-align: left;
+}
+.table th {
+  background: var(--bg-sidebar, #a67c52);
+  color: var(--color-text-inverse, #fff);
+  font-weight: 700;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.muted {
+  color: var(--color-muted, #a67c52);
+  font-size: 0.95em;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-elev-1);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+.table th {
+  background: var(--color-elev-2);
+  font-weight: 700;
+  color: var(--color-text);
+}
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Forzar botón de eliminar (danger) como outline dentro de la tabla en todos los temas */
+:host ::ng-deep ui-button .button-danger {
+  background: transparent !important;
+  border-color: var(--color-danger, #d32f2f) !important;
+  color: var(--color-danger, #d32f2f) !important;
+}
+:host ::ng-deep ui-button .button-danger:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}

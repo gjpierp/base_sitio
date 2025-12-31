@@ -1,0 +1,5 @@
+.ui-grid {
+  display: grid;
+  width: 100%;
+  /* grid-template-columns and gap are set via ngStyle */
+}

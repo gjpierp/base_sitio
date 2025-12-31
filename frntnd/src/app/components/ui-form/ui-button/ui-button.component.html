@@ -1,0 +1,26 @@
+<button
+  class="button"
+  [class.icon-only]="iconOnly"
+  [class.button-primary]="variant === 'primary'"
+  [class.button-secondary]="variant === 'secondary'"
+  [class.button-outline]="variant === 'outline'"
+  [class.button-danger]="variant === 'danger'"
+  [class.button-success]="variant === 'success'"
+  [class.button-warning]="variant === 'warning'"
+  [disabled]="disabled"
+  [attr.aria-label]="ariaLabel"
+  [routerLink]="routerLink"
+  [queryParams]="queryParams"
+  [fragment]="fragment"
+  (click)="onClick()"
+>
+  @if(iconUrl){
+  <img class="icon-img" [src]="iconUrl" alt="" aria-hidden="true" />
+  } @else if (icon) {
+  <span class="material-symbols-outlined" aria-hidden="true">{{ icon }}</span>
+  }
+  <ng-content></ng-content>
+  @if(!iconOnly){
+  {{ label }}
+  }
+</button>
