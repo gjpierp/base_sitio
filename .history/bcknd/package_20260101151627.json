@@ -1,0 +1,50 @@
+{
+  "name": "04-backend-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "nodemon index.js",
+    "start": "node index.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "generate-entities-adm": "node ./scripts/generate_entities_adm.js",
+    "test": "jest --runInBand"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.1",
+    "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.22.1",
+    "express-fileupload": "^1.5.2",
+    "express-validator": "^7.3.1",
+    "google-auth-library": "^10.5.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.0",
+    "mysql2": "^3.16.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3",
+    "uuid": "^13.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "swagger": {
+    "ui": "swagger-ui-express",
+    "jsdoc": "swagger-jsdoc"
+  },
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "^21.1.0",
+    "@angular-eslint/eslint-plugin-template": "^21.1.0",
+    "@angular-eslint/schematics": "^21.1.0",
+    "@angular-eslint/template-parser": "^21.1.0",
+    "eslint": "^9.39.2",
+    "nodemon": "^3.0.1",
+    "jest": "^29.6.1",
+    "jest-environment-node": "^29.6.1"
+  }
+}

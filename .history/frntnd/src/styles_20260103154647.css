@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import './assets/design-system/variables.css';
+@import './assets/design-system/base.css';
+@import './assets/design-system/components.css';
+@import 'tailwindcss';
+@import './swal2-select-style.css';
+@import './swal2-form-row.css';
+
+/* App global tweaks */
+
+button,
+.btn,
+.p-button,
+.btn-crear {
+  color: var(--color-text-inverse) !important;
+  background: var(--color-btn) !important;
+  border: 2px solid var(--color-border) !important;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  /* Usar degradado si el tema define --bg-gradient, si no fallback a --bg-main */
+  background: var(--bg-gradient, var(--bg-main));
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+}
+.sidebar {
+  width: 250px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+.sidebar .brand {
+  padding: var(--space-5);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+}
+.content {
+  flex: 1;
+}
+.header {
+  height: 60px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-5);
+}
+.main {
+  padding: var(--space-5);
+}
+/* You can add global styles to this file, and also import other style files */
+
+/* Header & Dashboard: botones sin fondo (forzar transparencia sobre reglas globales) */
+.ui-header .button,
+.ui-header .button-primary,
+.ui-header .button-secondary,
+.ui-header .button-outline,
+.ui-header .icon-btn,
+.ui-header button,
+.ui-header .button.button-primary,
+.ui-header .button.button-secondary,
+.ui-header .button.button-outline {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
+
+/* Dashboard hero actions and quick links */
+.hero .button,
+.hero .button-primary,
+.hero .button-secondary,
+.hero .button-outline,
+.hero-actions .button,
+.hero-actions button,
+.hero .quick,
+.hero .quick a {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+/* Quick cards (stat/quick) — hacer solo texto/ícono si se desea */
+.quick,
+.card .quick {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+}

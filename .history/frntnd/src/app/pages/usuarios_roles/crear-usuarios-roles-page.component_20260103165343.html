@@ -1,0 +1,20 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+<ui-card [title]="'Crear Asignación Usuario - Rol'" maxWidth="60%" centered="true" padding="1rem">
+  <ui-entity-form
+    [fields]="fields"
+    [model]="nuevo"
+    [loading]="loading"
+    submitLabel="Guardar"
+    (submit)="crear()"
+  ></ui-entity-form>
+  <div style="margin-top: 0.75rem">
+    @if (loading) {
+    <ui-spinner label="Procesando"></ui-spinner>
+    } @if (successMsg) {
+    <div class="success">{{ successMsg }}</div>
+    } @if (errorMsg) {
+    <div class="error">{{ errorMsg }}</div>
+    }
+  </div>
+</ui-card>
+</div>

@@ -1,0 +1,213 @@
+:host {
+  /* Valores por defecto de variables de tema (se pueden sobrescribir globalmente) */
+  --surface: #ffffff;
+  --text: #111111;
+  --color-elev-2: rgba(0, 0, 0, 0.5);
+  --primary: #4f46e5;
+  --secondary: #2b2b2b;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  font-size: 12px; /* tamaño de texto solicitado */
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-elev-2);
+  backdrop-filter: blur(2px);
+}
+
+.dialog {
+  position: relative;
+  margin: 5vh auto;
+  max-width: 560px;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: transparent;
+  color: inherit;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.content {
+  padding: 12px 16px;
+}
+
+/* Layout de formulario en dos columnas: labels a la izquierda, controles a la derecha */
+.content .form-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+.content label {
+  justify-self: end;
+  padding-right: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.content input,
+.content select,
+.content textarea,
+.content .form-control {
+  width: 100%;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+.footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  justify-content: flex-end;
+}
+
+.btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn.secondary {
+  background: var(--secondary);
+  color: #fff;
+}
+
+/* Utilidades para reducir márgenes por defecto dentro del modal */
+.content p,
+.content .row,
+.content .field {
+  margin: 0 0 6px 0;
+}
+
+/* Si el formulario no usa la clase .form-grid, intentamos aplicar un estilo simple */
+.content > label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.content > .control {
+  margin-bottom: 8px;
+}
+
+/* Forzar layout de 2 columnas para cualquier <form> dentro del modal (labels | controles) */
+.content > form,
+.content form {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+.content > form label,
+.content form label {
+  justify-self: end;
+  padding-right: 8px;
+}
+
+.content > form input,
+.content > form select,
+.content > form textarea,
+.content form input,
+.content form select,
+.content form textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Slot grid: aplica dos columnas al contenido proyectado (labels | controles) */
+.content .slot-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+.content .slot-grid label {
+  justify-self: end;
+  padding-right: 8px;
+}
+
+.content .slot-grid input,
+.content .slot-grid select,
+.content .slot-grid textarea,
+.content .slot-grid .form-control {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Estilos para usar una tabla como layout de formulario (label | control) */
+.content .form-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.content .form-table th,
+.content .form-table td {
+  padding: 6px 8px;
+  vertical-align: middle;
+  border: none;
+}
+.content .form-table th {
+  width: 160px;
+  text-align: right;
+  font-weight: 600;
+  padding-right: 12px;
+}
+.content .form-table td {
+  width: auto;
+}
+.content .form-table input,
+.content .form-table select,
+.content .form-table textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}

@@ -1,0 +1,53 @@
+.ui-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+  padding: 8px 0;
+}
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text, #334155);
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+}
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.page-num {
+  background: transparent;
+  border: none;
+  color: var(--color-text, #334155);
+  min-width: 28px;
+  height: auto;
+  padding: 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, color 0.12s ease;
+}
+.page-num:hover {
+  transform: translateY(-2px);
+}
+.page-num.active {
+  background: transparent; /* sin fondo */
+  color: var(--color-primary, #4f46e5); /* destacar solo con color de texto */
+  box-shadow: none;
+  font-weight: 700;
+}
+
+/* Reduce visual weight on disabled/edge icons */
+.ui-pagination .icon-btn[disabled],
+.ui-pagination .page-num[disabled] {
+  opacity: 0.4;
+}

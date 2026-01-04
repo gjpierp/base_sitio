@@ -1,0 +1,65 @@
+<ui-card>
+  <div class="spread" style="margin-bottom: 1rem">
+    @if(loading){
+    <ui-spinner label="Cargando"></ui-spinner>
+    } @if(loading && error){
+    <div class="muted">{{ error }}</div>
+    }
+  </div>
+  @if(!loading){
+  <div>
+    <table class="responsive-table">
+      <!-- Title removed from table caption per UI decision -->
+      <thead>
+        <tr>
+          @for (col of visibleColumns; track col.key) {
+          <th scope="col">{{ col.label }}</th>
+          }
+          <th scope="col" class="actions-col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of data; track row.id || $index) {
+        <tr>
+          @for (col of visibleColumns; track col.key) {
+          <td [attr.data-label]="col.label">{{ row[col.key] }}</td>
+          }
+          <td class="actions-col" [attr.data-label]="'Acciones'">
+            <ui-button
+              variant="outline"
+              ariaLabel="Editar Fila"
+              (pressed)="onEdit(row)"
+              title="Editar"
+              [iconOnly]="true"
+              ><span class="material-symbols-outlined" aria-hidden="true">edit</span></ui-button
+            >
+            <ui-button
+              variant="danger"
+              ariaLabel="Eliminar Fila"
+              (pressed)="onRemove(row)"
+              title="Eliminar"
+              [iconOnly]="true"
+              ><span class="material-symbols-outlined" aria-hidden="true">delete</span></ui-button
+            >
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    @if(data.length === 0){
+    <div class="muted">No hay datos para mostrar.</div>
+    }
+  </div>
+  }
+  @if(!loading){
+  <div class="table-pagination" style="margin-top: 0.75rem; display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+    <div class="muted">
+      Mostrando {{ data.length }} de {{ total }} — Página {{ page }} / {{ lastPage }}
+    </div>
+    <div class="actions">
+      <ui-button variant="outline" [disabled]="page <= 1" (pressed)="onPage(page - 1)" title="Anterior">Anterior</ui-button>
+      <ui-button variant="outline" [disabled]="page >= lastPage" (pressed)="onPage(page + 1)" title="Siguiente">Siguiente</ui-button>
+    </div>
+  </div>
+  }
+</ui-card>

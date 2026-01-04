@@ -1,0 +1,25 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div class="spread" style="margin-bottom: 1rem">
+      @if(loading){
+      <ui-spinner label="Cargando"></ui-spinner>
+      } @if(!loading && error){
+      <div class="muted">{{ error }}</div>
+      }
+    </div>
+    @if(!loading && datosListos){
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="dataFormateada"
+      [total]="totalUsuarios"
+      [loading]="loading"
+      [error]="error"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+    ></ui-entity-table>
+    }
+  </ui-card>
+</div>

@@ -1,0 +1,68 @@
+<ui-card [title]="title" subtitle="Opciones del sistema">
+  <div class="spread" style="margin-bottom: 1rem">
+    @if (loading) {
+    <ui-spinner label="Cargando"></ui-spinner>
+    } @if (!loading && error) {
+    <div class="muted">{{ error }}</div>
+    }
+  </div>
+
+  <!-- Selector de tema -->
+  <div style="margin-bottom: 1rem">
+    <app-theme-selector></app-theme-selector>
+  </div>
+
+  @if (!loading && datosListos) {
+  <table class="responsive-table" aria-describedby="config-desc">
+    <caption id="config-desc">
+      Listado de opciones
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Clave</th>
+        <th scope="col">Valor</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (c of data; track c.clave) {
+      <tr>
+        <td [attr.data-label]="'Clave'">{{ c.clave }}</td>
+        <td [attr.data-label]="'Valor'">{{ c.valor }}</td>
+        <td class="actions" [attr.data-label]="'Acciones'">
+          <ui-button
+            variant="outline"
+            ariaLabel="Editar"
+            (pressed)="abrirEditar(c)"
+            label="Editar"
+          ></ui-button>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+  @if (data.length === 0) {
+  <div class="muted">No hay datos para mostrar.</div>
+  } }
+
+  <!-- Modal de edición simple -->
+  <ui-modal
+    [open]="editOpen"
+    title="Editar opción"
+    confirmLabel="Guardar"
+    cancelLabel="Cancelar"
+    (closed)="cancelar()"
+    (confirmed)="guardarEdicion()"
+  >
+    <div class="form-grid">
+      <ui-input
+        label="Clave"
+        [(value)]="editarClave"
+        placeholder="Clave"
+        [disabled]="true"
+        style="width:360px;max-width:100%;box-sizing:border-box"
+      ></ui-input>
+      <ui-input label="Valor" [(value)]="editarValor" placeholder="Valor" style="width:360px;max-width:100%;box-sizing:border-box"></ui-input>
+    </div>
+  </ui-modal>
+</ui-card>

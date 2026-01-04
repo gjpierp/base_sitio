@@ -1,0 +1,20 @@
+<ui-card [title]="title" maxWidth="60%" centered="true" padding="1rem">
+  <ui-entity-form
+    [title]="title"
+    [fields]="fields"
+    [model]="modelo"
+    [loading]="loading"
+    submitLabel="Guardar"
+    (submit)="guardar()"
+  ></ui-entity-form>
+  <div style="margin-top: 0.75rem">
+    @if (loading) {
+    <ui-spinner label="Procesando"></ui-spinner>
+    } @if (successMsg) {
+    <div class="success">{{ successMsg }}</div>
+    } @if (errorMsg) {
+    <div class="error">{{ errorMsg }}</div>
+    }
+  </div>
+</ui-card>
+

@@ -1,0 +1,77 @@
+<ui-card>
+  <div class="spread" style="margin-bottom: 1rem">
+    @if(loading){
+    <ui-spinner label="Cargando"></ui-spinner>
+    } @if(!loading && error){
+    <div class="muted">{{ error }}</div>
+    }
+  </div>
+
+  @if(!loading){
+  <div>
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          @for(col of visibleColumns){
+          <th scope="col">
+            {{ col.label }}
+          </th>
+          }
+          <th scope="col" class="actions-col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for(row of data; let i = index){
+        <tr>
+          @for(col of visibleColumns){
+          <td>{{ row[col.key] }}</td>
+          }
+          <td class="actions-col" [attr.data-label]="'Acciones'">
+            <ui-button
+              variant="outline"
+              ariaLabel="Editar Fila"
+              (pressed)="onEdit(row)"
+              title="Editar"
+              [iconOnly]="true"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+            </ui-button>
+            <ui-button
+              variant="danger"
+              ariaLabel="Eliminar Fila"
+              (pressed)="onRemove(row)"
+              title="Eliminar"
+              [iconOnly]="true"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+            </ui-button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    @if(data.length === 0){
+    <div class="muted">No hay datos para mostrar.</div>
+    }
+  </div>
+
+  <div
+    class="table-pagination"
+    style="
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+    "
+  >
+    <ui-pagination
+      [page]="page"
+      [pageSize]="effectivePageSize"
+      [totalItems]="total"
+      [maxPages]="5"
+      (pageChange)="onPage($event)"
+    ></ui-pagination>
+  </div>
+  }
+</ui-card>

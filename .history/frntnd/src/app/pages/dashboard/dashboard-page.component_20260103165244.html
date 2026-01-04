@@ -1,0 +1,61 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+<section class="hero">
+  <div class="hero-inner container">
+    <div>
+      <h1>Admin-Sitio</h1>
+      <p class="muted">Gestión de usuarios y administración.</p>
+      <div class="hero-actions">
+        <ui-button
+          label="Usuarios"
+          variant="secondary"
+          icon="group"
+          routerLink="/usuarios"
+          [queryParams]="{ filtro: 'activos' }"
+        ></ui-button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<section class="container" style="margin-top: var(--space-6)">
+  <div class="grid">
+    @for (s of stats; track s.label) {
+    <a class="card card-pad stat" [routerLink]="getRouteFor(s.label)">
+      <div class="stat-header">
+        <span class="material-symbols-outlined">{{ s.icon }}</span>
+        <ui-badge [text]="s.label" [variant]="s.variant"></ui-badge>
+      </div>
+      <div class="stat-value">{{ s.value }}</div>
+      <div class="muted">{{ s.label }} totales</div>
+    </a>
+    }
+  </div>
+</section>
+
+<section class="container" style="margin-top: var(--space-6)">
+  <ui-card title="Accesos rápidos" subtitle="Navega por las secciones más usadas">
+    <div class="quick-grid">
+      <a class="quick" routerLink="/roles"
+        ><span class="material-symbols-outlined">shield_person</span> Roles</a
+      >
+      <a class="quick" routerLink="/permisos"
+        ><span class="material-symbols-outlined">key</span> Permisos</a
+      >
+      <a class="quick" routerLink="/menus"
+        ><span class="material-symbols-outlined">view_list</span> Menús</a
+      >
+      <!-- Enlace a territorios/paises eliminado -->
+      <a class="quick" routerLink="/busquedas/general"
+        ><span class="material-symbols-outlined">search</span> Búsquedas</a
+      >
+    </div>
+  </ui-card>
+</section>
+
+<section class="container" style="margin-top: var(--space-6)">
+  <div class="hero-actions">
+    <div class="card card-pad"></div>
+  </div>
+</section>

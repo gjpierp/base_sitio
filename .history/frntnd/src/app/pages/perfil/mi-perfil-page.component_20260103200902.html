@@ -1,0 +1,82 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" subtitle="Tu información">
+    <div class="spread" style="margin-bottom: 1rem">
+      @if (loading) {
+      <ui-spinner label="Cargando"></ui-spinner>
+      } @if (!loading && error) {
+      <div class="muted">{{ error }}</div>
+      }
+    </div>
+
+    @if (!loading && datosListos) {
+    <form class="form-grid" (submit)="$event.preventDefault(); guardar()">
+      <div
+        class="profile-header"
+        style="grid-column: 1 / -1; display: flex; gap: 12px; align-items: center"
+      >
+        <div style="display: flex; gap: 12px; align-items: center">
+          <img [src]="uploadPreview || avatarUrl" alt="Avatar" class="avatar" />
+          <div>
+            <h3 style="margin: 0">{{ nombres }} {{ apellidos }}</h3>
+            <div class="muted">{{ correo_electronico }}</div>
+          </div>
+        </div>
+        <div style="margin-left: auto; display: flex; gap: 8px; align-items: center">
+          <label class="btn-upload">
+            <input type="file" accept="image/*" (change)="onFileChange($event)" />
+            Seleccionar
+          </label>
+          @if(uploadPreview && !uploading){
+          <ui-button label="Confirmar" variant="primary" (pressed)="openConfirmModal()"></ui-button>
+          <ui-button label="Cancelar" variant="outline" (pressed)="cancelUpload()"></ui-button>
+          } @if(uploading){
+          <ui-button label="Subiendo..." variant="outline"></ui-button>
+          }
+        </div>
+      </div>
+      <ui-input label="Nombres" [(value)]="nombres"></ui-input>
+      <ui-input label="Apellidos" [(value)]="apellidos"></ui-input>
+      <ui-input label="Correo electrónico" [(value)]="correo_electronico"></ui-input>
+
+      <div style="grid-column: 1 / -1; display: flex; gap: 12px; align-items: center">
+        <label style="min-width: 120px">Tema Preferido</label>
+        <select name="selectedTheme" [(ngModel)]="selectedTheme">
+          @for(t of themes){
+          <option [value]="t.clave">{{ t.nombre }}</option>
+          }
+        </select>
+        <ui-button label="Aplicar tema" variant="outline" (pressed)="aplicarTema()"></ui-button>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; grid-column: 1 / -1">
+        <ui-button label="Cancelar" variant="outline" (pressed)="cargar()"></ui-button>
+        <ui-button label="Guardar" variant="primary" (pressed)="guardar()"></ui-button>
+      </div>
+
+      <!-- Modal de confirmación para subida de avatar -->
+      <ui-modal
+        [open]="confirmModalOpen"
+        title="Confirmar subida"
+        confirmLabel="Subir"
+        cancelLabel="Cerrar"
+        (confirmed)="onModalConfirmed()"
+        (closed)="onModalClosed()"
+      >
+        <div style="display: flex; gap: 12px; align-items: center">
+          <img
+            [src]="uploadPreview || avatarUrl"
+            alt="Preview"
+            style="width: 96px; height: 96px; border-radius: 8px; object-fit: cover"
+          />
+          <div>
+            <p>¿Deseas subir esta imagen como tu avatar?</p>
+            <p class="muted" style="font-size: 0.9rem; margin: 0">
+              Si confirmas, se reemplazará tu imagen actual.
+            </p>
+          </div>
+        </div>
+      </ui-modal>
+    </form>
+    }
+  </ui-card>
+</div>

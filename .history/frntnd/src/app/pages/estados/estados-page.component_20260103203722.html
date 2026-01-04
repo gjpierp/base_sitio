@@ -1,0 +1,34 @@
+<ui-card [title]="title" [subtitle]="subtitle">
+  <div class="spread" style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem">
+    <ng-container *ngIf="loading">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </ng-container>
+    <ng-container *ngIf="!loading && error">
+      <div class="muted">{{ error }}</div>
+    </ng-container>
+    <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <a class="btn primary" href="/estados/crear">
+            <span style="display:inline-flex;align-items:center;gap:0.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Crear
+            </span>
+          </a>
+        </div>
+    </ng-container>
+  </div>
+  <ng-container *ngIf="!loading && datosListos">
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [total]="total"
+      (pageChange)="onPageChange($event)"
+      [columns]="columns"
+      [data]="data"
+      [loading]="loading"
+      [error]="error"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+    ></ui-entity-table>
+  </ng-container>
+</ui-card>

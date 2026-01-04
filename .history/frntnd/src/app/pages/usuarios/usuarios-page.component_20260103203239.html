@@ -1,0 +1,34 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div
+      class="spread"
+      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
+    >
+      <ng-container *ngIf="loading">
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <a class="btn primary" href="/usuarios/crear">Crear</a>
+        </div>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [columns]="columns"
+        [data]="dataFormateada"
+        [total]="totalUsuarios"
+        [loading]="loading"
+        [error]="error"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+        (pageChange)="onPageChange($event)"
+      ></ui-entity-table>
+    </ng-container>
+  </ui-card>
+</div>

@@ -1,0 +1,7 @@
+node_modules/
+frntnd/node_modules/
+frntnd/dist/
+bcknd/node_modules/
+dist/
+.history/
+public/

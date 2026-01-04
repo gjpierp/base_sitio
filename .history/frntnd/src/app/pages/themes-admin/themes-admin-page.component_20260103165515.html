@@ -1,0 +1,30 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card title="Gestión de Temas">
+    <div *ngIf="loading">Cargando...</div>
+    <div *ngIf="!loading">
+      <table style="width: 100%; border-collapse: collapse">
+        <tr *ngFor="let t of themes" style="border-bottom: 1px solid #eee">
+          <td style="padding: 8px">
+            {{ t.nombre }} <span class="muted">({{ t.clave }})</span>
+          </td>
+          <td style="padding: 8px; text-align: right">
+            <ui-button label="Editar" (pressed)="edit(t)"></ui-button>
+            <ui-button label="Eliminar" variant="outline" (pressed)="deleteTheme(t)"></ui-button>
+          </td>
+        </tr>
+      </table>
+
+      <h3 style="margin-top: 1rem">Crear / Editar</h3>
+      <div style="display: grid; gap: 8px; max-width: 720px">
+        <ui-input label="Clave" [(value)]="clave"></ui-input>
+        <ui-input label="Nombre" [(value)]="nombre"></ui-input>
+        <label>css_vars (JSON)</label>
+        <textarea [(ngModel)]="cssVarsText" rows="6" style="width: 100%"></textarea>
+        <div style="display: flex; gap: 8px; justify-content: flex-end">
+          <ui-button label="Cancelar" variant="outline" (pressed)="resetForm()"></ui-button>
+          <ui-button label="Guardar" variant="primary" (pressed)="createOrUpdate()"></ui-button>
+        </div>
+      </div>
+    </div>
+  </ui-card>
+</div>

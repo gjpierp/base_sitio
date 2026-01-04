@@ -1,0 +1,20 @@
+<ui-card [title]="title" [subtitle]="subtitle">
+  <div class="spread" style="margin-bottom: 1rem">
+    @if(loading){
+    <ui-spinner label="Cargando"></ui-spinner>
+    } @if(!loading && error){
+    <div class="muted">{{ error }}</div>
+    }
+  </div>
+  @if(!loading && datosListos){
+  <ui-entity-table
+    [title]="title"
+    [subtitle]="subtitle"
+    [total]="data.length"
+    [columns]="columns"
+    [data]="data"
+    [loading]="loading"
+    [error]="error"
+  ></ui-entity-table>
+  }
+</ui-card>

@@ -1,0 +1,40 @@
+@if (totalPages > 1) {
+<nav class="ui-pagination" aria-label="Paginación">
+  <button class="page-btn" [disabled]="page === 1" (click)="goTo(1)" aria-label="Primera">
+    <span class="material-symbols-outlined">first_page</span>
+  </button>
+
+  <button class="page-btn" [disabled]="page === 1" (click)="goTo(page - 1)" aria-label="Anterior">
+    <span class="material-symbols-outlined">chevron_left</span>
+  </button>
+
+  @for (p of pages; track p) {
+  <button
+    class="page-btn"
+    [class.active]="p === page"
+    (click)="goTo(p)"
+    [attr.aria-current]="p === page ? 'page' : null"
+  >
+    {{ p }}
+  </button>
+  }
+
+  <button
+    class="page-btn"
+    [disabled]="page === totalPages"
+    (click)="goTo(page + 1)"
+    aria-label="Siguiente"
+  >
+    <span class="material-symbols-outlined">chevron_right</span>
+  </button>
+
+  <button
+    class="page-btn"
+    [disabled]="page === totalPages"
+    (click)="goTo(totalPages)"
+    aria-label="Última"
+  >
+    <span class="material-symbols-outlined">last_page</span>
+  </button>
+</nav>
+}

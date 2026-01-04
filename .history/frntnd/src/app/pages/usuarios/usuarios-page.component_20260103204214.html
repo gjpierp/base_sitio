@@ -1,0 +1,95 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div
+      class="spread"
+      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
+    >
+      <ng-container *ngIf="loading">
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <button type="button" class="btn primary" (click)="openCreateModal()">
+            <span style="display:inline-flex;align-items:center;gap:0.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Crear
+            </span>
+          </button>
+        </div>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [columns]="columns"
+        [data]="dataFormateada"
+        [total]="totalUsuarios"
+        [loading]="loading"
+        [error]="error"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+        (pageChange)="onPageChange($event)"
+      ></ui-entity-table>
+    </ng-container>
+  </ui-card>
+</div>
+
+<!-- Modal integrado para creación/edición -->
+<ui-modal
+  [open]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <form *ngIf="modalFields.length" (submit)="$event.preventDefault(); onModalConfirm()">
+      <table class="form-table">
+        <tr *ngFor="let f of modalFields">
+          <th>
+            <label [for]="f.key">{{ f.label }}</label>
+          </th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'text'">
+                <input [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key" />
+              </ng-container>
+              <ng-container *ngSwitchCase="'select'">
+                <select [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key">
+                  <option *ngFor="let o of f.options || []" [value]="o.value">{{ o.label }}</option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key"></textarea>
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key" />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <div *ngIf="!modalFields.length && modalDeleteMode" style="padding: 1rem">
+      <p>¿Confirma eliminar "<strong>{{ modalValues.nombre }}</strong>"?</p>
+    </div>
+  </div>
+</ui-modal>
+
+<div style="margin-top: 1rem">
+  <details>
+    <summary>Debug estado (mostrar/ocultar)</summary>
+    <pre style="font-size: 12px; white-space: pre-wrap; margin-top: 0.5rem">{{
+      {
+        loading: loading,
+        datosListos: datosListos,
+        dataLength: (data || []).length,
+        total: totalUsuarios,
+        error: error
+      } | json
+    }}</pre>
+  </details>
+</div>

@@ -1,0 +1,3 @@
+node scripts/generate-page-from-usuarios.js <target-kebab> [singular-kebab]
+# Ejemplo: crear páginas para 'menus' (singular 'menu')
+node scripts/generate-page-from-usuarios.js menus menu

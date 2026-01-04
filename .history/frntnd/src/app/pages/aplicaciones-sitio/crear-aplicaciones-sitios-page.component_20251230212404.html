@@ -1,0 +1,41 @@
+<ui-card [title]="title">
+  <div *ngIf="loading" class="spinner-wrap">
+    <ui-spinner></ui-spinner>
+  </div>
+
+  <div *ngIf="!loading">
+    <form (ngSubmit)="guardar()" class="form-aplicacion">
+      <label>
+        Nombre
+        <input type="text" [(ngModel)]="modelo.nombre" name="nombre" required />
+      </label>
+
+      <label>
+        Ruta / URL
+        <input type="text" [(ngModel)]="modelo.ruta" name="ruta" />
+      </label>
+
+      <label>
+        Sitio (ID)
+        <input type="text" [(ngModel)]="modelo.sitio_id" name="sitio_id" />
+      </label>
+
+      <label>
+        Activo
+        <input type="checkbox" [(ngModel)]="modelo.activo" name="activo" />
+      </label>
+
+      <label>
+        Descripción
+        <textarea [(ngModel)]="modelo.descripcion" name="descripcion"></textarea>
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">Guardar</button>
+        <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+      </div>
+
+      <div *ngIf="error" class="error">{{ error }}</div>
+    </form>
+  </div>
+</ui-card>

@@ -1,0 +1,87 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div
+      class="spread"
+      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
+    >
+      @if(loading) { 
+      <ng-container>
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+      } 
+      @if(!loading && error) { 
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+    }
+    @if(!loading) { 
+      <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <button type="button" class="btn primary" (click)="openCreateModal()">Crear</button>
+        </div>
+      </ng-container>
+    }
+    </div>
+    @if(!loading && datosListos) { 
+    <ng-container *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [columns]="columns"
+        [data]="data"
+        [loading]="loading"
+        [error]="error"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+      ></ui-entity-table>
+    </ng-container>
+  }
+  </ui-card>
+</div>
+
+<!-- Modal integrado para creación/edición -->
+    <div
+      class="spread"
+      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
+    >
+      <ng-container *ngIf="loading">
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <button type="button" class="btn primary" (click)="openCreateModal()">Crear</button>
+        </div>
+      </ng-container>
+    </div>
+              <select
+                *ngSwitchCase="'select'"
+                [id]="f.key"
+                [(ngModel)]="modalValues[f.key]"
+                name="{{ f.key }}"
+              >
+                <option *ngFor="let o of f.options || []" [value]="o.value">{{ o.label }}</option>
+              </select>
+              <textarea
+                *ngSwitchCase="'textarea'"
+                [id]="f.key"
+                [(ngModel)]="modalValues[f.key]"
+                name="{{ f.key }}"
+              ></textarea>
+              <input
+                *ngSwitchDefault
+                [id]="f.key"
+                [(ngModel)]="modalValues[f.key]"
+                name="{{ f.key }}"
+              />
+            </ng-container>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+</ui-modal>

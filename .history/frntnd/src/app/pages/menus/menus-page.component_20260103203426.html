@@ -1,0 +1,29 @@
+<ui-card [title]="title" [subtitle]="subtitle">
+  <div class="spread" style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem">
+    <ng-container *ngIf="loading">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </ng-container>
+    <ng-container *ngIf="!loading && error">
+      <div class="muted">{{ error }}</div>
+    </ng-container>
+    <ng-container *ngIf="!loading">
+      <div style="margin-left: auto">
+        <a class="btn primary" href="/menus/crear">Crear</a>
+      </div>
+    </ng-container>
+  </div>
+  <ng-container *ngIf="datosListos">
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [total]="totalMenus"
+      (pageChange)="onPageChange($event)"
+      [columns]="columns"
+      [data]="data"
+      [loading]="loading"
+      [error]="error"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+    ></ui-entity-table>
+  </ng-container>
+</ui-card>

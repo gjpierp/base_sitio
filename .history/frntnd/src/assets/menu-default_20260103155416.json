@@ -1,0 +1,24 @@
+[
+  {
+    "id_menu": 1,
+    "nombre": "Panel de Control",
+    "ruta": "",
+    "orden": 1,
+    "hijos": [
+      { "id_menu": 2, "nombre": "Dashboard", "ruta": "dashboard", "orden": 1 },
+      { "id_menu": 3, "nombre": "Usuarios", "ruta": "usuarios", "orden": 2 },
+      { "id_menu": 4, "nombre": "Roles", "ruta": "roles", "orden": 3 },
+      { "id_menu": 5, "nombre": "Permisos", "ruta": "permisos", "orden": 4 },
+      { "id_menu": 6, "nombre": "Menús", "ruta": "menus", "orden": 5 },
+      { "id_menu": 19, "nombre": "Tipos de Usuario", "ruta": "tipos-usuarios", "orden": 6 },
+      { "id_menu": 20, "nombre": "Jerarquías", "ruta": "jerarquias", "orden": 7 },
+      { "id_menu": 21, "nombre": "Estados", "ruta": "estados", "orden": 8 },
+      { "id_menu": 22, "nombre": "Búsquedas", "ruta": "busquedas/general", "orden": 9 },
+      { "id_menu": 30, "nombre": "Aplicaciones", "ruta": "aplicaciones-sitio", "orden": 10 },
+      { "id_menu": 31, "nombre": "Auditoría", "ruta": "auditoria", "orden": 11 },
+      { "id_menu": 35, "nombre": "Sitios", "ruta": "sitios", "orden": 12 },
+      { "id_menu": 7, "nombre": "Configuración", "ruta": "configuracion", "orden": 100 },
+      { "id_menu": 8, "nombre": "Mi Perfil", "ruta": "perfil", "orden": 101 }
+    ]
+  }
+]

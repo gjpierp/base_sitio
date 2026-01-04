@@ -1,0 +1,42 @@
+<ui-card [title]="title">
+  <div *ngIf="loading" class="spinner-wrap"><ui-spinner></ui-spinner></div>
+
+  <div *ngIf="!loading">
+    <form (ngSubmit)="guardar()" class="form-theme">
+      <label>
+        Nombre
+        <input type="text" [(ngModel)]="modelo.nombre" name="nombre" required />
+      </label>
+
+      <label>
+        Color primario
+        <input type="color" [(ngModel)]="modelo.primaryColor" name="primaryColor" />
+      </label>
+
+      <label>
+        Color secundario
+        <input type="color" [(ngModel)]="modelo.secondaryColor" name="secondaryColor" />
+      </label>
+
+      <label>
+        Descripción
+        <textarea [(ngModel)]="modelo.description" name="description"></textarea>
+      </label>
+
+      <div
+        class="preview"
+        [style.--primary]="modelo.primaryColor"
+        [style.--secondary]="modelo.secondaryColor"
+      >
+        <div class="preview-box">Vista previa</div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">Guardar</button>
+        <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+      </div>
+
+      <div *ngIf="error" class="error">{{ error }}</div>
+    </form>
+  </div>
+</ui-card>

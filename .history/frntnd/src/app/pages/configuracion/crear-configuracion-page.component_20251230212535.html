@@ -1,0 +1,34 @@
+<ui-card [title]="title">
+  <div *ngIf="loading" class="spinner-wrap"><ui-spinner></ui-spinner></div>
+
+  <div *ngIf="!loading">
+    <form (ngSubmit)="guardar()" class="form-config">
+      <label>
+        Clave
+        <input type="text" [(ngModel)]="modelo.clave" name="clave" required />
+      </label>
+
+      <label>
+        Valor
+        <input type="text" [(ngModel)]="modelo.valor" name="valor" required />
+      </label>
+
+      <label>
+        Descripción
+        <textarea [(ngModel)]="modelo.descripcion" name="descripcion"></textarea>
+      </label>
+
+      <label>
+        Activo
+        <input type="checkbox" [(ngModel)]="modelo.activo" name="activo" />
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">Guardar</button>
+        <button type="button" class="btn" (click)="cancelar()">Cancelar</button>
+      </div>
+
+      <div *ngIf="error" class="error">{{ error }}</div>
+    </form>
+  </div>
+</ui-card>

@@ -1,0 +1,1702 @@
+﻿{
+  "info": {
+    "name": "API-Admin-Sitio",
+    "_postman_id": "f0f0c2a1-aaaa-bbbb-cccc-admin-sitio",
+    "description": "Colección de endpoints del Admin del Sitio VVFF. Usa variables {{baseUrl}} y {{x-token}}. Las carpetas tienen iconos y colores (emojis) y cada endpoint tiene icono.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Añade automáticamente headers opcionales (x-token y x-db-profile)",
+          "const token = pm.variables.get(\u0027x-token\u0027) || pm.environment.get(\u0027x-token\u0027);",
+          "if (token) {",
+          "  const existing = pm.request.headers.get(\u0027x-token\u0027);",
+          "  if (!existing) pm.request.headers.add({ key: \u0027x-token\u0027, value: token });",
+          "}",
+          "const dbProfile = pm.variables.get(\u0027x-db-profile\u0027) || pm.environment.get(\u0027x-db-profile\u0027) || \u0027admin\u0027;",
+          "if (dbProfile) {",
+          "  const existingDb = pm.request.headers.get(\u0027x-db-profile\u0027);",
+          "  if (!existingDb) pm.request.headers.add({ key: \u0027x-db-profile\u0027, value: dbProfile });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Mantener consistencia: mostrar estado y cuerpo mínimo",
+          "pm.test(\u0027Estado HTTP válido\u0027, function () {",
+          "  pm.expect(pm.response.code).to.be.within(200, 404);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "baseurl",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "base_url",
+      "value": "http://localhost:3005",
+      "type": "string"
+    },
+    {
+      "key": "x-token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "x-db-profile",
+      "value": "admin",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticación ",
+      "description": "Endpoints de autenticación",
+      "item": [
+        {
+          "name": "🔑 Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@example.com\",\n  \"contrasena\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔁 Cambiar contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/cambiar-contrasena",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "cambiar-contrasena"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@example.com\",\n  \"contrasena_actual\": \"********\",\n  \"contrasena_nueva\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "📝 Registro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/registro",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "registro"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"usuario@example.com\",\n  \"nombre_usuario\": \"usuario\",\n  \"contrasena\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔄 Renew Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/renew",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "renew"]
+            }
+          }
+        },
+        {
+          "name": "🔵 Google Sign-In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "google"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"google_oauth_token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔵 Facebook Sign-In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/facebook",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "facebook"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"facebook_access_token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🚪 Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/login/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "login", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios ",
+      "description": "Gestión de usuarios",
+      "item": [
+        {
+          "name": "📄 Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre_usuario\": \"user\",\n  \"contrasena\": \"********\",\n  \"correo_electronico\": \"user@example.com\",\n  \"nombres\": \"Nombre\",\n  \"apellidos\": \"Apellido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Actualizar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Borrar usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🧩 Asignar roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "roles", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roles\": [1,2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🧩 Obtener roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "roles", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔐 Permisos del usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "permisos", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔁 Cambiar contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/cambiar-contrasena/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "cambiar-contrasena", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasena_actual\": \"********\",\n  \"contrasena_nueva\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "♻️ Resetear contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/resetear-contrasena:id/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "resetear-contrasena:id", ""]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contrasena_nueva\": \"********\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios", "buscar", "id", "{{id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Roles ",
+      "description": "Gestión de roles",
+      "item": [
+        {
+          "name": "📄 Listar roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar rol por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "buscar", "id", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Detalle rol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear rol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Administrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar rol",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar rol",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🧩 Asignar permisos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "permisos", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permisos\": [1,2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔏 Permisos del rol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "permisos", ":id"]
+            }
+          }
+        },
+        {
+          "name": "👥 Usuarios del rol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/:id/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", ":id", "usuarios"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔏 Permisos",
+      "description": "Gestión de permisos",
+      "item": [
+        {
+          "name": "📄 Listar permisos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Detalle permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", ":id"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"PERMISOS_VER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar permiso",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar permiso",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🧩 Roles del permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/roles/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", "roles", ":id"]
+            }
+          }
+        },
+        {
+          "name": "📋 Menús del permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/menus/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", "menus", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Menús",
+      "description": "Gestión de menús",
+      "item": [
+        {
+          "name": "📄 Listar menús",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus"]
+            }
+          }
+        },
+        {
+          "name": "🌳 Árbol de menús",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/arbol",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "arbol"]
+            }
+          }
+        },
+        {
+          "name": "👤 Menús del usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/usuario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "usuario"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Detalle menú",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar menús",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar menú por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "buscar", "id", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Menús por IDs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/ids?ids=1,2,3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "ids"],
+              "query": [
+                {
+                  "key": "ids",
+                  "value": "1,2,3"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear menú",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar menú",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar menú",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🧩 Asignar permisos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "permisos", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permisos\": [1,2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "🔏 Permisos del menú",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/permisos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "permisos", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Estados",
+      "description": "Gestión de estados",
+      "item": [
+        {
+          "name": "📄 Listar estados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Estado por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar estados",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar estado por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados", "buscar", "id", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear estado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"ACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar estado",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"INACTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar estado",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estados/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estados", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 Tipos de Usuario",
+      "description": "Gestión de tipos de usuario",
+      "item": [
+        {
+          "name": "📄 Listar tipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario"]
+            }
+          }
+        },
+        {
+          "name": "📄 Listar tipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-usuarios"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Tipo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar tipos (texto)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar tipo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario", "buscar", "id", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Tipo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos-usuarios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos-usuarios", ":id"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear tipo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"ADMIN\",\n  \"id_estado\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar tipo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar tipo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tipos_usuario/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tipos_usuario", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧱 Jerarquías",
+      "description": "Gestión de jerarquías",
+      "item": [
+        {
+          "name": "📄 Listar jerarquías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Obtener jerarquía por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", ":id"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar jerarquías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar jerarquía por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/buscar/id/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", "buscar", "id", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "🔎 Buscar jerarquía por nombre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/buscar/nombre/{{nombre}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", "buscar", "nombre", "{{nombre}}"]
+            }
+          }
+        },
+        {
+          "name": "➕ Crear jerarquía",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Gerencia\",\n  \"descripcion\": \"Descripción de la jerarquía\",\n  \"id_jerarquia_padre\": null,\n  \"id_estado\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "✏️ Editar jerarquía",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", ":id"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Gerencia Mod\",\n  \"id_jerarquia_padre\": null,\n  \"id_estado\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "❌ Eliminar jerarquía",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jerarquias/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "jerarquias", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🟨 Auditoría 📝",
+      "description": "Logs de auditoría",
+      "item": [
+        {
+          "name": "📄 Listar auditoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditoria",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditoria"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 Historial Accesos",
+      "item": [
+        {
+          "name": "📄 Listar accesos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/historial_accesos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "historial_accesos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📜 Historial Acciones",
+      "item": [
+        {
+          "name": "📄 Listar acciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/historial_acciones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "historial_acciones"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 Historial Contraseñas",
+      "item": [
+        {
+          "name": "📄 Listar contraseñas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/historial_contrasenas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "historial_contrasenas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔗 Roles-Permisos",
+      "item": [
+        {
+          "name": "📄 Listar roles-permisos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles_permisos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles_permisos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios-Roles",
+      "item": [
+        {
+          "name": "📄 Listar usuarios-roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios_roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios_roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤🧱 Usuarios-Jerarquías",
+      "item": [
+        {
+          "name": "📄 Listar usuarios-jerarquías",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios_jerarquias",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usuarios_jerarquias"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔎 Búsquedas ",
+      "item": [
+        {
+          "name": "📄 Todo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "todo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "⬆️ Uploads ",
+      "item": [
+        {
+          "name": "⬆️ Subir archivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/uploads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "uploads"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🌐 Sitios — Gestión de Sitios",
+      "description": "Carpeta para CRUD de Sitios (icono web / sitio).",
+      "item": [
+        {
+          "name": "📋 Listar Sitios",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔍 Obtener Sitio por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "➕ Crear Sitio",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mi Sitio\",\n  \"codigo\": \"mi-sitio\",\n  \"descripcion\": \"Descripción del sitio\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✏️ Actualizar Sitio",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mi Sitio Mod\",\n  \"codigo\": \"mi-sitio\",\n  \"descripcion\": \"Descripción actualizada\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ Eliminar Sitio",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/sitios/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sitios", ":id"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧩 Gestión de Aplicaciones",
+      "description": "Carpeta para CRUD de Aplicaciones por Sitio (icono app / módulo).",
+      "item": [
+        {
+          "name": "📋 Listar Aplicaciones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔍 Obtener Aplicación por ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "➕ Crear Aplicación",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_sitio\": 1,\n  \"nombre\": \"Mi App\",\n  \"clave\": \"mi-app\",\n  \"descripcion\": \"Descripción de la aplicación\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "✏️ Actualizar Aplicación",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_sitio\": 1,\n  \"nombre\": \"Mi App Mod\",\n  \"clave\": \"mi-app\",\n  \"descripcion\": \"Descripción actualizada\",\n  \"activo\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ Eliminar Aplicación",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/aplicaciones_sitio/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "aplicaciones_sitio", ":id"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔎 Búsquedas",
+      "description": "Colección rápida de endpoints de búsqueda (global y por colección).",
+      "item": [
+        {
+          "name": "🔎 Todo (global)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/todo?q=buscar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "todo"],
+              "query": [{ "key": "q", "value": "buscar" }]
+            }
+          }
+        },
+        {
+          "name": "📂 Colección - roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/roles/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "roles", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "📂 Colección - permisos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/permisos/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "permisos", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "📂 Colección - menus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "menus", "buscar", "{{q}}"]
+            }
+          }
+        },
+        {
+          "name": "📂 Colección - configuraciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/configuraciones/buscar/{{q}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "configuraciones", "buscar", "{{q}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div class="spread" style="margin-bottom: 1rem">
+      <ui-spinner *ngIf="loading" label="Cargando"></ui-spinner>
+      <div *ngIf="!loading && error" class="muted">{{ error }}</div>
+    </div>
+    <div *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [total]="data.length"
+        [columns]="columns"
+        [data]="data"
+        [loading]="loading"
+        [error]="error"
+      ></ui-entity-table>
+    </div>
+  </ui-card>
+</div>

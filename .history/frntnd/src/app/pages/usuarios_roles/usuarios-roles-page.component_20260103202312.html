@@ -1,0 +1,25 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div class="spread" style="margin-bottom: 1rem">
+      <ng-container *ngIf="loading">
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [total]="total"
+        [columns]="columns"
+        [data]="data"
+        [loading]="loading"
+        [error]="error"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+      ></ui-entity-table>
+    </ng-container>
+  </ui-card>
+</div>

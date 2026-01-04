@@ -1,0 +1,130 @@
+.ui-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background: var(--bg-sidebar) !important;
+  color: var(--sidebar-text, var(--color-text-inverse)) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--border-radius, 12px);
+  box-shadow: var(--shadow, 0 2px 12px rgba(60, 60, 60, 0.08));
+}
+
+/* Use host selectors so the collapsed state on the host element
+   reliably afects child labels regardless of view encapsulation */
+:host(.collapsed),
+.ui-sidebar.collapsed {
+  width: 68px;
+  min-width: 68px;
+}
+
+:host .sidebar-text,
+:host .name,
+.ui-sidebar .sidebar-text,
+.ui-sidebar .name {
+  transition: opacity 120ms ease, width 120ms ease, visibility 120ms ease;
+}
+
+:host(.collapsed) .name,
+:host(.collapsed) .sidebar-text,
+.ui-sidebar.collapsed .name,
+.ui-sidebar.collapsed .sidebar-text .span {
+  opacity: 0;
+  width: 0;
+  max-width: 0;
+  overflow: hidden;
+  visibility: hidden;
+  display: inline-block;
+}
+
+/* Al estar colapsado, centrar iconos y quitar padding lateral */
+:host(.collapsed) nav,
+.ui-sidebar.collapsed nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:host(.collapsed) .brand,
+.ui-sidebar.collapsed .brand {
+  justify-content: center;
+}
+
+/* On small viewports always show icons-only mode */
+@media (max-width: 820px) {
+  .ui-sidebar {
+    width: 68px;
+    min-width: 68px;
+  }
+  .ui-sidebar .name,
+  .ui-sidebar .sidebar-text .span {
+    opacity: 0;
+    width: 0;
+    max-width: 0;
+    overflow: hidden;
+    visibility: hidden;
+    display: inline-block;
+  }
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg-logo);
+  color: var(--color-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+.name {
+  white-space: nowrap;
+}
+.section {
+  margin: 10px 0 6px;
+}
+
+.icon-btn {
+  background: var(--bg-sidebar-active);
+  color: var(--sidebar-text, var(--color-text-inverse));
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  background: var(--bg-sidebar);
+}
+
+/* Hacer transparente el fondo de botones icon-btn dentro del sidebar (p.ej. el icono "refresh") */
+.ui-sidebar .icon-btn {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 4px !important;
+  border-radius: 0 !important;
+}
+
+/* Asegurar que el span del icono no tenga fondo */
+.ui-sidebar .icon-btn .material-symbols-outlined {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
