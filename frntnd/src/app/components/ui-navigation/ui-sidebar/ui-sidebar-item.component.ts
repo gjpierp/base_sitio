@@ -40,10 +40,80 @@ export class UiSidebarItemComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
+  /** Maneja clicks en enlaces del flyout cuando el sidebar está colapsado. */
+  onFlyoutLinkClick(event: Event, child: any) {
+    try {
+      event.preventDefault();
+      event.stopPropagation();
+    } catch {}
+    // Cerrar el flyout global y local
+    try {
+      const mine = this.itemId;
+      if (mine) this.sidebarState.setOpenFlyout(null);
+    } catch {}
+    this.showFlyout = false;
+
+    // Marcar sidebar como colapsado en localStorage (consistencia) y emitir evento para layout
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('sidebarCollapsed', '1');
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('sidebar:collapse', { detail: { collapsed: true } }));
+      } catch {}
+    } catch {}
+
+    // Navegar a la ruta si existe
+    const ruta = child?.ruta || child?.url || null;
+    if (ruta) {
+      try {
+        this.router.navigate([ruta]);
+      } catch {
+        try {
+          (window as any).location.href = ruta;
+        } catch {}
+      }
+    }
+  }
+
   // Click manejado en el contenedor: hacer que toda la linea navegue o expanda
   onContainerClick(event: Event) {
     // Evitar que doble manejo ocurra si el click vino de elementos internos que ya manejan el evento
     const target = event.target as HTMLElement | null;
+    const hasChildren = this.item?.hijos?.length || this.item?.submenu?.length;
+    const ruta = this.item?.ruta || this.item?.url || null;
+
+    // Detectar estado colapsado del sidebar lo antes posible: si está colapsado y el item tiene hijos
+    // debemos abrir el flyout incluso si el click ocurrió sobre un <a> o <button> interno.
+    const sidebarEl = this.elRef.nativeElement.closest('.ui-sidebar') as HTMLElement | null;
+    const isCollapsed = !!(sidebarEl && sidebarEl.classList.contains('collapsed'));
+    if (hasChildren && isCollapsed) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showFlyout = !this.showFlyout;
+      const mine = this.itemId;
+      if (this.showFlyout) {
+        if (mine) this.sidebarState.setOpenFlyout(mine);
+        try {
+          const sidebarRect = sidebarEl
+            ? sidebarEl.getBoundingClientRect()
+            : ({ right: 68 } as any);
+          const itemRect = this.elRef.nativeElement.getBoundingClientRect();
+          const top = itemRect.top;
+          const left = (sidebarRect.right || sidebarRect.width || 68) + 8;
+          this.flyoutStyle = { position: 'fixed', top: `${top}px`, left: `${left}px` };
+        } catch {
+          this.flyoutStyle = { position: 'fixed', top: '0px', left: '68px' };
+        }
+      } else {
+        try {
+          const current = this.sidebarState.getOpenFlyout();
+          if (current === mine) this.sidebarState.setOpenFlyout(null);
+        } catch {}
+      }
+      return;
+    }
+
     // Si el target es un link o dentro de un link, dejar que el comportamiento por defecto ocurra
     if (target) {
       const anchor = target.closest('a');
@@ -54,42 +124,8 @@ export class UiSidebarItemComponent implements OnInit, OnDestroy {
       }
     }
 
-    const hasChildren = this.item?.hijos?.length || this.item?.submenu?.length;
-    const ruta = this.item?.ruta || this.item?.url || null;
-
     if (hasChildren) {
-      // Si el sidebar está colapsado, abrir flyout; si no, alternar expansión
-      const sidebarEl = this.elRef.nativeElement.closest('.ui-sidebar') as Element | null;
-      const isCollapsed = !!(sidebarEl && sidebarEl.classList.contains('collapsed'));
-      if (isCollapsed) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.showFlyout = !this.showFlyout;
-        const mine = this.itemId;
-        if (this.showFlyout) {
-          if (mine) this.sidebarState.setOpenFlyout(mine);
-          try {
-            const sidebarEl2 = this.elRef.nativeElement.closest(
-              '.ui-sidebar'
-            ) as HTMLElement | null;
-            const sidebarRect = sidebarEl2
-              ? sidebarEl2.getBoundingClientRect()
-              : ({ right: 68 } as any);
-            const itemRect = this.elRef.nativeElement.getBoundingClientRect();
-            const top = Math.max(8, itemRect.top + itemRect.height / 2 - 20);
-            const left = (sidebarRect.right || sidebarRect.width || 68) + 8;
-            this.flyoutStyle = { position: 'fixed', top: `${top}px`, left: `${left}px` };
-          } catch {
-            this.flyoutStyle = { position: 'fixed', top: '0px', left: '68px' };
-          }
-        } else {
-          try {
-            const current = this.sidebarState.getOpenFlyout();
-            if (current === mine) this.sidebarState.setOpenFlyout(null);
-          } catch {}
-        }
-        return;
-      }
+      // no estamos en colapsado — alternar expansión (comportamiento por defecto)
       event.preventDefault();
       event.stopPropagation();
       this.toggleExpand();
@@ -187,8 +223,8 @@ export class UiSidebarItemComponent implements OnInit, OnDestroy {
   onItemClick(event: Event) {
     const hasChildren = this.item?.hijos?.length || this.item?.submenu?.length;
     if (hasChildren) {
-      // Si el sidebar está colapsado, mostrar flyout con hijos sin expandir el menu
-      const sidebarEl = this.elRef.nativeElement.closest('.ui-sidebar') as Element | null;
+      // Si el sidebar está colapsado, mostrar flyout con hijos AL LADO del sidebar
+      const sidebarEl = this.elRef.nativeElement.closest('.ui-sidebar') as HTMLElement | null;
       const isCollapsed = !!(sidebarEl && sidebarEl.classList.contains('collapsed'));
       if (isCollapsed) {
         event.preventDefault();
@@ -197,15 +233,13 @@ export class UiSidebarItemComponent implements OnInit, OnDestroy {
         const mine = this.itemId;
         if (this.showFlyout) {
           if (mine) this.sidebarState.setOpenFlyout(mine);
-          // calcular posicion fija del flyout para alinearlo con la linea del item
+          // calcular posicion fija del flyout para mostrarlo AL LADO del sidebar
           try {
-            const sidebarEl = this.elRef.nativeElement.closest('.ui-sidebar') as HTMLElement | null;
             const sidebarRect = sidebarEl
               ? sidebarEl.getBoundingClientRect()
               : ({ right: 68 } as any);
             const itemRect = this.elRef.nativeElement.getBoundingClientRect();
-            // Ajustar top para centrar en la linea del icono
-            const top = Math.max(8, itemRect.top + itemRect.height / 2 - 20);
+            const top = itemRect.top;
             const left = (sidebarRect.right || sidebarRect.width || 68) + 8;
             this.flyoutStyle = { position: 'fixed', top: `${top}px`, left: `${left}px` };
           } catch {

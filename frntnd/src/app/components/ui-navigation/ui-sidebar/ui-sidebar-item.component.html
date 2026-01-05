@@ -16,7 +16,15 @@
     [attr.title]="item.nombre || item.titulo"
   >
     @if (item.icono) {
-    <span class="material-symbols-outlined">{{ item.icono }}</span>
+    <span
+      class="material-symbols-outlined"
+      [ngClass]="{
+        'icon-edit': item.icono === 'edit',
+        'icon-delete': item.icono === 'delete',
+        'icon-add': item.icono === 'add'
+      }"
+      >{{ item.icono }}</span
+    >
     }
     <span class="sidebar-text">{{ item.nombre || item.titulo }}</span>
   </a>
@@ -47,6 +55,11 @@
     @if (item.icono) {
     <span
       class="material-symbols-outlined"
+      [ngClass]="{
+        'icon-edit': item.icono === 'edit',
+        'icon-delete': item.icono === 'delete',
+        'icon-add': item.icono === 'add'
+      }"
       (click)="$event.stopPropagation(); onItemClick($event)"
       >{{ item.icono }}</span
     >
@@ -69,7 +82,7 @@
       @for (child of getChildItems(); track child.id_menu) {
       <a
         [routerLink]="child.ruta || child.url"
-        (click)="$event.stopPropagation()"
+        (click)="onFlyoutLinkClick($event, child)"
         title="{{ child.nombre }}"
       >
         @if (child.icono) { <span class="material-symbols-outlined">{{ child.icono }}</span> }

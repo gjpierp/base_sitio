@@ -9,13 +9,20 @@ import { CommonModule } from '@angular/common';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import { ApiService } from '../../services/api.service';
 import { Permission } from '../../models/permission';
 
 @Component({
   selector: 'page-permisos',
   standalone: true,
-  imports: [CommonModule, UiCardComponent, UiSpinnerComponent, UiEntityTableComponent],
+  imports: [
+    CommonModule,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiEntityTableComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './permisos-page.component.html',
   styleUrls: ['./permisos-page.component.css'],
 })
@@ -175,6 +182,7 @@ export class PermisosPageComponent {
           const mapped = rows.map((r: any) => ({
             id: r.id_permiso ?? r.id ?? '',
             codigo: r.codigo ?? r.nombre ?? '',
+            nombre: r.codigo ?? r.nombre ?? '',
             descripcion: r.descripcion ?? undefined,
           }));
           const ordered = applySort(mapped);
@@ -228,6 +236,12 @@ export class PermisosPageComponent {
     this.editCodigo = row?.codigo ?? row?.nombre ?? '';
     this.editDescripcion = row?.descripcion ?? '';
     this.editOpen = true;
+  }
+
+  onCreate() {
+    try {
+      this.router.navigate(['/permisos/crear']);
+    } catch {}
   }
 
   /**
@@ -311,11 +325,12 @@ export class PermisosPageComponent {
   }
 
   private normalizePermiso(r: any) {
-    if (!r || typeof r !== 'object') return { id: '', codigo: '', descripcion: '' };
+    if (!r || typeof r !== 'object') return { id: '', codigo: '', nombre: '', descripcion: '' };
     const id = r.id_permiso ?? r.id ?? r.ID ?? r.permiso_id ?? '';
     const codigo = r.codigo ?? r.codigo_permiso ?? r.cod ?? r.nombre ?? r.nombre_permiso ?? '';
     const descripcion = r.descripcion ?? r.desc ?? r.descripcion_permiso ?? undefined;
-    return { id, codigo, descripcion };
+    const nombre = codigo ?? descripcion ?? '';
+    return { id, codigo, nombre, descripcion };
   }
 
   // Normalized handlers for templates expecting onEdit/onRemove

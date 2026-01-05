@@ -1,12 +1,15 @@
 import { firstValueFrom } from 'rxjs';
 
 export function setupList(thisRef: any, endpoint: string, preKey: string, mapFn: (r: any) => any) {
+  // Solo logs principales en el flujo de API
+
   const pre = ((thisRef.route?.snapshot?.data as any) || {})['pre'];
   if (pre && Array.isArray(pre[preKey])) {
     const rows = pre[preKey];
     thisRef.data = rows.map(mapFn);
     thisRef.total = Number(pre.total) || thisRef.data.length || 0;
     thisRef.datosListos = true;
+    console.log(`[setupList] loaded ${endpoint} from preloaded data, total: ${thisRef.total}`);
     try {
       thisRef.cdr?.detectChanges();
     } catch {}
@@ -19,7 +22,6 @@ export function setupList(thisRef: any, endpoint: string, preKey: string, mapFn:
   thisRef.api.getPaginated(endpoint, { desde: 0 }).subscribe({
     next: (res: any) => {
       try {
-        console.debug('[setupList] response for', endpoint, res);
       } catch {}
       const rows = res?.data || [];
       thisRef.data = rows.map(mapFn);
@@ -28,11 +30,10 @@ export function setupList(thisRef: any, endpoint: string, preKey: string, mapFn:
       thisRef.datosListos = true;
       try {
         thisRef.cdr?.detectChanges();
-      } catch {}
+      } catch (e) {}
     },
     error: (err: any) => {
       try {
-        console.error('[setupList] error loading', endpoint, err);
       } catch {}
       thisRef.error = (err as any)?.error?.msg || `Error al cargar ${endpoint}`;
       thisRef.data = [];
@@ -481,6 +482,9 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
         thisRef.modalDeleteMode = false;
         thisRef.modalEditingId = null;
         try {
+          thisRef.cdr?.detectChanges();
+        } catch {}
+        try {
           if (typeof thisRef.load === 'function') await thisRef.load();
           if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
           if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
@@ -488,7 +492,6 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
         return true;
       } catch (err) {
         try {
-          console.error('[onModalConfirmGeneric] delete error', err);
         } catch {}
         try {
           const { default: Swal } = await import('sweetalert2');
@@ -499,7 +502,7 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
       }
     }
 
-    // create
+    // create or update
     try {
       thisRef.modalSaving = true;
       // Build payload with basic validation and type conversion
@@ -509,10 +512,25 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
         const k = f.key;
         let v = (thisRef.modalValues || {})[k];
         if (typeof v === 'string') v = v.trim();
-        // Required check
-        if (v === '' || v === null || v === undefined) {
+        // Required check (only enforced on create), ignorando 'configuracion_por_defecto' y 'id_configuracion_default'
+        const ignoreRequired = ['configuracion_por_defecto', 'id_configuracion_default'];
+        if (
+          !f.hidden &&
+          !thisRef.modalEditingId &&
+          (v === '' || v === null || v === undefined) &&
+          !ignoreRequired.includes(k)
+        ) {
+          // Si el campo está en la lista de ignorados, no validar como requerido
+          if (ignoreRequired.includes(k)) {
+            payload[k] = v;
+            continue;
+          }
           try {
             const { default: Swal } = await import('sweetalert2');
+            thisRef.modalOpen = false;
+            try {
+              thisRef.cdr?.detectChanges();
+            } catch {}
             await Swal.fire('Error', `El campo "${f.label}" es requerido.`, 'error');
           } catch {}
           thisRef.modalSaving = false;
@@ -537,17 +555,69 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
         if (v === 'false') v = false;
         payload[k] = v;
       }
+      // Remove id if empty (backend usually generates it on create, or it's in URL on update)
+      if (payload.id === '' || payload.id === null || payload.id === undefined) {
+        delete payload.id;
+      }
+      // If editing, perform update; otherwise create
+      const id = thisRef.modalEditingId ?? null;
       try {
-        console.debug('[onModalConfirmGeneric] creating', endpoint, payload);
+        // For usuarios endpoint, ensure backend-required fields exist when creating
+        if (!id && String(endpoint).toLowerCase() === 'usuarios') {
+          try {
+            if (!payload.contrasena) {
+              const rand = Math.random().toString(36).slice(2, 8);
+              payload.contrasena = `Pwd${rand}`; // >=6 chars
+            }
+            const nombreUsuario = payload.nombre_usuario || payload.nombre || '';
+            if (!payload.nombres) {
+              const parts = String(nombreUsuario || '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
+              payload.nombres = parts.length
+                ? parts[0]
+                : (payload.correo_electronico || 'Usuario').split('@')[0];
+            }
+            if (!payload.apellidos) {
+              const parts = String(nombreUsuario || '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
+              payload.apellidos = parts.length > 1 ? parts.slice(1).join(' ') : 'N/A';
+            }
+          } catch (e) {
+            try {
+            } catch {}
+          }
+        }
+        // '[onModalConfirmGeneric] submit', // Línea eliminada por error de sintaxis
+        // Si necesitas loggear, usa console.log:
+        // console.log('[onModalConfirmGeneric] submit', endpoint, id ? `update ${id}` : 'create', payload);
+        // ...existing code...
       } catch {}
-      const { default: Swal } = await import('sweetalert2');
-      const res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
-      try {
-        console.debug('[onModalConfirmGeneric] create response', res);
-      } catch {}
-      await Swal.fire('Guardado', 'Elemento creado', 'success');
+
       thisRef.modalOpen = false;
       thisRef.modalSaving = false;
+      try {
+        thisRef.cdr?.detectChanges();
+      } catch {}
+      const { default: Swal } = await import('sweetalert2');
+      if (id && typeof id !== 'undefined' && id !== null && id !== '') {
+        // update
+        console.log('[PUT usuarios] Payload enviado:', payload);
+        const res = await firstValueFrom(thisRef.api.put(`${endpoint}/${id}`, payload) as any);
+        try {
+        } catch {}
+        await Swal.fire('Guardado', 'Elemento actualizado', 'success');
+      } else {
+        // create
+        console.log('[POST usuarios] Payload enviado:', payload);
+        const res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
+        try {
+        } catch {}
+        await Swal.fire('Guardado', 'Elemento creado', 'success');
+      }
       try {
         if (typeof thisRef.load === 'function') await thisRef.load();
         if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
@@ -556,11 +626,14 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
       return true;
     } catch (err) {
       try {
-        console.error('[onModalConfirmGeneric] create error', err);
       } catch {}
       thisRef.modalSaving = false;
       try {
         const { default: Swal } = await import('sweetalert2');
+        thisRef.modalOpen = false;
+        try {
+          thisRef.cdr?.detectChanges();
+        } catch {}
         const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
         await Swal.fire('Error', msg || 'No se pudo crear', 'error');
       } catch {}

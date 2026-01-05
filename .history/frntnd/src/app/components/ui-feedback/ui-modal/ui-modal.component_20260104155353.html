@@ -1,0 +1,18 @@
+<div class="modal" [hidden]="!open" aria-hidden="{{!open}}">
+  <div class="backdrop" (click)="onBackdropClick()"></div>
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="header">
+      <h3 class="title">{{ title }}</h3>
+      <button class="icon-btn" aria-label="Cerrar" (click)="close()">✕</button>
+    </div>
+    <div class="content">
+      <div class="slot-grid">
+        <ng-content></ng-content>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn secondary" (click)="close()">{{ cancelLabel }}</button>
+      <button class="btn primary" (click)="confirm()">{{ confirmLabel }}</button>
+    </div>
+  </div>
+</div>

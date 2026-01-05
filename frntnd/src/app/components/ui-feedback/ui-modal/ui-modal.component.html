@@ -1,20 +1,24 @@
-<ng-container *ngIf="open">
-  <div class="modal">
-    <div class="backdrop" (click)="onBackdropClick()"></div>
-    <div class="dialog" role="dialog" aria-modal="true">
-      <div class="header">
-        <h3 class="title">{{ title }}</h3>
-        <button class="icon-btn" aria-label="Cerrar" (click)="close()">✕</button>
-      </div>
-      <div class="content">
-        <div class="slot-grid">
-          <ng-content></ng-content>
-        </div>
-      </div>
-      <div class="footer">
-        <button class="btn secondary" (click)="close()">{{ cancelLabel }}</button>
-        <button class="btn primary" (click)="confirm()">{{ confirmLabel }}</button>
+<div class="modal" [hidden]="!isOpen" aria-hidden="{{ !isOpen }}">
+  <div class="backdrop" (click)="onBackdropClick()"></div>
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="header">
+      <h3 class="title">{{ title }}</h3>
+      <button class="btn secondary btn-cancel" (click)="close()" [attr.aria-label]="cancelLabel">
+        <span class="icon material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+    <div class="content">
+      <div class="slot-grid">
+        <ng-content></ng-content>
       </div>
     </div>
+    <div class="footer">
+      <button class="btn secondary btn-cancel" (click)="close()" [attr.aria-label]="cancelLabel">
+        <span class="icon material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+      <button class="btn primary btn-confirm" (click)="confirm()" [attr.aria-label]="confirmLabel">
+        <span class="icon material-symbols-outlined" aria-hidden="true">check</span>
+      </button>
+    </div>
   </div>
-</ng-container>
+</div>

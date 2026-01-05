@@ -1,0 +1,129 @@
+{
+  "table": "adm_usuarios",
+  "columns": [
+    {
+      "name": "id_usuario",
+      "type": "int",
+      "nullable": false,
+      "auto_increment": true,
+      "comment": "Identificador único del usuario"
+    },
+    {
+      "name": "nombre_usuario",
+      "type": "varchar(50)",
+      "nullable": false,
+      "auto_increment": false,
+      "comment": "Nombre de usuario"
+    },
+    {
+      "name": "correo_electronico",
+      "type": "varchar(100)",
+      "nullable": false,
+      "auto_increment": false,
+      "comment": "Correo electrónico único para login"
+    },
+    {
+      "name": "hash_contrasena",
+      "type": "varchar(255)",
+      "nullable": false,
+      "auto_increment": false,
+      "comment": "Hash de la contraseña"
+    },
+    {
+      "name": "fecha_cambio_contrasena",
+      "type": "datetime",
+      "nullable": true,
+      "auto_increment": false
+    },
+    {
+      "name": "id_tipo_usuario",
+      "type": "int",
+      "nullable": false,
+      "auto_increment": false,
+      "comment": "Tipo de usuario"
+    },
+    {
+      "name": "fecha_creacion",
+      "type": "datetime",
+      "nullable": true,
+      "default": "CURRENT_TIMESTAMP",
+      "auto_increment": false,
+      "comment": "Fecha de creación"
+    },
+    {
+      "name": "fecha_actualizacion",
+      "type": "datetime",
+      "nullable": true,
+      "default": "CURRENT_TIMESTAMP",
+      "auto_increment": false,
+      "comment": "Fecha de última actualización"
+    },
+    {
+      "name": "id_estado",
+      "type": "int",
+      "nullable": true,
+      "default": "1",
+      "auto_increment": false,
+      "comment": "Estado del usuario"
+    },
+    {
+      "name": "img",
+      "type": "varchar(255)",
+      "nullable": true,
+      "auto_increment": false
+    },
+    {
+      "name": "activo",
+      "type": "int",
+      "nullable": true,
+      "default": "1",
+      "auto_increment": false
+    },
+    {
+      "name": "id_configuracion_default",
+      "type": "int",
+      "nullable": true,
+      "auto_increment": false
+    },
+    {
+      "name": "nombres",
+      "type": "varchar(100)",
+      "nullable": true,
+      "auto_increment": false
+    },
+    {
+      "name": "apellidos",
+      "type": "varchar(100)",
+      "nullable": true,
+      "auto_increment": false
+    }
+  ],
+  "primaryKey": ["id_usuario"],
+  "uniqueKeys": {},
+  "keys": {
+    "adm_usuarios_ibfk_1": ["id_tipo_usuario"],
+    "correo_electronico": ["correo_electronico"],
+    "fk_usuario_estado": ["id_estado"],
+    "fk_usuarios_conf_default": ["id_configuracion_default"]
+  },
+  "foreignKeys": [
+    {
+      "constraint": "adm_usuarios_ibfk_1",
+      "columns": ["id_tipo_usuario"],
+      "referencedTable": "adm_tipos_usuario",
+      "referencedColumns": ["id_tipo_usuario"]
+    },
+    {
+      "constraint": "fk_usuarios_conf_default",
+      "columns": ["id_configuracion_default"],
+      "referencedTable": "adm_configuraciones_tema",
+      "referencedColumns": ["id_config"]
+    },
+    {
+      "constraint": "fk_usuario_estado",
+      "columns": ["id_estado"],
+      "referencedTable": "adm_estados",
+      "referencedColumns": ["id_estado"]
+    }
+  ]
+}

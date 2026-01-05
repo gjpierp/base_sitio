@@ -6,13 +6,21 @@ import { FormsModule } from '@angular/forms';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'page-usuarios-jerarquias',
   standalone: true,
-  imports: [CommonModule, UiCardComponent, UiSpinnerComponent, FormsModule, UiEntityTableComponent],
+  imports: [
+    CommonModule,
+    UiCardComponent,
+    UiSpinnerComponent,
+    FormsModule,
+    UiEntityTableComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './usuarios-jerarquias-page.component.html',
   styleUrls: ['./usuarios-jerarquias-page.component.css'],
 })
@@ -106,6 +114,12 @@ export class UsuariosJerarquiasPageComponent implements OnInit {
     if (confirm('¿Eliminar elemento?')) {
       this.notify.info('Eliminado (simulado)');
     }
+  }
+
+  onCreate() {
+    try {
+      this.router.navigate(['/usuarios-jerarquias/crear']);
+    } catch {}
   }
 
   onTableReady() {

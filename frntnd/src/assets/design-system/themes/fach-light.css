@@ -27,13 +27,13 @@
   --color-elev-1: var(--bg-card, var(--color-bg));
   --color-elev-2: #ffffff99;
   --color-header-bg: #003a8f;
-  --color-header-text: var(--color-accent);
+  --color-header-text: #fff;
   --color-info: #1976d2;
   --color-primary: #003a8f;
   --color-secondary: #e5e5e5;
   --color-success: #2e7d32;
   --color-text: #0f1724;
-  --color-text-inverse: #000000;
+  --color-text-inverse: #fff;
   --color-text-muted: #00000099;
   --focus-ring: var(--color-accent);
   --radius-lg: 0.5rem;
@@ -41,7 +41,7 @@
   --radius-sm: 0.25rem;
   --shadow: 0 2px 12px #3c3c3c14;
   --shadow-1: var(--shadow, 0 2px 8px #0000000f);
-  --sidebar-text: var(--color-header-text, #ffd700);
+  --sidebar-text: #fff;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;

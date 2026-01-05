@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api.service';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 /**
  * Componente para la gestión y listado de menús en el sistema.
  * Fecha             Autor                   Versión           Descripción
@@ -13,7 +14,13 @@ import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-s
 @Component({
   selector: 'page-menus',
   standalone: true,
-  imports: [CommonModule, UiEntityTableComponent, UiCardComponent, UiSpinnerComponent],
+  imports: [
+    CommonModule,
+    UiEntityTableComponent,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './menus-page.component.html',
   styleUrls: ['./menus-page.component.css'],
 })
@@ -215,6 +222,12 @@ export class MenusPageComponent {
 
   refrescar() {
     this.cargar();
+  }
+
+  onCreate() {
+    try {
+      this.router.navigate(['/menus/crear']);
+    } catch {}
   }
 
   /**

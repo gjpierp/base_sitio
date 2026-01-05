@@ -1,3 +1,18 @@
+/* Forzar color negro solo para los íconos de los botones en el sidebar */
+.sidebar-item button .material-symbols-outlined,
+.ui-sidebar-item button .material-symbols-outlined {
+  color: #111 !important;
+}
+/* Colores personalizados para íconos según función */
+.material-symbols-outlined.icon-edit {
+  color: #2196f3 !important; /* azul para editar */
+}
+.material-symbols-outlined.icon-delete {
+  color: #f44336 !important; /* rojo para eliminar */
+}
+.material-symbols-outlined.icon-add {
+  color: #4caf50 !important; /* verde para agregar */
+}
 .sidebar-item {
   display: flex;
   align-items: center;
@@ -44,16 +59,22 @@
   display: none !important;
 }
 
-/* Forzar color en el texto del sidebar */
-/* Forzar color de texto del sidebar y agregar borde para debug */
-.ui-sidebar:not(.collapsed) .sidebar-item span:not(.material-symbols-outlined) {
-  color: var(--sidebar-text, var(--color-text-inverse, #fff)) !important;
+/* Forzar color blanco en el texto del sidebar y menú activo/seleccionado SIEMPRE */
+.ui-sidebar .sidebar-item span:not(.material-symbols-outlined),
+.ui-sidebar-item a,
+.ui-sidebar-item a.active,
+.sidebar-item a,
+.sidebar-item button,
+.expand-btn,
+.flyout-inner a,
+.flyout-item {
+  color: #fff !important;
   opacity: 1 !important;
   display: inline !important;
 }
 .ui-sidebar-item a.active {
   background: var(--bg-active);
-  color: var(--color-text-inverse) !important;
+  color: #fff !important;
 }
 .ui-sidebar-item.has-children {
   font-weight: 600;
@@ -77,28 +98,36 @@
   padding-left: 8px;
 }
 
-/* Flyout when sidebar is collapsed: positioned next to the sidebar and aligned with the item */
+/* Flyout: la posición la define el estilo inline (flyoutStyle) */
 .flyout {
-  position: fixed;
+  min-width: 180px;
   z-index: 1400;
   background: var(--bg-sidebar);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   border-radius: 8px;
-  min-width: 180px;
   padding: 6px;
+  display: block;
+}
+/* Forzar color blanco en el texto del menú al pasar el cursor */
+.flyout-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 .flyout-inner a {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 6px 8px;
-  color: var(--sidebar-text, var(--color-text-inverse));
+  color: #fff !important;
   text-decoration: none;
   border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
 }
 .flyout-inner a:hover {
   background: var(--bg-sidebar-active);
+  color: #fff !important;
 }
 .flyout-label {
   white-space: nowrap;
@@ -108,18 +137,7 @@
 .sidebar-item {
   position: relative;
 }
-.flyout {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  background: var(--bg-sidebar);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  min-width: 220px;
-  padding: 6px;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  z-index: 1200;
-}
+/* El flyout ya está ajustado arriba para mostrarse hacia abajo */
 .flyout-item {
   display: flex;
   gap: 10px;
@@ -153,22 +171,20 @@
 }
 
 /* Hover: cambiar solo el color de texto (sin fondo) */
+.flyout-inner a,
 .flyout-inner a:hover,
+.flyout-item,
 .flyout-item:hover,
 .sidebar-item:hover a,
 .sidebar-item:hover {
-  background: transparent !important;
-  color: var(--color-primary) !important;
+  color: #fff !important;
+  background: var(--bg-sidebar-active, #222) !important;
 }
 .flyout-text {
   white-space: nowrap;
 }
 
-/* Ajuste cuando el sidebar está colapsado: alinear flyout junto al sidebar estrecho */
-.ui-sidebar.collapsed .flyout,
-:host-context(.collapsed) .flyout {
-  left: 68px;
-}
+/* Eliminar ajuste lateral, el flyout se posiciona debajo del ítem */
 
 /* Focus visible para label clickeable accesible */
 .ui-sidebar-item [role='button']:focus-visible {

@@ -19,7 +19,14 @@ import { NotificationService } from '../../services/notification.service';
 @Component({
   selector: 'page-tipos-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiEntityTableComponent, UiCardComponent, UiSpinnerComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UiEntityTableComponent,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './tipos-usuarios-page.component.html',
   styleUrls: ['./tipos-usuarios-page.component.css'],
 })
@@ -122,6 +129,12 @@ export class TiposUsuariosPageComponent implements OnInit {
     if (confirm('¿Eliminar elemento?')) {
       this.notify.info('Eliminado (simulado)');
     }
+  }
+
+  onCreate() {
+    try {
+      this.router.navigate(['/tipos_usuarios/crear']);
+    } catch {}
   }
 
   onTableReady() {

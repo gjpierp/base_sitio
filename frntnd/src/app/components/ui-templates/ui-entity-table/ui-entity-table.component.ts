@@ -1,4 +1,14 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  inject,
+  ChangeDetectorRef,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiButtonComponent } from '../../ui-form/ui-button/ui-button.component';
 import { UiSpinnerComponent } from '../../ui-feedback/ui-spinner/ui-spinner.component';
@@ -24,7 +34,13 @@ export interface ColumnDef {
   templateUrl: './ui-entity-table.component.html',
   styleUrls: ['./ui-entity-table.component.css'],
 })
-export class UiEntityTableComponent {
+export class UiEntityTableComponent implements OnInit, OnChanges {
+  private cdr = inject(ChangeDetectorRef);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data'] || changes['columns']) {
+      this.cdr.markForCheck();
+    }
+  }
   @Input() title: string = '';
   @Input() subtitle?: string;
   @Input() error?: string;

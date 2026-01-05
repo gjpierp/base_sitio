@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
@@ -13,7 +14,14 @@ import { NotificationService } from '../../services/notification.service';
 @Component({
   selector: 'page-roles-permisos',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiCardComponent, UiSpinnerComponent, UiEntityTableComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiEntityTableComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './roles-permisos-page.component.html',
   styleUrls: ['./roles-permisos-page.component.css'],
 })
@@ -109,6 +117,12 @@ export class RolesPermisosPageComponent implements OnInit {
     if (confirm('¿Eliminar elemento?')) {
       this.notify.info('Eliminado (simulado)');
     }
+  }
+
+  onCreate() {
+    try {
+      this.router.navigate(['/roles-permisos/crear']);
+    } catch {}
   }
 
   onTableReady() {

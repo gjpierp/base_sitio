@@ -1,0 +1,93 @@
+<div
+  class="sidebar-item"
+  [class.has-children]="item.hijos?.length || item.submenu?.length"
+  [style.paddingLeft.px]="level * 18 + 8"
+  (click)="onContainerClick($event)"
+  (keydown.enter)="onContainerClick($event)"
+  (keydown.space)="onContainerClick($event)"
+  tabindex="0"
+>
+  @if (item.ruta || item.url) {
+  <!-- Elemento navegable: navegar en primer clic. -->
+  <a
+    [routerLink]="item.ruta || item.url"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    [attr.title]="item.nombre || item.titulo"
+  >
+    @if (item.icono) {
+    <span class="material-symbols-outlined">{{ item.icono }}</span>
+    }
+    <span class="sidebar-text">{{ item.nombre || item.titulo }}</span>
+  </a>
+  <!-- Si tiene hijos, mostramos el botón de expandir separado (no interfiere con la navegación). -->
+  @if (item.hijos?.length || item.submenu?.length) {
+  <button
+    (click)="toggleExpand(); $event.stopPropagation()"
+    class="expand-btn"
+    [attr.aria-expanded]="expanded"
+    [attr.aria-controls]="childrenId"
+    [attr.aria-label]="(expanded ? 'Colapsar' : 'Expandir') + ' ' + (item.nombre || item.titulo)"
+  >
+    <span class="material-symbols-outlined">{{ expanded ? 'expand_less' : 'expand_more' }}</span>
+  </button>
+  } } @else {
+  <!-- Elemento no navegable: el clic expande/colapsa -->
+  <span
+    (click)="onItemClick($event)"
+    (keydown.enter)="onItemClick($event)"
+    (keydown.space)="onItemClick($event)"
+    [attr.role]="item.hijos?.length || item.submenu?.length ? 'button' : null"
+    [attr.tabindex]="item.hijos?.length || item.submenu?.length ? '0' : null"
+    [attr.aria-expanded]="expanded"
+    [attr.aria-controls]="childrenId"
+    [attr.aria-label]="(expanded ? 'Colapsar' : 'Expandir') + ' ' + (item.nombre || item.titulo)"
+    [attr.title]="item.nombre || item.titulo"
+  >
+    @if (item.icono) {
+    <span
+      class="material-symbols-outlined"
+      (click)="$event.stopPropagation(); onItemClick($event)"
+      >{{ item.icono }}</span
+    >
+    }
+    <span class="sidebar-text">{{ item.nombre || item.titulo }}</span>
+  </span>
+  @if (item.hijos?.length || item.submenu?.length) {
+  <button
+    (click)="toggleExpand()"
+    class="expand-btn"
+    [attr.aria-expanded]="expanded"
+    [attr.aria-controls]="childrenId"
+    [attr.aria-label]="(expanded ? 'Colapsar' : 'Expandir') + ' ' + (item.nombre || item.titulo)"
+  >
+    <span class="material-symbols-outlined">{{ expanded ? 'expand_less' : 'expand_more' }}</span>
+  </button>
+  } } @if (showFlyout) {
+  <div class="flyout" style="position: fixed" [ngStyle]="flyoutStyle">
+    <div class="flyout-inner">
+      @for (child of getChildItems(); track child.id_menu) {
+      <a
+        [routerLink]="child.ruta || child.url"
+        (click)="onFlyoutLinkClick($event, child)"
+        title="{{ child.nombre }}"
+      >
+        @if (child.icono) { <span class="material-symbols-outlined">{{ child.icono }}</span> }
+        <span class="flyout-label">{{ child.nombre }}</span>
+      </a>
+      }
+    </div>
+  </div>
+  }
+</div>
+@if ((item.hijos?.length || item.submenu?.length) && expanded) {
+<div class="sidebar-children" [attr.id]="childrenId">
+  @for (child of (item.hijos?.length ? item.hijos : item.submenu); track child.id_menu) {
+  <ui-sidebar-item
+    [item]="child"
+    [level]="level + 1"
+    (expandedChange)="onChildExpandedChange($event)"
+  ></ui-sidebar-item>
+  }
+</div>
+}

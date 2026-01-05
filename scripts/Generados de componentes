@@ -1,2 +1,0 @@
-node scripts/generate-page-from-usuarios.js <target-kebab> [singular-kebab]
-node scripts/generate-page-from-usuarios.js menus menu

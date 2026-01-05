@@ -6,10 +6,16 @@
     <ng-container *ngIf="!loading && error">
       <div class="muted">{{ error }}</div>
     </ng-container>
-  </div>
-
-  <ng-container *ngIf="!loading">
-    <div>
+    <div
+      style="
+        font-size: 11px;
+        color: #888;
+        background: #f8f8f8;
+        border: 1px solid #eee;
+        padding: 4px;
+        margin-bottom: 6px;
+      "
+    >
       <table class="responsive-table">
         <thead>
           <tr>
@@ -24,7 +30,7 @@
             <td *ngFor="let col of visibleColumns">{{ row[col.key] }}</td>
             <td class="actions-col" [attr.data-label]="'Acciones'">
               <ui-button
-                variant="outline"
+                variant="success"
                 ariaLabel="Editar Fila"
                 (pressed)="onEdit(row)"
                 title="Editar"
@@ -66,5 +72,5 @@
         (pageChange)="onPage($event)"
       ></ui-pagination>
     </div>
-  </ng-container>
+  </div>
 </ui-card>

@@ -1,18 +1,29 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  OnInit,
+  ViewChild,
+  ChangeDetectionStrategy,
+  NgZone,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
-import { User } from '../../models/user';
+import { User, USUARIO_SCHEMA } from '../../models/usuario';
 import { TipoUsuario } from '../../models/tipo-usuario';
 import { Estado } from '../../models/estado';
+import { Roles } from '../../models/roles';
+import { Jerarquias } from '../../models/jerarquias';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal.component';
-import { abrirCrearModalGeneric, onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
+import { onPageChangeGeneric, onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
 
 /**
  * Componente para la gestión y listado de usuarios en el sistema.
@@ -25,6 +36,7 @@ import { abrirCrearModalGeneric, onModalConfirmGeneric, onModalClosedGeneric } f
   imports: [
     CommonModule,
     FormsModule,
+    UiButtonComponent,
     UiCardComponent,
     UiSpinnerComponent,
     UiEntityTableComponent,
@@ -32,6 +44,7 @@ import { abrirCrearModalGeneric, onModalConfirmGeneric, onModalClosedGeneric } f
   ],
   templateUrl: './usuarios-page.component.html',
   styleUrls: ['./usuarios-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class UsuariosPageComponent implements OnInit {
   /**
@@ -41,33 +54,36 @@ export class UsuariosPageComponent implements OnInit {
    */
   title = 'Usuarios';
   subtitle = 'Usuarios';
-  // Create-user UI removed: form fields and showForm flag omitted
   tiposUsuario: TipoUsuario[] = [];
   estados: Estado[] = [];
+  roles: any[] = [];
+  jerarquias: any[] = [];
   data: User[] = [];
+  formattedData: any[] = [];
   loading = false;
   error?: string;
   datosListos = false;
   totalUsuarios = 0;
-
+  total = 0;
   usuarioAEliminar: any = null;
-
-  // modal integrado para crear/editar/eliminar genérico
   modalOpen = false;
   modalTitle = '';
   modalFields: any[] = [];
   modalValues: any = {};
   modalSaving = false;
+  modalLoading = false;
   modalEditingId: any = null;
   modalDeleteMode = false;
   currentPage = 1;
+
+  @ViewChild('modalRef') modalComp: any;
 
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private notify = inject(NotificationService);
   private router = inject(Router);
-
+  private ngZone = inject(NgZone);
   /**
    * @description Constructor de la clase UsuariosPageComponent.
    * @author Gerardo Paiva
@@ -75,223 +91,301 @@ export class UsuariosPageComponent implements OnInit {
    */
   constructor() {}
 
-  async openCreateModal() {
-    try {
-      console.debug('[UsuariosPage] openCreateModal start');
-      // Mostrar modal inmediatamente para evitar que errores posteriores lo impidan
-      this.modalOpen = true;
-      this.modalTitle = 'Crear usuario';
-      try {
-        this.cdr.detectChanges();
-      } catch {}
-
-      // ensure options for tipoUsuario and estados are loaded
-      let tipoOptions: { value: string; label: string }[] = [];
-      let estadoOptions: { value: string; label: string }[] = [];
-      let rolOptions: { value: string; label: string }[] = [];
-      let jerarquiaOptions: { value: string; label: string }[] = [];
-      try {
-        if (Array.isArray(this.tiposUsuario) && this.tiposUsuario.length > 0) {
-          tipoOptions = this.tiposUsuario.map((t: any) => ({
-            value: String(t.id_tipo_usuario ?? t.id ?? ''),
-            label: t.nombre ?? t.title ?? t.titulo ?? String(t.id_tipo_usuario ?? t.id ?? ''),
-          }));
-        } else {
-          const tresp: any = await firstValueFrom(
-            this.api.getPaginated('tipos_usuario', { desde: 0 }) as any
-          );
-          const trows = tresp?.data || tresp || [];
-          tipoOptions = (Array.isArray(trows) ? trows : []).map((t: any) => ({
-            value: String(t.id_tipo_usuario ?? t.id ?? ''),
-            label: t.nombre ?? t.title ?? t.titulo ?? String(t.id_tipo_usuario ?? t.id ?? ''),
-          }));
-          this.tiposUsuario = Array.isArray(trows) ? trows : [];
-        }
-      } catch {}
-
-      try {
-        if (Array.isArray(this.estados) && this.estados.length > 0) {
-          estadoOptions = this.estados.map((e: any) => ({
-            value: String(e.id_estado ?? e.id ?? ''),
-            label: e.nombre ?? e.title ?? e.titulo ?? String(e.id_estado ?? e.id ?? ''),
-          }));
-        } else {
-          const eres: any = await firstValueFrom(
-            this.api.getPaginated('estados', { desde: 0 }) as any
-          );
-          const erows = eres?.data || eres || [];
-          estadoOptions = (Array.isArray(erows) ? erows : []).map((e: any) => ({
-            value: String(e.id_estado ?? e.id ?? ''),
-            label: e.nombre ?? e.title ?? e.titulo ?? String(e.id_estado ?? e.id ?? ''),
-          }));
-          this.estados = Array.isArray(erows) ? erows : [];
-        }
-      } catch {}
-
-      // load roles
-      try {
-        const rresp: any = await firstValueFrom(
-          this.api.getPaginated('roles', { desde: 0 }) as any
-        );
-        const rrows = rresp?.data || rresp || [];
-        rolOptions = (Array.isArray(rrows) ? rrows : []).map((r: any) => ({
-          value: String(r.id_rol ?? r.id ?? ''),
-          label: r.nombre ?? r.title ?? String(r.id_rol ?? r.id ?? ''),
-        }));
-      } catch {}
-
-      // load jerarquias
-      try {
-        const jresp: any = await firstValueFrom(
-          this.api.getPaginated('jerarquias', { desde: 0 }) as any
-        );
-        const jrows = jresp?.data || jresp || [];
-        jerarquiaOptions = (Array.isArray(jrows) ? jrows : []).map((j: any) => ({
-          value: String(j.id_jerarquia ?? j.id ?? ''),
-          label: j.nombre ?? j.title ?? String(j.id_jerarquia ?? j.id ?? ''),
-        }));
-      } catch {}
-
-      const fields: any[] = [];
-      // Required by backend validators
-      fields.push({ key: 'nombre_usuario', label: 'Nombre de usuario', type: 'text', value: '' });
-      fields.push({ key: 'contrasena', label: 'Contraseña', type: 'password', value: '' });
-      fields.push({ key: 'nombres', label: 'Nombres', type: 'text', value: '' });
-      fields.push({ key: 'apellidos', label: 'Apellidos', type: 'text', value: '' });
-      fields.push({
-        key: 'correo_electronico',
-        label: 'Correo electrónico',
-        type: 'text',
-        value: '',
-      });
-      fields.push({
-        key: 'id_rol',
-        label: 'Rol',
-        type: 'select',
-        options: rolOptions,
-        value: rolOptions[0]?.value ?? '',
-      });
-      fields.push({
-        key: 'id_jerarquia',
-        label: 'Jerarquía',
-        type: 'select',
-        options: jerarquiaOptions,
-        value: jerarquiaOptions[0]?.value ?? '',
-      });
-      fields.push({
-        key: 'id_tipo_usuario',
-        label: 'Tipo usuario',
-        type: 'select',
-        options: tipoOptions,
-        value: tipoOptions[0]?.value ?? '',
-      });
-      fields.push({
-        key: 'id_estado',
-        label: 'Estado',
-        type: 'select',
-        options: estadoOptions,
-        value: estadoOptions[0]?.value ?? '',
-      });
-      fields.push({
-        key: 'activo',
-        label: 'Activo',
-        type: 'select',
-        options: [
-          { value: 'true', label: 'Sí' },
-          { value: 'false', label: 'No' },
-        ],
-        value: 'true',
-      });
-
-      this.modalFields = fields;
-      this.modalValues = {};
-      for (const f of fields) this.modalValues[f.key] = f.value ?? '';
-      this.modalEditingId = null;
-      this.modalDeleteMode = false;
-      console.debug('[UsuariosPage] openCreateModal prepared fields, modalOpen=', this.modalOpen);
-      try {
-        this.cdr.detectChanges();
-      } catch {}
-    } catch (err) {
-      try {
-        console.error(err);
-      } catch {}
-    }
-  }
-
-  async onModalConfirm() {
-    try {
-      await onModalConfirmGeneric(this, 'usuarios');
-    } catch {}
-  }
-
-  onModalClosed() {
-    try {
-      onModalClosedGeneric(this);
-    } catch {}
-  }
-
-  ngOnInit() {
-    const pre = this.route.snapshot.data?.['pre'];
-    if (pre) {
-      // Consumir datos precargados del resolver y pintar inmediatamente
-      this.tiposUsuario = Array.isArray(pre.tiposUsuario) ? pre.tiposUsuario : [];
-      this.estados = Array.isArray(pre.estados) ? pre.estados : [];
-      const rows = Array.isArray(pre.usuarios) ? pre.usuarios : [];
-      this.data = rows.map((r: any) => ({
-        id: r.id_usuario ?? r.id ?? r.ID ?? '',
-        nombre: r.nombre_usuario ?? r.nombre ?? r.name ?? '',
-        correo_electronico: r.correo ?? r.correo_electronico ?? '',
-        id_tipo_usuario: r.id_tipo_usuario ?? '',
-        id_estado: r.id_estado ?? '',
-        img: r.img ?? null,
-        fecha_creacion: r.fecha_creacion ?? null,
-        fecha_actualizacion: r.fecha_actualizacion ?? null,
-      }));
-      this.totalUsuarios = Number(pre.total) || this.data.length || 0;
+  /**
+   * @description Método de inicialización del componente.
+   * Carga los datos precargados por el Resolver o los obtiene de forma asíncrona.
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
+  ngOnInit(): void {
+    // Verificar si el Resolver ya trajo los datos para evitar recarga y parpadeos
+    const preloaded = this.route.snapshot.data['pre'];
+    if (preloaded) {
+      this.tiposUsuario = preloaded.tiposUsuario || [];
+      this.estados = preloaded.estados || [];
+      this.roles = preloaded.roles || [];
+      this.jerarquias = preloaded.jerarquias || [];
+      this.procesarDatosUsuarios(preloaded.usuarios || [], preloaded.total || 0);
       this.datosListos = true;
-      this.cdr.detectChanges();
     } else {
-      // Fallback: cargar normalmente si no hay datos del resolver
       this.cargarDatosAsync();
     }
   }
-
-  openNewUser() {
-    // Create-user functionality removed from users page.
-    // Legacy method retained as no-op for backwards compatibility.
-  }
-
   /**
-   * @description Devuelve las columnas visibles en la tabla de usuarios.
+   * @description Abrir modal de edición y precargar campos/valores.
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  get columns() {
-    return [
-      { key: 'nombre', label: 'Nombre' },
-      { key: 'correo_electronico', label: 'Correo' },
-      { key: 'tipo_usuario_nombre', label: 'Tipo usuario' },
-      { key: 'estado_nombre', label: 'Estado' },
-    ];
-  }
+  async openEditModal(usuario: any) {
+    this.modalTitle = 'Editar usuario';
+    this.modalFields = [];
+    this.modalValues = {};
+    this.modalDeleteMode = false;
+    this.modalLoading = true;
+    this.modalOpen = true;
+    this.cdr.detectChanges();
 
+    try {
+      // Asignar el id del usuario para edición, usando el id del usuario actualizado desde la base de datos
+      let u: any = usuario ? JSON.parse(JSON.stringify(usuario)) : {};
+      const idToFetch = u?.id || u?.id_usuario || u?.ID || null;
+      if (!idToFetch) {
+        this.notify.warning('Error: No se pudo obtener el ID del usuario para editar.');
+        this.modalOpen = false;
+        this.cdr.detectChanges();
+        return;
+      }
+      if (idToFetch) {
+        const detailResp: any = await firstValueFrom(
+          this.api.get(`usuarios/${idToFetch}`) as any
+        ).catch(() => null);
+        if (detailResp) {
+          const payload = detailResp?.data ?? detailResp;
+          if (payload && typeof payload === 'object') u = { ...u, ...payload };
+          // Asignar el id desde la base de datos
+          this.modalEditingId = u?.id_usuario || u?.id || u?.ID || null;
+          // Si el id es un string y parece un correo, descartar y buscar el id numérico
+          if (typeof this.modalEditingId === 'string' && this.modalEditingId.includes('@')) {
+            this.modalEditingId = u?.id_usuario || null;
+          }
+        } else {
+          this.modalEditingId = idToFetch;
+          // Validación extra si no se pudo cargar detalle
+          if (typeof this.modalEditingId === 'string' && this.modalEditingId.includes('@')) {
+            this.modalEditingId = u?.id_usuario || null;
+          }
+        }
+      } else {
+        this.modalEditingId = null;
+      }
+      if (!this.datosListos) {
+        await this.cargarDatosAsync();
+      }
+
+      this.ngZone.run(() => {
+        const rolOptions = (Array.isArray(this.roles) ? this.roles : []).map((r: any) => ({
+          value:
+            r.id_rol != null && r.id_rol !== '' && !isNaN(Number(r.id_rol))
+              ? String(r.id_rol)
+              : r.id != null && r.id !== '' && !isNaN(Number(r.id))
+              ? String(r.id)
+              : '',
+          label:
+            r.nombre ??
+            r.label ??
+            r.title ??
+            r.descripcion ??
+            r.nombre_rol ??
+            r.rol ??
+            r.name ??
+            String(r.id_rol ?? r.id ?? ''),
+        }));
+        const tipoOptions = (Array.isArray(this.tiposUsuario) ? this.tiposUsuario : []).map(
+          (t: any) => ({
+            value:
+              t.id_tipo_usuario != null &&
+              t.id_tipo_usuario !== '' &&
+              !isNaN(Number(t.id_tipo_usuario))
+                ? String(t.id_tipo_usuario)
+                : t.id != null && t.id !== '' && !isNaN(Number(t.id))
+                ? String(t.id)
+                : '',
+            label: t.nombre ?? t.title ?? String(t.id_tipo_usuario ?? t.id ?? ''),
+          })
+        );
+        const estadoOptions = (Array.isArray(this.estados) ? this.estados : []).map((e: any) => ({
+          value:
+            e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
+              ? String(e.id_estado)
+              : e.id != null && e.id !== '' && !isNaN(Number(e.id))
+              ? String(e.id)
+              : '',
+          label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
+        }));
+        const jerarquiaOptions = (Array.isArray(this.jerarquias) ? this.jerarquias : []).map(
+          (j: any) => ({
+            value:
+              j.id_jerarquia != null && j.id_jerarquia !== '' && !isNaN(Number(j.id_jerarquia))
+                ? String(j.id_jerarquia)
+                : j.id != null && j.id !== '' && !isNaN(Number(j.id))
+                ? String(j.id)
+                : '',
+            label:
+              j.nombre ??
+              j.label ??
+              j.title ??
+              j.descripcion ??
+              j.nombre_jerarquia ??
+              j.jerarquia ??
+              j.name ??
+              String(j.id_jerarquia ?? j.id ?? ''),
+          })
+        );
+        this.modalFields = this.buildUsuarioFields(
+          { rolOptions, jerarquiaOptions, tipoOptions, estadoOptions },
+          u,
+          true
+        );
+        this.modalValues = {};
+        for (const f of this.modalFields) {
+          this.modalValues[f.key] = f.value;
+        }
+        this.modalLoading = false;
+        this.modalOpen = true;
+        this.cdr.detectChanges();
+      });
+    } catch (err) {
+      this.modalOpen = false;
+      this.notify.warning('No se pudo cargar la información del usuario');
+      this.cdr.detectChanges();
+    }
+  }
   /**
-   * @description Devuelve los datos de usuarios con fechas y nombres formateados para la vista.
+   * @description Construye el array de campos del modal basándose en el modelo `usuario`.
+   * Permite inyectar opciones (roles, jerarquías, tipos, estados) y valores por defecto.
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  get dataFormateada() {
-    return this.data.map((u) => ({
+  private buildUsuarioFields(opts: any = {}, defaults: any = {}, isEdit: boolean = false) {
+    const rolOptions = opts.rolOptions ?? [];
+    const jerarquiaOptions = opts.jerarquiaOptions ?? [];
+    const tipoOptions = opts.tipoOptions ?? [];
+    const estadoOptions = opts.estadoOptions ?? [];
+    const schemaFields =
+      USUARIO_SCHEMA && Array.isArray(USUARIO_SCHEMA.fields) ? USUARIO_SCHEMA.fields : [];
+    const fields: any[] = schemaFields.map((s: any) => {
+      const key = s.key;
+      const base: any = {
+        key,
+        label: s.label ?? key,
+        type: s.type ?? 'text',
+        readonly: !!s.readonly || (isEdit && !!s.readonlyOnEdit),
+        hiddenOnCreate: !!s.hiddenOnCreate,
+        hiddenOnEdit: !!s.hiddenOnEdit,
+        hidden: !!s.hidden || (isEdit ? !!s.hiddenOnEdit : !!s.hiddenOnCreate),
+      };
+      // Opciones para campos select
+      if (base.type === 'select') {
+        if (key === 'id_rol') base.options = rolOptions;
+        if (key === 'id_jerarquia') base.options = jerarquiaOptions;
+        if (key === 'id_tipo_usuario') base.options = tipoOptions;
+        if (key === 'id_estado') base.options = estadoOptions;
+        if (key === 'activo') {
+          base.options = [
+            { value: 'true', label: 'Sí' },
+            { value: 'false', label: 'No' },
+          ];
+        }
+      }
+      // value: try multiple candidate keys in defaults (key, alias, sensible fallbacks)
+      const candidates: string[] = [];
+      candidates.push(key);
+      if (s.alias) candidates.push(s.alias);
+      if (key.startsWith('id_')) {
+        const baseKey = key.slice(3);
+        // Priorizar claves que sugieran ID o el objeto completo
+        candidates.push(baseKey, `${baseKey}_id`, `${baseKey}Id`);
+        // Restaurar búsqueda por nombre específico para permitir el match por etiqueta (Label Match)
+        candidates.push(`${baseKey}_nombre`, `nombre_${baseKey}`, `${baseKey}_name`);
+      }
+      if (key.endsWith('_usuario')) {
+        const baseKey = key.replace(/_usuario$/, '');
+        candidates.push(baseKey, 'nombre', 'name', 'username');
+      }
+
+      // Fallbacks genéricos solo si NO es un campo de ID (evita asignar nombre de usuario a id_rol)
+      if (!key.startsWith('id_')) {
+        if (key === 'id') {
+          candidates.push('id_usuario', 'ID');
+        } else {
+          candidates.push(key.replace(/_/g, ''), 'nombre', 'name', 'correo', 'correo_electronico');
+        }
+      }
+
+      let val: any = undefined;
+      for (const k of candidates) {
+        if (!k) continue;
+        if (
+          Object.prototype.hasOwnProperty.call(defaults, k) &&
+          typeof defaults[k] !== 'undefined'
+        ) {
+          val = defaults[k];
+          break;
+        }
+      }
+
+      // FIX: Si el valor es un objeto (ej: { id: 1, nombre: 'Admin' }), extraer el ID
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        val =
+          val.id ??
+          val[key] ?? // ej: val.id_rol
+          val.id_usuario ??
+          val.id_rol ??
+          val.id_jerarquia ??
+          val.id_tipo_usuario ??
+          val.id_estado ??
+          val;
+      }
+
+      if (typeof val === 'undefined') {
+        if (key === 'correo_electronico') val = defaults.correo ?? '';
+        else val = '';
+      }
+
+      // Asegurar que el valor sea string para coincidir con las opciones del select (que son strings)
+      let strVal = val == null ? '' : String(val);
+
+      // Lógica de recuperación inteligente para Selects:
+      // Si el valor no coincide con ninguna opción por 'value', intentar buscar por 'label'
+      // (ej. si el backend devuelve "Administrador" en vez de "1")
+      if (base.type === 'select' && Array.isArray(base.options) && strVal !== '') {
+        const matchValue = base.options.find((o: any) => String(o.value) === strVal);
+        if (!matchValue) {
+          const matchLabel = base.options.find(
+            (o: any) => o.label && String(o.label).toLowerCase() === strVal.toLowerCase()
+          );
+          if (matchLabel) {
+            strVal = String(matchLabel.value);
+          }
+        }
+      }
+
+      base.value = strVal;
+      return base;
+    });
+    return fields;
+  }
+
+  /**
+   * @description Procesa los datos crudos de usuarios para la tabla.
+   * Centraliza la lógica para usarla tanto en carga inicial como en refresco.
+   */
+  private procesarDatosUsuarios(rows: any[], total: number) {
+    this.data = (Array.isArray(rows) ? rows : []).map((u: any) => ({
       ...u,
-      tipo_usuario_nombre:
-        this.tiposUsuario.find(
-          (t) => Number((t as any).id_tipo_usuario) === Number((u as any)['id_tipo_usuario'])
-        )?.nombre || '',
-      estado_nombre:
-        this.estados.find((e) => Number((e as any).id_estado) === Number((u as any)['id_estado']))
-          ?.nombre || '',
+      nombre_usuario: u['nombre_usuario'] || u['nombre'] || u['name'] || '',
+      correo_electronico: u['correo_electronico'] || u['correo'] || '',
+      nombres: u['nombres'] || '',
+      apellidos: u['apellidos'] || '',
+      nombre_rol: u['nombre_rol'] || '',
+      nombre_jerarquia: u['nombre_jerarquia'] || '',
+      nombre_tipo_usuario: u['nombre_tipo_usuario'] || '',
+      nombre_estado: u['nombre_estado'] || '',
     }));
+
+    this.formattedData = this.data.map((u) => ({
+      ...u,
+      nombre_usuario: u['nombre_usuario'] || '',
+      correo_electronico: u['correo_electronico'] || '',
+      nombres: u['nombres'] || '',
+      apellidos: u['apellidos'] || '',
+      nombre_rol: u['nombre_rol'] || '',
+      nombre_jerarquia: u['nombre_jerarquia'] || '',
+      nombre_tipo_usuario: u['nombre_tipo_usuario'] || '',
+      nombre_estado: u['nombre_estado'] || '',
+    }));
+
+    this.totalUsuarios = Number(total) || this.data.length || 0;
   }
 
   /**
@@ -301,58 +395,111 @@ export class UsuariosPageComponent implements OnInit {
    */
   async cargarDatosAsync() {
     this.loading = true;
+    this.error = undefined; // Limpiar errores previos al recargar
+
     try {
-      const [tipos, estados] = await Promise.all([
-        firstValueFrom(this.api.get<TipoUsuario[]>('tipos_usuario') as any),
-        firstValueFrom(this.api.get<Estado[]>('estados') as any),
-      ]);
-      // Normaliza la respuesta del endpoint /api/tipos_usuario
-      this.tiposUsuario = Array.isArray(tipos)
-        ? tipos
-        : (typeof tipos === 'object' &&
-            tipos !== null &&
-            (Array.isArray((tipos as any)['tipos'])
-              ? (tipos as any)['tipos']
-              : Array.isArray((tipos as any)['tipos_usuario'])
-              ? (tipos as any)['tipos_usuario']
-              : Array.isArray((tipos as any)['data'])
-              ? (tipos as any)['data']
-              : [])) ||
-          [];
-      this.estados = Array.isArray(estados)
-        ? estados
-        : (typeof estados === 'object' &&
-            estados !== null &&
-            (Array.isArray((estados as any)['estados'])
-              ? (estados as any)['estados']
-              : Array.isArray((estados as any)['data'])
-              ? (estados as any)['data']
-              : [])) ||
-          [];
-      // Cargar primera página (server-side) con tamaño por defecto
-      const res: any = await firstValueFrom(this.api.getPaginated('usuarios', { desde: 0 }) as any);
-      const rows = res?.data || [];
-      this.data = rows.map((r: any) => ({
-        id: r.id_usuario ?? r.id ?? r.ID ?? '',
-        nombre: r.nombre_usuario ?? r.nombre ?? r.name ?? '',
-        correo_electronico: r.correo ?? r.correo_electronico ?? '',
-        id_tipo_usuario: r.id_tipo_usuario ?? '',
-        id_estado: r.id_estado ?? '',
-        img: r.img ?? null,
-        fecha_creacion: r.fecha_creacion ?? null,
-        fecha_actualizacion: r.fecha_actualizacion ?? null,
-      }));
-      this.totalUsuarios = Number(res?.total) || rows.length || 0;
-      this.datosListos = true;
-      this.cdr.detectChanges();
+      const results = await firstValueFrom(
+        forkJoin({
+          tipos: this.api.get<any>('tipos_usuario'),
+          estados: this.api.get<any>('estados'),
+          roles: this.api.get<any>('roles', { desde: 0 }),
+          jerarquias: this.api.get<any>('jerarquias', { desde: 0 }),
+          usuariosRes: this.api.get<any>('usuarios', { desde: 0 }),
+        })
+      );
+
+      this.ngZone.run(() => {
+        const { tipos, estados, roles, jerarquias, usuariosRes } = results;
+
+        // Procesar Tipos
+        this.tiposUsuario = Array.isArray(tipos)
+          ? tipos
+          : (typeof tipos === 'object' &&
+              tipos !== null &&
+              (Array.isArray((tipos as any)['tipos'])
+                ? (tipos as any)['tipos']
+                : Array.isArray((tipos as any)['tipos_usuario'])
+                ? (tipos as any)['tipos_usuario']
+                : Array.isArray((tipos as any)['data'])
+                ? (tipos as any)['data']
+                : [])) ||
+            [];
+
+        // Procesar Estados
+        this.estados = Array.isArray(estados)
+          ? estados
+          : (typeof estados === 'object' &&
+              estados !== null &&
+              (Array.isArray((estados as any)['estados'])
+                ? (estados as any)['estados']
+                : Array.isArray((estados as any)['data'])
+                ? (estados as any)['data']
+                : [])) ||
+            [];
+
+        // Procesar Roles
+        this.roles = Array.isArray(roles)
+          ? roles
+          : (typeof roles === 'object' &&
+              roles !== null &&
+              (Array.isArray((roles as any)['roles'])
+                ? (roles as any)['roles']
+                : Array.isArray((roles as any)['data'])
+                ? (roles as any)['data']
+                : [])) ||
+            [];
+
+        // Procesar Jerarquias
+        this.jerarquias = Array.isArray(jerarquias)
+          ? jerarquias
+          : (typeof jerarquias === 'object' &&
+              jerarquias !== null &&
+              (Array.isArray((jerarquias as any)['jerarquias'])
+                ? (jerarquias as any)['jerarquias']
+                : Array.isArray((jerarquias as any)['data'])
+                ? (jerarquias as any)['data']
+                : [])) ||
+            [];
+
+        // Procesar Usuarios
+        const rows = usuariosRes?.usuarios || usuariosRes?.data || [];
+        this.procesarDatosUsuarios(rows, usuariosRes?.total);
+        this.loading = false;
+        this.datosListos = true;
+        this.cdr.detectChanges();
+      });
     } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar usuarios';
-      this.data = [];
-      this.datosListos = false;
+      this.ngZone.run(() => {
+        this.error = (err as any)?.error?.msg || 'No se pudo cargar usuarios';
+        this.data = [];
+        this.formattedData = [];
+        this.loading = false;
+        this.datosListos = true;
+        this.cdr.detectChanges();
+      });
     }
-    this.loading = false;
   }
 
+  /**
+   * @description Carga inicial (alias) usado por otras páginas para refrescar la lista.
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
+  // simple alias used by other pages/helpers
+  async load() {
+    this.currentPage = 1;
+    await this.cargarDatosAsync();
+    // keep generic `total` in sync
+    try {
+      this.total = this.totalUsuarios;
+    } catch {}
+  }
+
+  /**
+   * @description Maneja cambios de paginación, búsqueda y orden en la tabla.
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
   onPageChange(evt: {
     page: number;
     pageSize: number;
@@ -360,134 +507,159 @@ export class UsuariosPageComponent implements OnInit {
     sortKey?: string;
     sortDir?: 'asc' | 'desc';
   }) {
-    this.currentPage = evt.page;
-    const desde = (evt.page - 1) * evt.pageSize;
-    const limite = evt.pageSize;
-    const term = (evt.term || '').trim();
-    const sortKey = (evt.sortKey || '').trim();
-    const sortDir = (evt.sortDir || 'asc').toLowerCase() as 'asc' | 'desc';
-    const applySort = (list: any[]) => {
-      if (!sortKey) return list;
-      const sorted = [...list].sort((a, b) => {
-        const va = a?.[sortKey];
-        const vb = b?.[sortKey];
-        const na = va === null || va === undefined;
-        const nb = vb === null || vb === undefined;
-        if (na && nb) return 0;
-        if (na) return 1;
-        if (nb) return -1;
-        const ta = typeof va;
-        const tb = typeof vb;
-        if (ta === 'number' && tb === 'number') {
-          return sortDir === 'asc' ? va - vb : vb - va;
-        }
-        const sa = String(va).toLowerCase();
-        const sb = String(vb).toLowerCase();
-        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
-      });
-      return sorted;
-    };
-    this.loading = true;
-    this.datosListos = false;
+    try {
+      this.currentPage = Number(evt.page) || 1;
+    } catch {}
+
+    onPageChangeGeneric(this, evt, 'usuarios', (r: any) => ({
+      id: r.id_usuario ?? r.id ?? r.ID ?? '',
+      nombre: r.nombre_usuario ?? r.nombre ?? r.name ?? '',
+      correo_electronico: r.correo ?? r.correo_electronico ?? '',
+      id_tipo_usuario: r.id_tipo_usuario ?? '',
+      id_estado: r.id_estado ?? '',
+      activo:
+        typeof r.activo !== 'undefined'
+          ? r.activo === 1 || r.activo === '1' || r.activo === true
+          : true,
+    }));
+  }
+
+  /**
+   * @description Notifica que la tabla está lista para renderizar y dispara detección de cambios.
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
+  onTableReady() {
+    this.datosListos = true;
     try {
       this.cdr.detectChanges();
     } catch {}
-    if (term) {
-      // Filtro server-side vía endpoint de búsquedas, luego paginar por slice
-      this.api.get<any>(`todo/coleccion/usuarios/${encodeURIComponent(term)}`).subscribe({
-        next: (res) => {
-          const list = Array.isArray((res as any)?.resultados)
-            ? (res as any).resultados
-            : Array.isArray((res as any)?.usuarios)
-            ? (res as any).usuarios
-            : Array.isArray(res)
-            ? (res as any)
-            : [];
-          const mapped = list.map((r: any) => ({
-            id: r.id_usuario ?? r.id ?? r.ID ?? '',
-            nombre: r.nombre_usuario ?? r.nombre ?? r.name ?? '',
-            correo_electronico: r.correo ?? r.correo_electronico ?? '',
-            id_tipo_usuario: r.id_tipo_usuario ?? '',
-            id_estado: r.id_estado ?? '',
-          }));
-          const ordered = applySort(mapped);
-          this.totalUsuarios = ordered.length;
-          // Slice para la página solicitada
-          this.data = ordered.slice(desde, desde + limite);
-          this.loading = false;
-          try {
-            this.datosListos = true;
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo filtrar usuarios';
-          this.loading = false;
-          try {
-            this.datosListos = false;
-            this.cdr.detectChanges();
-          } catch {}
-        },
+  }
+
+  /**
+   * @description Abre el modal de creación de usuario y carga opciones en background.
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
+  async openCreateModal() {
+    this.modalTitle = 'Crear usuario';
+    this.modalFields = [];
+    this.modalValues = {};
+    this.modalEditingId = null;
+    this.modalDeleteMode = false;
+    this.modalLoading = true;
+    this.modalOpen = true; // Mostrar modal inmediatamente
+    this.cdr.detectChanges();
+
+    try {
+      // Si los datos no están listos, espera a que se carguen
+      if (!this.datosListos) {
+        await this.cargarDatosAsync();
+      }
+
+      this.ngZone.run(() => {
+        const rolOptions = (Array.isArray(this.roles) ? this.roles : []).map((r: any) => ({
+          value:
+            r.id_rol != null && r.id_rol !== '' && !isNaN(Number(r.id_rol))
+              ? String(r.id_rol)
+              : r.id != null && r.id !== '' && !isNaN(Number(r.id))
+              ? String(r.id)
+              : '',
+          label:
+            r.nombre ??
+            r.label ??
+            r.title ??
+            r.descripcion ??
+            r.nombre_rol ??
+            r.rol ??
+            r.name ??
+            String(r.id_rol ?? r.id ?? ''),
+        }));
+        const tipoOptions = (Array.isArray(this.tiposUsuario) ? this.tiposUsuario : []).map(
+          (t: any) => ({
+            value:
+              t.id_tipo_usuario != null &&
+              t.id_tipo_usuario !== '' &&
+              !isNaN(Number(t.id_tipo_usuario))
+                ? String(t.id_tipo_usuario)
+                : t.id != null && t.id !== '' && !isNaN(Number(t.id))
+                ? String(t.id)
+                : '',
+            label: t.nombre ?? t.title ?? String(t.id_tipo_usuario ?? t.id ?? ''),
+          })
+        );
+        const estadoOptions = (Array.isArray(this.estados) ? this.estados : []).map((e: any) => ({
+          value:
+            e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
+              ? String(e.id_estado)
+              : e.id != null && e.id !== '' && !isNaN(Number(e.id))
+              ? String(e.id)
+              : '',
+          label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
+        }));
+        // Si necesitas jerarquía, agrégala igual que los otros
+        const jerarquiaOptions = (Array.isArray(this.jerarquias) ? this.jerarquias : []).map(
+          (j: any) => ({
+            value:
+              j.id_jerarquia != null && j.id_jerarquia !== '' && !isNaN(Number(j.id_jerarquia))
+                ? String(j.id_jerarquia)
+                : j.id != null && j.id !== '' && !isNaN(Number(j.id))
+                ? String(j.id)
+                : '',
+            label:
+              j.nombre ??
+              j.label ??
+              j.title ??
+              j.descripcion ??
+              j.nombre_jerarquia ??
+              j.jerarquia ??
+              j.name ??
+              String(j.id_jerarquia ?? j.id ?? ''),
+          })
+        );
+
+        this.modalFields = this.buildUsuarioFields(
+          { rolOptions, jerarquiaOptions, tipoOptions, estadoOptions },
+          {},
+          false
+        );
+        this.modalValues = {};
+        for (const f of this.modalFields) {
+          if (f.type === 'select') {
+            this.modalValues[f.key] = f.value != null && f.value !== '' ? f.value : null;
+          } else {
+            this.modalValues[f.key] = f.value ?? '';
+          }
+        }
+        this.modalLoading = false;
+        this.cdr.detectChanges();
       });
-    } else {
-      // Paginación server-side estándar
-      this.api.get<any>('usuarios', { desde, limite, sortKey, sortDir }).subscribe({
-        next: (res) => {
-          const users = Array.isArray(res?.usuarios)
-            ? res.usuarios
-            : Array.isArray(res)
-            ? (res as any)
-            : [];
-          const mapped = users.map((r: any) => ({
-            id: r.id_usuario ?? r.id ?? r.ID ?? '',
-            nombre: r.nombre_usuario ?? r.nombre ?? r.name ?? '',
-            correo_electronico: r.correo ?? r.correo_electronico ?? '',
-            id_tipo_usuario: r.id_tipo_usuario ?? '',
-            id_estado: r.id_estado ?? '',
-          }));
-          const ordered = applySort(mapped);
-          this.data = ordered;
-          this.totalUsuarios = Number((res as any)?.total) || ordered.length;
-          this.loading = false;
-          try {
-            this.datosListos = true;
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo cargar usuarios';
-          this.loading = false;
-          try {
-            this.datosListos = false;
-            this.cdr.detectChanges();
-          } catch {}
-        },
-      });
+    } catch (err) {
+      this.modalOpen = false;
+      this.cdr.detectChanges();
     }
   }
 
   /**
-   * @description Refresca los datos de la tabla de usuarios.
+   * @description Inicia el flujo de edición para un usuario (abre modal).
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  refrescar() {
-    this.cargarDatosAsync();
-  }
-
-  onEdit(usuario: any) {
+  async onEdit(usuario: any) {
     try {
-      // Abrir modal de edición en lugar de navegar
-      this.openEditModal(usuario);
+      await this.openEditModal(usuario);
       return;
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      this.notify.warning('No se pudo iniciar la edición del usuario: ' + (err?.message || ''));
     }
-    this.notify.warning('No se pudo iniciar la edición del usuario');
   }
 
+  /**
+   * @description Muestra confirmación para eliminar un usuario (abre modal de confirmación).
+   * @author Gerardo Paiva
+   * @date 28-12-2025
+   */
   onRemove(usuario: any) {
-    // Mostrar modal de confirmación de borrado
     try {
       this.modalFields = [];
       this.modalValues = { nombre: usuario?.nombre ?? '' };
@@ -495,221 +667,71 @@ export class UsuariosPageComponent implements OnInit {
       this.modalEditingId = usuario?.id || usuario?.id_usuario || usuario?.ID || null;
       this.modalDeleteMode = true;
       this.modalOpen = true;
-      try {
-        this.cdr.detectChanges();
-      } catch {}
+      this.cdr.detectChanges();
     } catch (err) {
-      console.error(err);
       this.notify.warning('No se pudo iniciar la eliminación');
     }
   }
-
   /**
-   * Abrir modal de edición y precargar campos/valores.
+   * Confirma la acción del modal (crear/editar/borrar)
    */
-  async openEditModal(usuario: any) {
+  async onModalConfirm(): Promise<void> {
     try {
-      console.debug(
-        '[UsuariosPage] openEditModal start id=',
-        usuario?.id || usuario?.id_usuario || usuario?.ID
-      );
-      // Mostrar modal de inmediato para respuesta rápida
-      this.modalOpen = true;
-      this.modalTitle = 'Editar usuario';
-      try {
-        this.cdr.detectChanges();
-      } catch {}
-      // Si faltan id_rol o id_jerarquia, intentar obtenerlos desde endpoints específicos
-      try {
-        const uid = usuario?.id || usuario?.id_usuario || usuario?.ID || null;
-        if (uid) {
-          // Obtener roles asignados al usuario y usar el primero como valor por defecto
-          try {
-            const rolesResp: any = await firstValueFrom(
-              this.api.get(`usuarios/roles/${uid}`) as any
-            );
-            const assignedRoles = rolesResp?.roles || [];
-            if (
-              (!usuario?.id_rol || String(usuario.id_rol) === '') &&
-              Array.isArray(assignedRoles) &&
-              assignedRoles.length
-            ) {
-              usuario.id_rol =
-                assignedRoles[0].id_rol ?? assignedRoles[0].id ?? assignedRoles[0].id_rol;
-            }
-          } catch (e) {
-            console.debug('[openEditModal] no se pudo obtener roles del usuario', e);
-          }
-
-          // Obtener las asociaciones usuario-jerarquias y buscar la que corresponda
-          try {
-            const ujResp: any = await firstValueFrom(this.api.get(`usuarios_jerarquias`) as any);
-            const asociaciones = ujResp?.usuarios_jerarquias || ujResp?.data || ujResp || [];
-            if (
-              (!usuario?.id_jerarquia || String(usuario.id_jerarquia) === '') &&
-              Array.isArray(asociaciones)
-            ) {
-              const asoci = asociaciones.find((a: any) => String(a.id_usuario) === String(uid));
-              if (asoci) {
-                usuario.id_jerarquia = asoci.id_jerarquia ?? asoci.id;
-              }
-            }
-          } catch (e) {
-            console.debug('[openEditModal] no se pudo obtener usuarios_jerarquias', e);
-          }
-        }
-      } catch (e) {
-        try {
-          console.error(e);
-        } catch {}
-      }
-      // Cargar opciones si es necesario (roles, jerarquias, tipos, estados)
-      let rolOptions: { value: string; label: string }[] = [];
-      let jerarquiaOptions: { value: string; label: string }[] = [];
-      let tipoOptions: { value: string; label: string }[] = [];
-      let estadoOptions: { value: string; label: string }[] = [];
-
-      try {
-        const rresp: any = await firstValueFrom(
-          this.api.getPaginated('roles', { desde: 0 }) as any
-        );
-        const rrows = rresp?.data || rresp || [];
-        rolOptions = (Array.isArray(rrows) ? rrows : []).map((r: any) => ({
-          value: String(r.id_rol ?? r.id ?? ''),
-          label: r.nombre ?? String(r.id_rol ?? r.id ?? ''),
-        }));
-      } catch {}
-      try {
-        const jresp: any = await firstValueFrom(
-          this.api.getPaginated('jerarquias', { desde: 0 }) as any
-        );
-        const jrows = jresp?.data || jresp || [];
-        jerarquiaOptions = (Array.isArray(jrows) ? jrows : []).map((j: any) => ({
-          value: String(j.id_jerarquia ?? j.id ?? ''),
-          label: j.nombre ?? String(j.id_jerarquia ?? j.id ?? ''),
-        }));
-      } catch {}
-      try {
-        const tresp: any = await firstValueFrom(
-          this.api.getPaginated('tipos_usuario', { desde: 0 }) as any
-        );
-        const trows = tresp?.data || tresp || [];
-        tipoOptions = (Array.isArray(trows) ? trows : []).map((t: any) => ({
-          value: String(t.id_tipo_usuario ?? t.id ?? ''),
-          label: t.nombre ?? String(t.id_tipo_usuario ?? t.id ?? ''),
-        }));
-      } catch {}
-      try {
-        const eres: any = await firstValueFrom(
-          this.api.getPaginated('estados', { desde: 0 }) as any
-        );
-        const erows = eres?.data || eres || [];
-        estadoOptions = (Array.isArray(erows) ? erows : []).map((e: any) => ({
-          value: String(e.id_estado ?? e.id ?? ''),
-          label: e.nombre ?? String(e.id_estado ?? e.id ?? ''),
-        }));
-      } catch {}
-
-      const fields: any[] = [];
-      fields.push({
-        key: 'nombre_usuario',
-        label: 'Nombre de usuario',
-        type: 'text',
-        value: usuario?.nombre_usuario ?? usuario?.nombre ?? '',
-      });
-      // contraseña en blanco para edición (opcional)
-      fields.push({ key: 'contrasena', label: 'Contraseña', type: 'password', value: '' });
-      fields.push({
-        key: 'nombres',
-        label: 'Nombres',
-        type: 'text',
-        value: usuario?.nombres ?? '',
-      });
-      fields.push({
-        key: 'apellidos',
-        label: 'Apellidos',
-        type: 'text',
-        value: usuario?.apellidos ?? '',
-      });
-      fields.push({
-        key: 'correo_electronico',
-        label: 'Correo electrónico',
-        type: 'text',
-        value: usuario?.correo_electronico ?? usuario?.correo ?? '',
-      });
-      fields.push({
-        key: 'id_rol',
-        label: 'Rol',
-        type: 'select',
-        options: rolOptions,
-        value: String(usuario?.id_rol ?? ''),
-      });
-      fields.push({
-        key: 'id_jerarquia',
-        label: 'Jerarquía',
-        type: 'select',
-        options: jerarquiaOptions,
-        value: String(usuario?.id_jerarquia ?? ''),
-      });
-      fields.push({
-        key: 'id_tipo_usuario',
-        label: 'Tipo usuario',
-        type: 'select',
-        options: tipoOptions,
-        value: String(usuario?.id_tipo_usuario ?? ''),
-      });
-      fields.push({
-        key: 'id_estado',
-        label: 'Estado',
-        type: 'select',
-        options: estadoOptions,
-        value: String(usuario?.id_estado ?? ''),
-      });
-      fields.push({
-        key: 'activo',
-        label: 'Activo',
-        type: 'select',
-        options: [
-          { value: 'true', label: 'Sí' },
-          { value: 'false', label: 'No' },
-        ],
-        value: usuario?.activo ? 'true' : 'false',
-      });
-
-      this.modalFields = fields;
-      this.modalValues = {};
-      for (const f of fields) this.modalValues[f.key] = f.value ?? '';
-      this.modalEditingId = usuario?.id || usuario?.id_usuario || usuario?.ID || null;
-      this.modalTitle = 'Editar usuario';
-      this.modalDeleteMode = false;
-      this.modalOpen = true;
-      try {
-        this.cdr.detectChanges();
-      } catch {}
-    } catch (err) {
-      console.error(err);
-      this.notify.warning('No se pudo abrir modal de edición');
+      await onModalConfirmGeneric(this, 'usuarios');
+      await this.cargarDatosAsync();
+    } catch (e) {
+      this.notify.warning('Error al confirmar el modal');
     }
   }
 
   /**
-   * @description Cambia el tema visual del sitio según selección.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
+   * Se ejecuta al cerrar el modal; limpia estado y delega al helper genérico.
    */
-  cambiarEstilo(evt: Event) {
+  onModalClosed(): void {
+    try {
+      onModalClosedGeneric(this);
+    } catch (e) {
+      this.notify.warning('Error al cerrar el modal');
+    }
+  }
+
+  /**
+   * Refresca los datos de la tabla de usuarios.
+   */
+  async refrescar(): Promise<void> {
+    await this.cargarDatosAsync();
+  }
+
+  /**
+   * Cambia el tema visual del sitio según selección.
+   */
+  cambiarEstilo(evt: Event): void {
     const sel = (evt.target as HTMLSelectElement)?.value || 'base';
     const theme = sel === 'modern' ? 'modern' : 'base';
     try {
       document.documentElement.setAttribute('data-theme', theme);
-    } catch {}
+    } catch (e) {
+      this.notify.warning('No se pudo cambiar el tema');
+    }
   }
 
-  onTableReady() {
-    // Marcar lista la tabla para asegurar que se pinte
-    this.datosListos = true;
-    try {
-      this.cdr.detectChanges();
-    } catch {}
+  /**
+   * Método legacy para compatibilidad; no realiza acción (no-op).
+   */
+  openNewUser(): void {}
+
+  /**
+   * Devuelve las columnas visibles en la tabla de usuarios según USUARIO_SCHEMA.
+   */
+  get columns(): { key: string; label: string }[] {
+    return [
+      { key: 'correo_electronico', label: 'Usuarios' },
+      { key: 'nombres', label: 'Nombres' },
+      { key: 'apellidos', label: 'Apellidos' },
+      { key: 'nombre_rol', label: 'Rol' },
+      { key: 'nombre_jerarquia', label: 'Jerarquía' },
+      { key: 'nombre_tipo_usuario', label: 'Tipo Usuario' },
+      { key: 'nombre_estado', label: 'Estado' },
+    ];
   }
 }

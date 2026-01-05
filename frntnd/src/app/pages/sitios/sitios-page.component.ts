@@ -6,6 +6,7 @@ import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.compon
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
 import { ApiService } from '../../services/api.service';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import {
   setupList,
   onPageChangeGeneric,
@@ -16,7 +17,13 @@ import {
 @Component({
   selector: 'page-sitios',
   standalone: true,
-  imports: [CommonModule, UiCardComponent, UiSpinnerComponent, UiEntityTableComponent],
+  imports: [
+    CommonModule,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiEntityTableComponent,
+    UiButtonComponent,
+  ],
   templateUrl: './sitios-page.component.html',
   styleUrls: ['./sitios-page.component.css'],
 })
@@ -133,5 +140,24 @@ export class SitiosPageComponent implements OnInit {
         } catch {}
       }
     })();
+  }
+  async onCreate() {
+    // Abrir modal para crear nuevo sitio, similar a openCreateModal de aplicaciones-sitio
+    try {
+      await abrirEditarModalGeneric(
+        this,
+        {},
+        'sitios',
+        [
+          { key: 'nombre', label: 'Nombre', type: 'text', value: '' },
+          { key: 'dominio', label: 'Dominio', type: 'text', value: '' },
+        ],
+        ['id', 'id_sitio', 'ID']
+      );
+    } catch (err) {
+      try {
+        console.error(err);
+      } catch {}
+    }
   }
 }

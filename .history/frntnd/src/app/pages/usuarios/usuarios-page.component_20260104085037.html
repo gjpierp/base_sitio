@@ -1,0 +1,115 @@
+<div class="page-animate" [class.page-ready]="datosListos">
+  <ui-card [title]="title" [subtitle]="subtitle">
+    <div
+      class="spread"
+      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
+    >
+      <ng-container *ngIf="loading">
+        <ui-spinner label="Cargando"></ui-spinner>
+      </ng-container>
+      <ng-container *ngIf="!loading && error">
+        <div class="muted">{{ error }}</div>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <div style="margin-left: auto">
+          <ui-button variant="primary" (pressed)="openCreateModal()" icon="add">
+            Crear
+          </ui-button>
+        </div>
+      </ng-container>
+    </div>
+    <ng-container *ngIf="!loading && datosListos">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [columns]="columns"
+        [data]="dataFormateada"
+        [total]="totalUsuarios"
+        [loading]="loading"
+        [error]="error"
+        [page]="currentPage"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+        (pageChange)="onPageChange($event)"
+      ></ui-entity-table>
+    </ng-container>
+  </ui-card>
+</div>
+
+<!-- Modal integrado para creación/edición -->
+<ui-modal
+  [open]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <form *ngIf="modalFields.length" (submit)="$event.preventDefault(); onModalConfirm()">
+      <table class="form-table">
+        <tr *ngFor="let f of modalFields">
+          <th>
+            <label
+              [for]="f.key"
+              style="
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+                display: inline-block;
+              "
+              >{{ f.label }}</label
+            >
+          </th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  [id]="f.key"
+                  [ngModel]="modalValues[f.key] ?? f.value"
+                  (ngModelChange)="modalValues[f.key] = $event"
+                  [name]="f.key"
+                  style="width: 360px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchCase="'select'">
+                <select
+                  [id]="f.key"
+                  [ngModel]="modalValues[f.key] ?? f.value"
+                  (ngModelChange)="modalValues[f.key] = $event"
+                  [name]="f.key"
+                  style="width: 360px; max-width: 100%; box-sizing: border-box"
+                >
+                  <option *ngFor="let o of f.options || []" [value]="o.value">{{ o.label }}</option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [id]="f.key"
+                  [ngModel]="modalValues[f.key] ?? f.value"
+                  (ngModelChange)="modalValues[f.key] = $event"
+                  [name]="f.key"
+                  style="width: 360px; max-width: 100%; box-sizing: border-box"
+                ></textarea>
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input
+                  [id]="f.key"
+                  [ngModel]="modalValues[f.key] ?? f.value"
+                  (ngModelChange)="modalValues[f.key] = $event"
+                  [name]="f.key"
+                  style="width: 360px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <div *ngIf="!modalFields.length && modalDeleteMode" style="padding: 1rem">
+      <p>
+        ¿Confirma eliminar "<strong>{{ modalValues.nombre }}</strong
+        >"?
+      </p>
+    </div>
+  </div>
+</ui-modal>
