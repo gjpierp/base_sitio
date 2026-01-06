@@ -9,7 +9,7 @@ import { ThemeSelectorComponent } from '../../../shared/theme-selector/theme-sel
 @Component({
   selector: 'ui-header',
   standalone: true,
-  imports: [UiInputComponent, UiButtonComponent, ThemeSelectorComponent],
+  imports: [UiInputComponent, UiButtonComponent],
   templateUrl: './ui-header.component.html',
   styleUrl: './ui-header.component.css',
 })

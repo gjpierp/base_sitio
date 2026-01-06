@@ -3,7 +3,6 @@ import {
   inject,
   ChangeDetectorRef,
   OnInit,
-  ViewChild,
   ChangeDetectionStrategy,
   NgZone,
 } from '@angular/core';
@@ -47,6 +46,65 @@ import { onPageChangeGeneric, onModalConfirmGeneric, onModalClosedGeneric } from
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class UsuariosPageComponent implements OnInit {
+  // Filtros de búsqueda
+  filtroNombre: string = '';
+  filtroCorreo: string = '';
+  filtroTipoUsuario: string = '';
+  filtroEstado: string = '';
+  estadoActivoId: string = '';
+  filtroRol: string = '';
+
+  /**
+   * Aplica los filtros de búsqueda sobre la lista de usuarios
+   */
+  aplicarFiltros() {
+    let filtrados = this.data;
+    if (this.filtroNombre) {
+      const nombre = this.filtroNombre.toLowerCase();
+      filtrados = filtrados.filter((u) =>
+        (u.nombre_usuario || u.nombres || '').toLowerCase().includes(nombre)
+      );
+    }
+    if (this.filtroCorreo) {
+      const correo = this.filtroCorreo.toLowerCase();
+      filtrados = filtrados.filter((u) =>
+        (u.correo_electronico || '').toLowerCase().includes(correo)
+      );
+    }
+    if (this.filtroTipoUsuario) {
+      filtrados = filtrados.filter(
+        (u) => String(u.id_tipo_usuario) === String(this.filtroTipoUsuario)
+      );
+    }
+    if (this.filtroEstado) {
+      filtrados = filtrados.filter((u) => String(u.id_estado) === String(this.filtroEstado));
+    }
+    if (this.filtroRol) {
+      filtrados = filtrados.filter((u) => u.id_rol && String(u.id_rol) === String(this.filtroRol));
+    }
+    this.formattedData = filtrados;
+    this.totalUsuarios = filtrados.length;
+
+    // Limpiar filtros después de buscar
+    this.filtroNombre = '';
+    this.filtroCorreo = '';
+    this.filtroTipoUsuario = '';
+    this.filtroEstado = '';
+    this.filtroRol = '';
+  }
+
+  /**
+   * Limpia los filtros y restaura la lista completa
+   */
+  limpiarFiltros() {
+    this.filtroNombre = '';
+    this.filtroCorreo = '';
+    this.filtroTipoUsuario = '';
+    this.filtroEstado = '';
+    this.filtroRol = '';
+    this.formattedData = this.data;
+    this.totalUsuarios = this.data.length;
+  }
   /**
    * @description Inicio de Variables
    * @author Gerardo Paiva
@@ -76,8 +134,6 @@ export class UsuariosPageComponent implements OnInit {
   modalDeleteMode = false;
   currentPage = 1;
 
-  @ViewChild('modalRef') modalComp: any;
-
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
@@ -103,9 +159,25 @@ export class UsuariosPageComponent implements OnInit {
     if (preloaded) {
       this.tiposUsuario = preloaded.tiposUsuario || [];
       this.estados = preloaded.estados || [];
+      // Buscar el id del estado "Activo" y filtrar por defecto
+      const estadoActivo = this.estados.find((e) => e.nombre?.toLowerCase() === 'activo');
+      let usuariosFiltrados = preloaded.usuarios || [];
+      if (estadoActivo) {
+        this.estadoActivoId = String(estadoActivo.id_estado);
+        this.filtroEstado = this.estadoActivoId;
+        usuariosFiltrados = usuariosFiltrados.filter(
+          (u: any) => String(u.id_estado) === String(this.estadoActivoId)
+        );
+      }
       this.roles = preloaded.roles || [];
       this.jerarquias = preloaded.jerarquias || [];
-      this.procesarDatosUsuarios(preloaded.usuarios || [], preloaded.total || 0);
+      console.log('[UsuariosPageComponent] Datos precargados:', {
+        roles: this.roles,
+        tiposUsuario: this.tiposUsuario,
+        estados: this.estados,
+        jerarquias: this.jerarquias,
+      });
+      this.procesarDatosUsuarios(usuariosFiltrados, usuariosFiltrados.length);
       this.datosListos = true;
     } else {
       this.cargarDatosAsync();
@@ -116,127 +188,95 @@ export class UsuariosPageComponent implements OnInit {
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  async openEditModal(usuario: any) {
+  openEditModal(usuario: any) {
+    // 1. Configuración inicial limpia
     this.modalTitle = 'Editar usuario';
     this.modalFields = [];
     this.modalValues = {};
     this.modalDeleteMode = false;
+    this.modalEditingId = null;
     this.modalLoading = true;
+
+    // 2. Reinicio forzado del modal para evitar problemas de "primer click"
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+
     this.modalOpen = true;
     this.cdr.detectChanges();
 
+    // 3. Lógica de carga de datos
     try {
-      // Asignar el id del usuario para edición, usando el id del usuario actualizado desde la base de datos
-      let u: any = usuario ? JSON.parse(JSON.stringify(usuario)) : {};
-      const idToFetch = u?.id || u?.id_usuario || u?.ID || null;
-      if (!idToFetch) {
-        this.notify.warning('Error: No se pudo obtener el ID del usuario para editar.');
-        this.modalOpen = false;
-        this.cdr.detectChanges();
-        return;
-      }
-      if (idToFetch) {
-        const detailResp: any = await firstValueFrom(
-          this.api.get(`usuarios/${idToFetch}`) as any
-        ).catch(() => null);
-        if (detailResp) {
-          const payload = detailResp?.data ?? detailResp;
-          if (payload && typeof payload === 'object') u = { ...u, ...payload };
-          // Asignar el id desde la base de datos
-          this.modalEditingId = u?.id_usuario || u?.id || u?.ID || null;
-          // Si el id es un string y parece un correo, descartar y buscar el id numérico
-          if (typeof this.modalEditingId === 'string' && this.modalEditingId.includes('@')) {
-            this.modalEditingId = u?.id_usuario || null;
-          }
-        } else {
-          this.modalEditingId = idToFetch;
-          // Validación extra si no se pudo cargar detalle
-          if (typeof this.modalEditingId === 'string' && this.modalEditingId.includes('@')) {
-            this.modalEditingId = u?.id_usuario || null;
-          }
-        }
-      } else {
-        this.modalEditingId = null;
-      }
-      if (!this.datosListos) {
-        await this.cargarDatosAsync();
+      // Identificar ID
+      const uRow = usuario ? { ...usuario } : {};
+      const id = uRow.id || uRow.id_usuario || uRow.ID;
+
+      if (!id) throw new Error('Usuario sin ID');
+
+      // Cargar detalle fresco (opcional, pero recomendado)
+      let uDetail = uRow;
+      try {
+        const res: any = firstValueFrom(this.api.get(`usuarios/${id}`));
+        const payload = res?.data ?? res;
+        if (payload) uDetail = { ...uDetail, ...payload };
+      } catch (e) {
+        console.warn('Usando datos de fila por error en detalle:', e);
       }
 
+      // Asegurar catálogos cargados
+      if (!this.datosListos || !this.roles?.length) {
+        this.cargarDatosAsync();
+      }
+
+      // 4. Construcción de UI dentro de la zona de Angular
       this.ngZone.run(() => {
-        const rolOptions = (Array.isArray(this.roles) ? this.roles : []).map((r: any) => ({
-          value:
-            r.id_rol != null && r.id_rol !== '' && !isNaN(Number(r.id_rol))
-              ? String(r.id_rol)
-              : r.id != null && r.id !== '' && !isNaN(Number(r.id))
-              ? String(r.id)
-              : '',
-          label:
-            r.nombre ??
-            r.label ??
-            r.title ??
-            r.descripcion ??
-            r.nombre_rol ??
-            r.rol ??
-            r.name ??
-            String(r.id_rol ?? r.id ?? ''),
-        }));
-        const tipoOptions = (Array.isArray(this.tiposUsuario) ? this.tiposUsuario : []).map(
-          (t: any) => ({
-            value:
-              t.id_tipo_usuario != null &&
-              t.id_tipo_usuario !== '' &&
-              !isNaN(Number(t.id_tipo_usuario))
-                ? String(t.id_tipo_usuario)
-                : t.id != null && t.id !== '' && !isNaN(Number(t.id))
-                ? String(t.id)
-                : '',
-            label: t.nombre ?? t.title ?? String(t.id_tipo_usuario ?? t.id ?? ''),
-          })
-        );
-        const estadoOptions = (Array.isArray(this.estados) ? this.estados : []).map((e: any) => ({
-          value:
-            e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
-              ? String(e.id_estado)
-              : e.id != null && e.id !== '' && !isNaN(Number(e.id))
-              ? String(e.id)
-              : '',
-          label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
-        }));
-        const jerarquiaOptions = (Array.isArray(this.jerarquias) ? this.jerarquias : []).map(
-          (j: any) => ({
-            value:
-              j.id_jerarquia != null && j.id_jerarquia !== '' && !isNaN(Number(j.id_jerarquia))
-                ? String(j.id_jerarquia)
-                : j.id != null && j.id !== '' && !isNaN(Number(j.id))
-                ? String(j.id)
-                : '',
-            label:
-              j.nombre ??
-              j.label ??
-              j.title ??
-              j.descripcion ??
-              j.nombre_jerarquia ??
-              j.jerarquia ??
-              j.name ??
-              String(j.id_jerarquia ?? j.id ?? ''),
-          })
-        );
+        // Helper para mapear opciones
+        const mapOpts = (arr: any[], idKey: string, labelKey: string) =>
+          (Array.isArray(arr) ? arr : [])
+            .filter((x) => x)
+            .map((x) => ({
+              value: String(x[idKey] ?? x.id ?? ''),
+              label: x[labelKey] ?? x.nombre ?? x.title ?? String(x[idKey] ?? ''),
+            }));
+
+        const rolOptions = mapOpts(this.roles, 'id_rol', 'nombre');
+        const tipoOptions = mapOpts(this.tiposUsuario, 'id_tipo_usuario', 'nombre');
+        const estadoOptions = mapOpts(this.estados, 'id_estado', 'nombre');
+        const jerarquiaOptions = mapOpts(this.jerarquias, 'id_jerarquia', 'nombre');
+
+        // LOG para depuración de carga de select
+        console.log('[UsuariosPageComponent] Opciones de select:', {
+          rolOptions,
+          tipoOptions,
+          estadoOptions,
+          jerarquiaOptions,
+        });
+
+        // Construir campos
         this.modalFields = this.buildUsuarioFields(
           { rolOptions, jerarquiaOptions, tipoOptions, estadoOptions },
-          u,
+          uDetail,
           true
         );
-        this.modalValues = {};
-        for (const f of this.modalFields) {
-          this.modalValues[f.key] = f.value;
+
+        // Asignar valores
+        const values: any = {};
+        this.modalFields.forEach((f) => (values[f.key] = f.value));
+        this.modalValues = values;
+
+        this.modalEditingId = uDetail.id_usuario || id;
+
+        // Fix específico para IDs que parecen correos (legacy data)
+        if (typeof this.modalEditingId === 'string' && this.modalEditingId.includes('@')) {
+          this.modalEditingId = uDetail.id_usuario || null;
         }
+
+        // Mostrar formulario
         this.modalLoading = false;
-        this.modalOpen = true;
         this.cdr.detectChanges();
       });
     } catch (err) {
       this.modalOpen = false;
-      this.notify.warning('No se pudo cargar la información del usuario');
+      this.notify.warning('No se pudo cargar el usuario para edición');
       this.cdr.detectChanges();
     }
   }
@@ -267,16 +307,22 @@ export class UsuariosPageComponent implements OnInit {
       // Opciones para campos select
       if (base.type === 'select') {
         if (key === 'id_rol') base.options = rolOptions;
-        if (key === 'id_jerarquia') base.options = jerarquiaOptions;
-        if (key === 'id_tipo_usuario') base.options = tipoOptions;
-        if (key === 'id_estado') base.options = estadoOptions;
-        if (key === 'activo') {
+        else if (key === 'id_jerarquia') base.options = jerarquiaOptions;
+        else if (key === 'id_tipo_usuario') base.options = tipoOptions;
+        else if (key === 'id_estado') base.options = estadoOptions;
+        else if (
+          key === 'activo' ||
+          key === 'habilitado' ||
+          key === 'visible' ||
+          key === 'borrado'
+        ) {
           base.options = [
             { value: 'true', label: 'Sí' },
             { value: 'false', label: 'No' },
           ];
         }
       }
+
       // value: try multiple candidate keys in defaults (key, alias, sensible fallbacks)
       const candidates: string[] = [];
       candidates.push(key);
@@ -297,8 +343,10 @@ export class UsuariosPageComponent implements OnInit {
       if (!key.startsWith('id_')) {
         if (key === 'id') {
           candidates.push('id_usuario', 'ID');
-        } else {
-          candidates.push(key.replace(/_/g, ''), 'nombre', 'name', 'correo', 'correo_electronico');
+        } else if (key === 'nombre' || key === 'nombres') {
+          candidates.push('name', 'nombre_usuario');
+        } else if (key === 'correo_electronico') {
+          candidates.push('correo', 'email');
         }
       }
 
@@ -394,7 +442,13 @@ export class UsuariosPageComponent implements OnInit {
    * @date 28-12-2025
    */
   async cargarDatosAsync() {
-    this.loading = true;
+    // Fix NG0100: Defer loading state update to avoid ExpressionChangedAfterItHasBeenCheckedError
+    let pending = true;
+    setTimeout(() => {
+      if (pending) {
+        this.loading = true;
+      }
+    });
     this.error = undefined; // Limpiar errores previos al recargar
 
     try {
@@ -408,6 +462,7 @@ export class UsuariosPageComponent implements OnInit {
         })
       );
 
+      pending = false;
       this.ngZone.run(() => {
         const { tipos, estados, roles, jerarquias, usuariosRes } = results;
 
@@ -469,12 +524,13 @@ export class UsuariosPageComponent implements OnInit {
         this.cdr.detectChanges();
       });
     } catch (err) {
+      pending = false;
       this.ngZone.run(() => {
         this.error = (err as any)?.error?.msg || 'No se pudo cargar usuarios';
         this.data = [];
         this.formattedData = [];
         this.loading = false;
-        this.datosListos = true;
+        this.datosListos = false; // Permitir reintento si falló
         this.cdr.detectChanges();
       });
     }
@@ -517,10 +573,6 @@ export class UsuariosPageComponent implements OnInit {
       correo_electronico: r.correo ?? r.correo_electronico ?? '',
       id_tipo_usuario: r.id_tipo_usuario ?? '',
       id_estado: r.id_estado ?? '',
-      activo:
-        typeof r.activo !== 'undefined'
-          ? r.activo === 1 || r.activo === '1' || r.activo === true
-          : true,
     }));
   }
 
@@ -548,7 +600,11 @@ export class UsuariosPageComponent implements OnInit {
     this.modalEditingId = null;
     this.modalDeleteMode = false;
     this.modalLoading = true;
-    this.modalOpen = true; // Mostrar modal inmediatamente
+
+    // Reinicio forzado para asegurar apertura (igual que en edición)
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+    this.modalOpen = true;
     this.cdr.detectChanges();
 
     try {
@@ -558,25 +614,28 @@ export class UsuariosPageComponent implements OnInit {
       }
 
       this.ngZone.run(() => {
-        const rolOptions = (Array.isArray(this.roles) ? this.roles : []).map((r: any) => ({
-          value:
-            r.id_rol != null && r.id_rol !== '' && !isNaN(Number(r.id_rol))
-              ? String(r.id_rol)
-              : r.id != null && r.id !== '' && !isNaN(Number(r.id))
-              ? String(r.id)
-              : '',
-          label:
-            r.nombre ??
-            r.label ??
-            r.title ??
-            r.descripcion ??
-            r.nombre_rol ??
-            r.rol ??
-            r.name ??
-            String(r.id_rol ?? r.id ?? ''),
-        }));
-        const tipoOptions = (Array.isArray(this.tiposUsuario) ? this.tiposUsuario : []).map(
-          (t: any) => ({
+        const rolOptions = (Array.isArray(this.roles) ? this.roles : [])
+          .filter((r) => r)
+          .map((r: any) => ({
+            value:
+              r.id_rol != null && r.id_rol !== '' && !isNaN(Number(r.id_rol))
+                ? String(r.id_rol)
+                : r.id != null && r.id !== '' && !isNaN(Number(r.id))
+                ? String(r.id)
+                : '',
+            label:
+              r.nombre ??
+              r.label ??
+              r.title ??
+              r.descripcion ??
+              r.nombre_rol ??
+              r.rol ??
+              r.name ??
+              String(r.id_rol ?? r.id ?? ''),
+          }));
+        const tipoOptions = (Array.isArray(this.tiposUsuario) ? this.tiposUsuario : [])
+          .filter((t) => t)
+          .map((t: any) => ({
             value:
               t.id_tipo_usuario != null &&
               t.id_tipo_usuario !== '' &&
@@ -586,20 +645,22 @@ export class UsuariosPageComponent implements OnInit {
                 ? String(t.id)
                 : '',
             label: t.nombre ?? t.title ?? String(t.id_tipo_usuario ?? t.id ?? ''),
-          })
-        );
-        const estadoOptions = (Array.isArray(this.estados) ? this.estados : []).map((e: any) => ({
-          value:
-            e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
-              ? String(e.id_estado)
-              : e.id != null && e.id !== '' && !isNaN(Number(e.id))
-              ? String(e.id)
-              : '',
-          label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
-        }));
+          }));
+        const estadoOptions = (Array.isArray(this.estados) ? this.estados : [])
+          .filter((e) => e)
+          .map((e: any) => ({
+            value:
+              e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
+                ? String(e.id_estado)
+                : e.id != null && e.id !== '' && !isNaN(Number(e.id))
+                ? String(e.id)
+                : '',
+            label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
+          }));
         // Si necesitas jerarquía, agrégala igual que los otros
-        const jerarquiaOptions = (Array.isArray(this.jerarquias) ? this.jerarquias : []).map(
-          (j: any) => ({
+        const jerarquiaOptions = (Array.isArray(this.jerarquias) ? this.jerarquias : [])
+          .filter((j) => j)
+          .map((j: any) => ({
             value:
               j.id_jerarquia != null && j.id_jerarquia !== '' && !isNaN(Number(j.id_jerarquia))
                 ? String(j.id_jerarquia)
@@ -615,8 +676,7 @@ export class UsuariosPageComponent implements OnInit {
               j.jerarquia ??
               j.name ??
               String(j.id_jerarquia ?? j.id ?? ''),
-          })
-        );
+          }));
 
         this.modalFields = this.buildUsuarioFields(
           { rolOptions, jerarquiaOptions, tipoOptions, estadoOptions },
@@ -664,10 +724,12 @@ export class UsuariosPageComponent implements OnInit {
       this.modalFields = [];
       this.modalValues = { nombre: usuario?.nombre ?? '' };
       this.modalTitle = 'Eliminar usuario';
-      this.modalEditingId = usuario?.id || usuario?.id_usuario || usuario?.ID || null;
+      // Solo id numérico válido
+      this.modalEditingId = Number(usuario?.id || usuario?.id_usuario || usuario?.ID);
       this.modalDeleteMode = true;
+      this.modalLoading = false;
       this.modalOpen = true;
-      this.cdr.detectChanges();
+      setTimeout(() => this.cdr.detectChanges(), 0);
     } catch (err) {
       this.notify.warning('No se pudo iniciar la eliminación');
     }
@@ -677,8 +739,23 @@ export class UsuariosPageComponent implements OnInit {
    */
   async onModalConfirm(): Promise<void> {
     try {
-      await onModalConfirmGeneric(this, 'usuarios');
+      console.log(
+        '[onModalConfirm] Modal confirmado. Estado delete:',
+        this.modalDeleteMode,
+        'ID:',
+        this.modalEditingId
+      );
+      const success = await onModalConfirmGeneric(this, 'usuarios');
+      // Cerrar el modal siempre, incluso si hay error
+      this.modalOpen = false;
+      this.modalDeleteMode = false;
+      this.modalEditingId = null;
+      this.cdr.detectChanges();
+      if (!success) return;
+      // Esperar un momento para asegurar que la transacción en BD finalizó
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await this.cargarDatosAsync();
+      this.cdr.detectChanges();
     } catch (e) {
       this.notify.warning('Error al confirmar el modal');
     }

@@ -4,7 +4,6 @@ export interface Permission {
   descripcion?: string;
   id_permiso?: number | string;
   id_estado?: number | string;
-  activo?: number | boolean;
 
   [key: string]: any;
 }

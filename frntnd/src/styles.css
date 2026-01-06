@@ -151,3 +151,16 @@ label,
 .content form label {
   text-align: left !important;
 }
+
+/* Global overrides for UI components */
+ui-entity-table {
+  width: 100%;
+  display: block;
+}
+
+ui-modal .modal-container,
+ui-modal .modal-dialog,
+.modal-content {
+  width: fit-content !important;
+  max-width: 95vw !important;
+}

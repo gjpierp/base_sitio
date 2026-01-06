@@ -104,10 +104,10 @@
 .dialog {
   position: relative;
   margin: 0;
-  /* Make the dialog occupy a larger portion of available width by default */
-  width: 70%;
-  max-width: 1100px;
-  min-width: 360px;
+  /* Ancho adaptable al contenido, con límites */
+  width: 800px !important;
+  min-width: 800px !important;
+  max-width: 800px !important;
   background: var(--surface);
   color: var(--text);
   border-radius: 8px;
@@ -132,13 +132,6 @@
 }
 
 /* Responsive: on small viewports, use almost full width */
-@media (max-width: 800px) {
-  .dialog {
-    width: calc(100% - 32px);
-    min-width: auto;
-    max-width: none;
-  }
-}
 
 .header {
   display: flex;
@@ -202,7 +195,7 @@
 .content select,
 .content textarea,
 .content .form-control {
-  width: 100%;
+  /* width: 100%; */
   font-size: 14px;
   padding: 8px 10px;
   border-radius: 6px;
@@ -347,7 +340,7 @@
   padding-right: 12px;
 }
 .content .form-table td {
-  width: auto;
+  /* width: auto; */
 }
 .content .form-table input,
 .content .form-table select,

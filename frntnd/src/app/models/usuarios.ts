@@ -12,8 +12,6 @@ export interface Usuarios {
   fecha_actualizacion?: string | Date | null;
   id_estado?: number | null;
   img?: string | null;
-  activo?: number | null;
-  id_configuracion_default?: number | null;
   nombres?: string | null;
   apellidos?: string | null;
 }

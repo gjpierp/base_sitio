@@ -8,16 +8,14 @@ export const JERARQUIA_SCHEMA: { fields: Array<any> } = {
     { key: 'descripcion', label: 'Descripción', type: 'text' },
     { key: 'id_jerarquia_padre', label: 'Jerarquía padre', type: 'select' },
     { key: 'id_estado', label: 'Estado', type: 'select' },
-    { key: 'activo', label: 'Activo', type: 'select' },
   ],
 };
+
 export interface Jerarquia {
   id_jerarquia?: number | string;
-  nombre?: string;
-  descripcion?: string | null;
   id_jerarquia_padre?: number | string | null;
   id_estado?: number | string | null;
-  activo?: number | boolean;
-
+  nombre?: string;
+  descripcion?: string | null;
   [key: string]: any;
 }

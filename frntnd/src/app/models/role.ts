@@ -7,7 +7,6 @@ export const ROLE_SCHEMA: { fields: Array<any> } = {
     { key: 'nombre', label: 'Nombre', type: 'text' },
     { key: 'descripcion', label: 'Descripción', type: 'text' },
     { key: 'id_estado', label: 'Estado', type: 'select' },
-    { key: 'activo', label: 'Activo', type: 'select' },
   ],
 };
 export interface Role {

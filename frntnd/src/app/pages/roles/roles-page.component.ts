@@ -1,15 +1,25 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+  OnInit,
+  NgZone,
+} from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
-import { ApiService } from '../../services/api.service';
-import { Role } from '../../models/role';
+import { firstValueFrom } from 'rxjs';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
+import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal.component';
-
+import { ApiService } from '../../services/api.service';
+import { NotificationService } from '../../services/notification.service';
+import { Roles } from '../../models/roles';
+import { Estado } from '../../models/estado';
+import { UiPaginationComponent } from '../../components/ui-navigation/ui-pagination/ui-pagination.component';
 /**
  * Componente para la gestión y listado de roles en el sistema.
  * Fecha  Autor Versión Descripción
@@ -21,35 +31,43 @@ import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal
   imports: [
     CommonModule,
     FormsModule,
-    UiEntityTableComponent,
     UiCardComponent,
     UiSpinnerComponent,
+    UiButtonComponent,
+    UiEntityTableComponent,
     UiModalComponent,
+    UiPaginationComponent,
   ],
   templateUrl: './roles-page.component.html',
   styleUrls: ['./roles-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default,
 })
-export class RolesPageComponent {
-  private api = inject(ApiService);
-  private cdr = inject(ChangeDetectorRef);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-
+export class RolesPageComponent implements OnInit {
+  seleccionado: any = null;
+  modalError: string = '';
+  nuevo: { nombre: string; descripcion: string } = { nombre: '', descripcion: '' };
+  // route: any; // Eliminado, ahora se inyecta en el constructor
+  estadoActivoId: string = '';
   title = 'Roles';
-  subtitle = 'Roles';
+  subtitle = 'Administración de roles';
   columns = [
-    { key: 'id', label: 'ID' },
     { key: 'nombre', label: 'Nombre' },
     { key: 'descripcion', label: 'Descripción' },
+    { key: 'nombre_estado', label: 'Estado' },
   ];
-  data: Role[] = [];
+  data: Roles[] = [];
+  formattedData: any[] = [];
   loading = false;
   error?: string;
   totalRoles = 0;
-  datosListos = false;
   currentPage = 1;
-  nuevo = { nombre: '', descripcion: '' };
-  // legacy/modal state (use integrated ui-modal)
+  datosListos = false;
+  estados: Estado[] = [];
+  filtroNombre: string = '';
+  filtroDescripcion: string = '';
+  filtroEstado: string = '';
+
+  // Modal
   modalOpen = false;
   modalTitle = '';
   modalFields: any[] = [];
@@ -58,28 +76,170 @@ export class RolesPageComponent {
   modalLoading = false;
   modalEditingId: any = null;
   modalDeleteMode = false;
-  seleccionado: any = null;
-  modalError = '';
+
+  private api = inject(ApiService);
+  private cdr = inject(ChangeDetectorRef);
+  private notify = inject(NotificationService);
+  private ngZone = inject(NgZone);
+
+  ngOnInit(): void {
+    // Permitir precarga por resolver en el futuro, por ahora siempre async
+    this.cargarDatosAsync();
+  }
+
+  onPageChange(event: any) {
+    // Puedes ajustar la lógica según paginación real
+    this.currentPage = event.page || 1;
+    this.cargarDatosAsync();
+  }
+
+  async cargarDatosAsync() {
+    this.loading = true;
+    try {
+      type ResultType = { estados: any; roles: any };
+      const results: ResultType = await firstValueFrom(
+        (window as any).forkJoin
+          ? (window as any).forkJoin({
+              estados: this.api.get<any>('estados'),
+              roles: this.api.get<any>('roles'),
+            })
+          : (
+              await import('rxjs')
+            ).forkJoin({
+              estados: this.api.get<any>('estados'),
+              roles: this.api.get<any>('roles'),
+            })
+      );
+      this.ngZone.run(() => {
+        const { estados, roles } = results;
+        // Procesar Estados
+        this.estados = Array.isArray(estados)
+          ? estados
+          : (typeof estados === 'object' &&
+              estados !== null &&
+              (Array.isArray((estados as any)['estados'])
+                ? (estados as any)['estados']
+                : Array.isArray((estados as any)['data'])
+                ? (estados as any)['data']
+                : [])) ||
+            [];
+        // Buscar el id del estado "Activo" y filtrar por defecto
+        const estadoActivo = this.estados.find((e) => e.nombre?.toLowerCase() === 'activo');
+        if (estadoActivo) {
+          this.estadoActivoId = String(estadoActivo.id_estado);
+          this.filtroEstado = this.estadoActivoId;
+        }
+        // Procesar Roles
+        const rows = Array.isArray(roles)
+          ? roles
+          : (typeof roles === 'object' &&
+              roles !== null &&
+              (Array.isArray((roles as any)['roles'])
+                ? (roles as any)['roles']
+                : Array.isArray((roles as any)['data'])
+                ? (roles as any)['data']
+                : [])) ||
+            [];
+        this.procesarDatosRoles(rows, this.estados);
+        this.loading = false;
+        this.datosListos = true;
+        this.cdr.detectChanges();
+      });
+    } catch (err) {
+      this.ngZone.run(() => {
+        this.error = (err as any)?.error?.msg || 'No se pudo cargar roles';
+        this.data = [];
+        this.formattedData = [];
+        this.loading = false;
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      });
+    }
+  }
+
+  procesarDatosRoles(rows: any[], estados: Estado[]) {
+    // Mostrar todos los roles y usar nombre_estado si viene del backend
+    const rolesProcesados = rows.map((r: any) => ({
+      ...r,
+      nombre_estado: r.nombre_estado || 'Sin estado',
+    }));
+    this.data = rolesProcesados;
+    this.formattedData = this.data;
+    this.totalRoles = this.data.length;
+  }
+
+  aplicarFiltros() {
+    let filtrados = this.data;
+    // Filtrar por estado activo si no hay filtro explícito
+    if (!this.filtroEstado && this.estadoActivoId) {
+      filtrados = filtrados.filter((r) => String(r.id_estado) === String(this.estadoActivoId));
+    }
+    if (this.filtroNombre) {
+      const nombre = this.filtroNombre.toLowerCase();
+      filtrados = filtrados.filter((r) => (r.nombre || '').toLowerCase().includes(nombre));
+    }
+    if (this.filtroDescripcion) {
+      const desc = this.filtroDescripcion.toLowerCase();
+      filtrados = filtrados.filter((r) => (r.descripcion || '').toLowerCase().includes(desc));
+    }
+    if (this.filtroEstado) {
+      filtrados = filtrados.filter((r) => String(r.id_estado) === String(this.filtroEstado));
+    }
+    this.formattedData = filtrados;
+    this.totalRoles = filtrados.length;
+  }
+
+  limpiarFiltros() {
+    this.filtroNombre = '';
+    this.filtroDescripcion = '';
+    this.filtroEstado = '';
+    this.formattedData = this.data;
+    this.totalRoles = this.data.length;
+  }
+
+  // ...existing code...
+
+  openEditModal(rol: any) {
+    this.modalTitle = 'Editar rol';
+    this.modalFields = this.buildFields(rol);
+    this.modalValues = { ...rol };
+    this.modalDeleteMode = false;
+    this.modalEditingId = rol.id_rol;
+    this.modalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  // ...existing code...
+
+  // ...existing code...
+
+  // ...existing code...
+
+  buildFields(defaults: any = {}) {
+    return [
+      { key: 'nombre', label: 'Nombre', type: 'text', value: defaults.nombre || '' },
+      { key: 'descripcion', label: 'Descripción', type: 'text', value: defaults.descripcion || '' },
+      {
+        key: 'id_estado',
+        label: 'Estado',
+        type: 'select',
+        options: this.estados.map((e) => ({ value: e.id_estado, label: e.nombre })),
+        value: defaults.id_estado || '',
+      },
+    ];
+  }
+
+  refrescar() {
+    this.cargarDatosAsync();
+  }
 
   /**
    * @description Constructor de la clase RolesPageComponent.
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  constructor() {
-    const pre = this.route.snapshot.data?.['pre'];
-    if (pre) {
-      const rows = Array.isArray(pre.roles) ? pre.roles : [];
-      this.data = rows.map((r: any) => this.normalizeRole(r));
-      this.totalRoles = Number(pre.total) || this.data.length;
-      this.loading = false;
-      this.datosListos = true;
-      try {
-        this.cdr.detectChanges();
-      } catch {}
-    } else {
-      this.cargar();
-    }
+  constructor(private route: ActivatedRoute) {
+    // Constructor vacío, la carga de datos se realiza en ngOnInit
   }
 
   /**
@@ -87,15 +247,6 @@ export class RolesPageComponent {
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  ngOnInit() {
-    try {
-      localStorage.removeItem('table:roles:filterText');
-    } catch {}
-  }
-
-  refrescar() {
-    this.cargar();
-  }
 
   /**
    * @description Carga la lista de roles desde la API.
@@ -104,121 +255,32 @@ export class RolesPageComponent {
    */
   cargar() {
     this.loading = true;
-    // Cargar primera página con límite por defecto (el backend usa items_per_page si no se indica limite)
     this.api.getPaginated('roles', { desde: 0 }).subscribe({
       next: (resp) => {
-        const rows = resp.data || [];
+        const rows = Array.isArray(resp) ? resp : resp && Array.isArray(resp.data) ? resp.data : [];
         this.data = rows.map((r: any) => this.normalizeRole(r));
+        this.formattedData = this.data;
         this.totalRoles = Number(resp.total) || this.data.length;
         this.loading = false;
         this.datosListos = true;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.msg || 'No se pudo cargar roles';
         this.loading = false;
+        this.cdr.detectChanges();
       },
     });
   }
 
-  onPageChange(evt: {
-    page: number;
-    pageSize: number;
-    term?: string;
-    sortKey?: string;
-    sortDir?: 'asc' | 'desc';
-  }) {
-    this.currentPage = evt.page;
-    const desde = (evt.page - 1) * evt.pageSize;
-    const limite = evt.pageSize;
-    this.loading = true;
-    this.datosListos = false;
-    try {
-      this.cdr.detectChanges();
-    } catch {}
-    const term = (evt.term || '').trim();
-    const sortKey = (evt.sortKey || '').trim();
-    const sortDir = (evt.sortDir || 'asc').toLowerCase() as 'asc' | 'desc';
-    const applySort = (list: any[]) => {
-      if (!sortKey) return list;
-      const sorted = [...list].sort((a, b) => {
-        const va = a?.[sortKey];
-        const vb = b?.[sortKey];
-        const na = va === null || va === undefined;
-        const nb = vb === null || vb === undefined;
-        if (na && nb) return 0;
-        if (na) return 1;
-        if (nb) return -1;
-        const ta = typeof va;
-        const tb = typeof vb;
-        if (ta === 'number' && tb === 'number') {
-          return sortDir === 'asc' ? va - vb : vb - va;
-        }
-        const sa = String(va).toLowerCase();
-        const sb = String(vb).toLowerCase();
-        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
-      });
-      return sorted;
-    };
-    if (term) {
-      this.api.get<any>(`todo/coleccion/roles/${encodeURIComponent(term)}`).subscribe({
-        next: (resp) => {
-          const list = Array.isArray((resp as any)?.resultados)
-            ? (resp as any).resultados
-            : Array.isArray(resp)
-            ? (resp as any)
-            : [];
-          const mapped = list.map((r: any) => this.normalizeRole(r));
-          const ordered = applySort(mapped as any[]);
-          this.totalRoles = ordered.length;
-          this.data = ordered.slice(desde, desde + limite);
-          this.loading = false;
-          this.datosListos = true;
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: (err) => {
-          this.error = err?.error?.msg || 'No se pudo filtrar roles';
-          this.loading = false;
-        },
-      });
-    } else {
-      this.api.getPaginated('roles', { desde, limite, sortKey, sortDir }).subscribe({
-        next: (resp) => {
-          const rows = resp.data || [];
-          const mapped = rows.map((r: any) => this.normalizeRole(r));
-          const ordered = applySort(mapped as any[]);
-          this.data = ordered;
-          this.totalRoles = Number(resp.total) || ordered.length;
-          this.loading = false;
-          this.datosListos = true;
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: (err) => {
-          this.error = err?.error?.msg || 'No se pudo cargar roles';
-          this.loading = false;
-        },
-      });
-    }
-  }
+  // ...existing code...
 
   /**
    * @description Crea un nuevo rol utilizando los datos del formulario local.
    * @author Gerardo Paiva
    * @date 28-12-2025
    */
-  crear() {
-    const body = { nombre: this.nuevo.nombre, descripcion: this.nuevo.descripcion };
-    this.api.post('roles', body).subscribe({
-      next: () => {
-        this.nuevo = { nombre: '', descripcion: '' };
-        this.cargar();
-      },
-      error: (err) => (this.error = err?.error?.msg || 'No se pudo crear el rol'),
-    });
-  }
+  // ...existing code...
 
   /**
    * @description Abre el modal de edición para un rol específico.
@@ -257,7 +319,10 @@ export class RolesPageComponent {
             const resp: any = await firstValueFrom(this.api.get(`roles/${id}`) as any).catch(
               () => null
             );
-            payload = resp?.rol ?? resp?.data ?? resp ?? payload;
+            payload =
+              resp && typeof resp === 'object'
+                ? resp.rol ?? (Array.isArray(resp.data) ? resp.data[0] : resp.data) ?? resp
+                : payload;
           } catch (e) {
             console.debug('[RolesPage] fetch role detail error', e);
           }
@@ -315,7 +380,6 @@ export class RolesPageComponent {
    * @date 28-12-2025
    */
   cerrarEditar() {
-    // legacy - keep for compatibility
     this.modalOpen = false;
     this.seleccionado = null;
     this.modalValues = {};
@@ -323,6 +387,7 @@ export class RolesPageComponent {
     this.modalEditingId = null;
     this.modalDeleteMode = false;
     this.modalError = '';
+    this.cdr.detectChanges();
   }
 
   /**
@@ -340,6 +405,7 @@ export class RolesPageComponent {
     }
     this.modalSaving = true;
     const payload = { nombre, descripcion: this.modalValues?.descripcion ?? '' };
+    console.log('[RolesPage] PUT payload (editar rol):', { id, ...payload });
     this.api.put(`roles/${id}`, payload).subscribe({
       next: () => {
         this.modalSaving = false;
@@ -364,6 +430,7 @@ export class RolesPageComponent {
     this.modalEditingId = null;
     this.modalDeleteMode = false;
     this.modalValues = {};
+    this.cdr.detectChanges();
   }
 
   /**
@@ -375,6 +442,7 @@ export class RolesPageComponent {
     const id = this.modalEditingId ?? this.seleccionado?.id;
     if (!id) return this.cerrarEliminar();
     this.modalSaving = true;
+    console.log('[RolesPage] DELETE payload (eliminar rol):', { id });
     this.api.delete(`roles/${id}`).subscribe({
       next: () => {
         this.modalSaving = false;
@@ -399,6 +467,13 @@ export class RolesPageComponent {
       this.modalFields = [
         { key: 'nombre', label: 'Nombre', type: 'text', value: '' },
         { key: 'descripcion', label: 'Descripción', type: 'textarea', value: '' },
+        {
+          key: 'id_estado',
+          label: 'Estado',
+          type: 'select',
+          options: this.estados.map((e) => ({ value: e.id_estado, label: e.nombre })),
+          value: this.estadoActivoId || (this.estados[0]?.id_estado ?? ''),
+        },
       ];
       this.modalValues = {};
       for (const f of this.modalFields) this.modalValues[f.key] = f.value ?? '';
@@ -428,7 +503,7 @@ export class RolesPageComponent {
 
   onModalConfirm() {
     if (this.modalDeleteMode) {
-      // delete flow
+      // Solo eliminar
       this.eliminarSeleccionado();
       return;
     }
@@ -439,8 +514,16 @@ export class RolesPageComponent {
       return;
     }
     this.modalSaving = true;
-    const payload = { nombre, descripcion: this.modalValues?.descripcion ?? '' };
+    // Buscar el registro completo filtrado por id
+    const registro = this.data.find((r) => String(r.id_rol) === String(id));
+    // Si existe, enviar todos los datos, actualizando los campos editados
+    let payload: any = registro ? { ...registro } : {};
+    payload.nombre = nombre;
+    payload.descripcion = this.modalValues?.descripcion ?? '';
+    payload.id_estado = this.modalValues?.id_estado ?? payload.id_estado;
     if (id) {
+      // Solo PUT para editar
+      console.log('[RolesPage] PUT payload (onModalConfirm editar rol):', { id, ...payload });
       this.api.put(`roles/${id}`, payload).subscribe({
         next: () => {
           this.modalSaving = false;
@@ -454,6 +537,8 @@ export class RolesPageComponent {
         },
       });
     } else {
+      // Solo POST para crear
+      console.log('[RolesPage] POST payload (crear rol):', payload);
       this.api.post('roles', payload).subscribe({
         next: () => {
           this.modalSaving = false;
@@ -476,12 +561,13 @@ export class RolesPageComponent {
     this.modalDeleteMode = false;
     this.modalSaving = false;
     this.modalError = '';
+    this.cdr.detectChanges();
   }
 
   // Normalized handlers for templates expecting onEdit/onRemove
   onEdit(e: any) {
     try {
-      return (this as any).abrirEditar ? (this as any).abrirEditar(e) : undefined;
+      return (this as any).openEditModal ? (this as any).openEditModal(e) : undefined;
     } catch (err) {
       // noop
     }
@@ -502,12 +588,11 @@ export class RolesPageComponent {
     } catch {}
   }
 
-  private normalizeRole(r: any) {
-    if (!r || typeof r !== 'object') return { id: '', nombre: '', descripcion: '' };
-    const id = r.id_rol ?? r.id ?? r.ID ?? r.idRole ?? r.role_id ?? '';
+  private normalizeRole(r: any): Roles {
+    if (!r || typeof r !== 'object') return { id_rol: 0, nombre: '', descripcion: '' };
+    const id_rol = r.id_rol ?? r.id ?? r.ID ?? r.idRole ?? r.role_id ?? 0;
     const nombre = r.nombre ?? r.nombre_rol ?? r.nombreRole ?? r.name ?? r.titulo ?? '';
-    const descripcion =
-      r.descripcion ?? r.descripcion_rol ?? r.desc ?? r.descripcionRol ?? undefined;
-    return { id, nombre, descripcion };
+    const descripcion = r.descripcion ?? r.descripcion_rol ?? r.desc ?? r.descripcionRol ?? '';
+    return { id_rol, nombre, descripcion };
   }
 }

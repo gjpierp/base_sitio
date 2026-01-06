@@ -1,4 +1,13 @@
-import { Component, ElementRef, EventEmitter, Input, Output, Renderer2 } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  Renderer2,
+  AfterViewInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -8,7 +17,28 @@ import { CommonModule } from '@angular/common';
   templateUrl: './ui-modal.component.html',
   styleUrls: ['./ui-modal.component.css'],
 })
-export class UiModalComponent {
+export class UiModalComponent implements AfterViewInit {
+  @ViewChild('dialogRef', { static: false }) dialogRef!: ElementRef<HTMLDivElement>;
+
+  constructor(private renderer: Renderer2) {}
+
+  ngAfterViewInit() {
+    // Removed dynamic width adjustment
+    // setTimeout(() => this.adjustDialogWidth(), 0);
+  }
+
+  private adjustDialogWidth() {
+    // Removed dynamic width adjustment logic
+    // if (!this.dialogRef) return;
+    // const dialog = this.dialogRef.nativeElement;
+    // const content = dialog.querySelector('.content');
+    // if (!content) return;
+    // const contentWidth = content.scrollWidth;
+    // const minWidth = 360;
+    // const maxWidth = 1100;
+    // let newWidth = Math.max(minWidth, Math.min(contentWidth, maxWidth));
+    // this.renderer.setStyle(dialog, 'width', newWidth + 'px');
+  }
   private _open = false;
   private lastOpenedAt = 0;
   // no DOM relocation: keep component in Angular's render tree
@@ -41,7 +71,7 @@ export class UiModalComponent {
     this.isOpen = v;
   }
 
-  constructor() {}
+  // ...
 
   onBackdropClick() {
     // Ignore backdrop clicks that occur immediately after opening (click that triggered open)

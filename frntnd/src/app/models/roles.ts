@@ -3,7 +3,6 @@ export interface Roles {
   nombre: string;
   descripcion?: string | null;
   id_estado?: number | null;
-  activo?: number | null;
 }
 
 export type PartialRoles = Partial<Roles>;

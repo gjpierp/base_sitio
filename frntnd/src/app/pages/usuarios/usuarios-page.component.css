@@ -72,3 +72,8 @@
     justify-content: flex-start;
   }
 }
+
+:host {
+  width: 100%;
+  display: block;
+}

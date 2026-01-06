@@ -5,6 +5,5 @@ export interface HistorialAccion {
   descripcion?: string | null;
   fecha?: string | null;
   direccion_ip?: string | null;
-
   [key: string]: any;
 }

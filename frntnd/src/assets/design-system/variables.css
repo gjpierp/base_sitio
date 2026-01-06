@@ -2,7 +2,6 @@
   VARIABLES DE DISEÑO VVFF
   ------------------------
   Este archivo importa todos los temas y centraliza las variables.
-  El tema activo se selecciona por [data-theme=...] en el body.
 */
 
 @import './themes/modern.css';

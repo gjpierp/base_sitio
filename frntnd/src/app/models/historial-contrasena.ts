@@ -3,6 +3,5 @@ export interface HistorialContrasena {
   id_usuario?: number | string;
   hash_contrasena?: string;
   fecha_cambio?: string | null;
-
   [key: string]: any;
 }

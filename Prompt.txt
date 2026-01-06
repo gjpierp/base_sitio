@@ -1,0 +1,21 @@
+
+Crea o actualiza la pages/roles con Angular siguiendo la estructura, flujo de trabajo y el mismo diseño visual que la página de usuarios:
+
+- Debes actualizar segun el models para tomar todos los campos de la tabla
+- Componente standalone con ChangeDetectionStrategy.Default.
+- Importa CommonModule, FormsModule y componentes UI personalizados.
+- Variables para título, subtítulo, datos, loading, error, paginación, modal y catálogo.
+- Métodos para cargar datos asíncronos, procesar y formatear la data, abrir modales de creación/edición/eliminación, y manejar confirmaciones.
+- Esquema declarativo para los campos del formulario (como SITIO_SCHEMA).
+- Modal integrado para formularios y confirmaciones.
+- Tabla principal con paginación, edición y eliminación, centrada y usando todo el espacio disponible.
+- JOIN con la tabla adm_estados para mostrar el nombre del estado en la tabla y en los filtros.
+- Filtros por los campos del models, con iconos en los botones y formato consistente.
+- Métodos de edición y eliminación usan el mismo flujo de modal y confirmación.
+- Centraliza la lógica de renderizado y actualización de estado con ChangeDetectorRef y NgZone.
+- Estructura de métodos: cargarDatosAsync, procesarDatosSitios, openCreateModal, openEditModal, onRemove, onModalConfirm, onModalClosed, refrescar, etc.
+- Helpers genéricos para confirmaciones y cierre de modal.
+- Validaciones y mapeos de datos igual que en usuarios.
+- Diseño visual moderno, responsivo e idéntico al de la página de usuarios (estructura, estilos, disposición de elementos, iconos, botones, modales y tablas).
+- El nuevo codigo debe tener la misma logica de funcionamiento que pages/usuarios.
+- Debes validar que no dejes errores.

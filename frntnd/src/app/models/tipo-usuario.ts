@@ -16,7 +16,6 @@ export interface TipoUsuario {
   nombre: string;
   descripcion?: string;
   id_estado?: number | string;
-  activo?: number | boolean;
 
   [key: string]: any;
 }

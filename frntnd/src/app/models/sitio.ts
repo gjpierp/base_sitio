@@ -7,7 +7,7 @@ export const SITIO_SCHEMA: { fields: Array<any> } = {
     { key: 'nombre', label: 'Nombre', type: 'text' },
     { key: 'codigo', label: 'Código', type: 'text' },
     { key: 'descripcion', label: 'Descripción', type: 'text' },
-    { key: 'activo', label: 'Activo', type: 'select' },
+    { key: 'id_estado', label: 'Estado', type: 'select' },
   ],
 };
 export interface Sitio {
@@ -15,7 +15,7 @@ export interface Sitio {
   nombre?: string;
   codigo?: string | null;
   descripcion?: string | null;
-  activo?: number | boolean;
+  id_estado?: number | boolean;
   created_at?: string | null;
   updated_at?: string | null;
 

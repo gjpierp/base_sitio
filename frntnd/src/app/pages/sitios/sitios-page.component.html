@@ -1,35 +1,179 @@
-<div class="page-animate" [class.page-ready]="datosListos">
-  <ui-card [title]="title" [subtitle]="subtitle">
-    <div
-      class="spread"
-      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
-    >
-      <ui-spinner *ngIf="loading" label="Cargando"></ui-spinner>
-      <div *ngIf="!loading && error" class="muted">{{ error }}</div>
-      <ng-container *ngIf="!loading">
-        <div style="margin-left: auto">
-          <ui-button
-            variant="primary"
-            (pressed)="onCreate()"
-            icon="add"
-            [iconOnly]="true"
-            ariaLabel="Crear"
-          ></ui-button>
-        </div>
-      </ng-container>
+<div>
+  <ui-card>
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div>
+        <span style="font-size: 1.5em; font-weight: 600">{{ title }}</span>
+        <span *ngIf="subtitle" style="margin-left: 1rem; color: #888; font-size: 1em">{{
+          subtitle
+        }}</span>
+      </div>
+      <ui-button
+        variant="primary"
+        (pressed)="openCreateModal()"
+        icon="add"
+        [iconOnly]="true"
+        ariaLabel="Crear"
+      ></ui-button>
     </div>
-    <div *ngIf="!loading && datosListos">
+  </ui-card>
+
+  <ui-card title="Filtros">
+    <form
+      (ngSubmit)="aplicarFiltros()"
+      style="margin-bottom: 0; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center"
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroNombre"
+        name="filtroNombre"
+        placeholder="Nombre"
+        style="width: 180px"
+      />
+      <input
+        type="text"
+        [(ngModel)]="filtroDominio"
+        name="filtroDominio"
+        placeholder="Dominio"
+        style="width: 180px"
+      />
+      <input
+        type="text"
+        [(ngModel)]="filtroEstado"
+        name="filtroEstado"
+        placeholder="Estado"
+        style="width: 160px"
+      />
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        style="height: 32px"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="secondary"
+        icon="close"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        (pressed)="limpiarFiltros()"
+        style="height: 32px"
+      ></ui-button>
+    </form>
+  </ui-card>
+
+  <div class="spread" style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem">
+    <ng-container *ngIf="loading">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </ng-container>
+    <ng-container *ngIf="!loading && error">
+      <div class="muted">{{ error }}</div>
+    </ng-container>
+  </div>
+  <div style="display: flex; justify-content: center; align-items: center; width: 100%">
+    <div style="width: 100%; max-width: 1400px">
       <ui-entity-table
         [title]="title"
         [subtitle]="subtitle"
-        [total]="data.length"
         [columns]="columns"
-        [data]="data"
+        [data]="formattedData"
+        [total]="total"
         [loading]="loading"
         [error]="error"
         [page]="currentPage"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
         (pageChange)="onPageChange($event)"
       ></ui-entity-table>
     </div>
-  </ui-card>
+  </div>
 </div>
+
+<!-- Modal integrado para creación/edición/eliminación -->
+<ui-modal
+  #modalRef
+  [isOpen]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <!-- Mensaje de confirmación de eliminación -->
+    <div
+      *ngIf="!modalLoading && modalDeleteMode"
+      style="padding: 2rem; text-align: center; font-size: 1.1em"
+    >
+      <span
+        >¿Estás seguro que deseas eliminar el sitio <b>{{ modalValues.nombre || '' }}</b
+        >?</span
+      >
+    </div>
+    <table class="form-table" *ngIf="!modalLoading && !modalDeleteMode && modalFields.length">
+      <ng-container *ngFor="let f of modalFields">
+        <tr *ngIf="!f.hidden">
+          <th>
+            <label
+              [for]="f.key"
+              style="
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+                display: inline-block;
+              "
+              >{{ f.label }}</label
+            >
+          </th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchCase="'select'">
+                <select
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [disabled]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                >
+                  <option *ngFor="let o of f.options || []" [ngValue]="o.value">
+                    {{ o.label }}
+                  </option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                ></textarea>
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
+  </div>
+</ui-modal>

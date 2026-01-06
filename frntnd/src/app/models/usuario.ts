@@ -10,8 +10,6 @@ export interface User {
   fecha_actualizacion?: string | null;
   id_estado?: number | string;
   img?: string | null;
-  activo?: number | boolean;
-  id_configuracion_default?: number | string | null;
   nombres?: string | null;
   apellidos?: string | null;
 
@@ -20,7 +18,14 @@ export interface User {
   nombre?: string;
   correo_electronico?: string;
 
-  [key: string]: any;
+  // Campos agregados para evitar errores TS7053/TS2551
+  id_rol?: number | string;
+  nombre_rol?: string;
+  nombre_jerarquia?: string;
+  nombre_tipo_usuario?: string;
+  nombre_estado?: string;
+
+  // [key: string]: any; // Eliminar si no es necesario
 }
 
 /**
@@ -41,36 +46,28 @@ export const USUARIO_SCHEMA: { fields: Array<any> } = {
       key: 'correo_electronico',
       label: 'Correo electrónico',
       type: 'text',
-      alias: 'correo',
+      alias: 'correo_electronico',
       readonly: false,
       readonlyOnEdit: true,
+      value: '',
     },
     // avatar
-    { key: 'img', label: 'Avatar (URL)', type: 'text' },
-    // password (visible al crear; oculto al editar)
-    { key: 'contrasena', label: 'Contraseña', type: 'password', hidden: false, hiddenOnEdit: true },
-    // config
     {
-      key: 'id_configuracion_default',
-      label: 'Configuración por defecto',
+      key: 'img',
+      label: 'Avatar (URL)',
       type: 'text',
       hidden: true,
-      hiddenOnCreate: true,
       hiddenOnEdit: true,
+      hiddenOnCreate: true,
     },
+    // password (visible al crear; oculto al editar)
+    { key: 'contrasena', label: 'Contraseña', type: 'password', hidden: false, hiddenOnEdit: true },
     // relations / selects
     { key: 'id_rol', label: 'Rol', type: 'select' },
     { key: 'id_jerarquia', label: 'Jerarquía', type: 'select' },
     { key: 'id_tipo_usuario', label: 'Tipo usuario', type: 'select' },
     { key: 'id_estado', label: 'Estado', type: 'select' },
     // flags
-    {
-      key: 'activo',
-      label: 'Activo',
-      type: 'select',
-      hidden: true,
-      hiddenOnCreate: true,
-      hiddenOnEdit: true,
-    },
+    // Campo 'activo' eliminado
   ],
 };

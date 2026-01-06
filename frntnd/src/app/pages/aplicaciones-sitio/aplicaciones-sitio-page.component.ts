@@ -66,7 +66,6 @@ export class AplicacionesSitioPageComponent implements OnInit {
       ruta: r.ruta ?? r.path ?? '',
       descripcion: r.descripcion ?? r.desc ?? r.descripcion_larga ?? '',
       sitio: r.sitio?.nombre ?? r.nombre_sitio ?? r.sitio_nombre ?? r.id_sitio ?? '',
-      activo: r.activo ?? r.estado ?? true,
     }));
     // Fallback: si por alguna razón setupList no cargó datos (errores de ruta/API), intentar cargar explícitamente
     setTimeout(async () => {

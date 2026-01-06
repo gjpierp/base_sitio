@@ -1,42 +1,101 @@
-<div>
-  <ui-card [title]="title" [subtitle]="subtitle">
-    <div
-      class="spread"
-      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
-    >
-      <ng-container *ngIf="loading">
-        <ui-spinner label="Cargando"></ui-spinner>
-      </ng-container>
-      <ng-container *ngIf="!loading && error">
-        <div class="muted">{{ error }}</div>
-      </ng-container>
-      <ng-container *ngIf="!loading">
-        <div style="margin-left: auto">
-          <ui-button
-            variant="primary"
-            (pressed)="openCreateModal()"
-            icon="add"
-            [iconOnly]="true"
-            ariaLabel="Crear"
-          ></ui-button>
-        </div>
-      </ng-container>
+<form (ngSubmit)="aplicarFiltros()">
+  <!-- Card de título, subtítulo y botón crear -->
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
     </div>
-    <ui-entity-table
-      [title]="title"
-      [subtitle]="subtitle"
-      [columns]="columns"
-      [data]="formattedData"
-      [total]="totalUsuarios"
-      [loading]="loading"
-      [error]="error"
-      [page]="currentPage"
-      (edit)="onEdit($event)"
-      (remove)="onRemove($event)"
-      (pageChange)="onPageChange($event)"
-    ></ui-entity-table>
   </ui-card>
-</div>
+
+  <!-- Card de filtros -->
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div
+      style="
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroNombre"
+        name="filtroNombre"
+        placeholder="Nombre"
+        style="width: 180px"
+      />
+      <input
+        type="text"
+        [(ngModel)]="filtroCorreo"
+        name="filtroCorreo"
+        placeholder="Correo electrónico"
+        style="width: 180px"
+      />
+      <select [(ngModel)]="filtroTipoUsuario" name="filtroTipoUsuario" style="width: 160px">
+        <option value="">Tipo usuario</option>
+        <option *ngFor="let t of tiposUsuario" [value]="t.id_tipo_usuario">{{ t.nombre }}</option>
+      </select>
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Estado</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+      <select [(ngModel)]="filtroRol" name="filtroRol" style="width: 160px">
+        <option value="">Rol</option>
+        <option *ngFor="let r of roles" [value]="r.id_rol">{{ r.nombre }}</option>
+      </select>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        title="Buscar"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="primary"
+        icon="clear"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        title="Limpiar"
+        (pressed)="limpiarFiltros()"
+      ></ui-button>
+    </div>
+  </ui-card>
+
+  <!-- Card de registros -->
+  <ui-card style="margin-top: 1.5rem">
+    <div style="width: 100%">
+      <ui-entity-table
+        [title]="title"
+        [subtitle]="subtitle"
+        [columns]="columns"
+        [data]="formattedData"
+        [total]="totalUsuarios"
+        [loading]="loading"
+        [error]="error"
+        [page]="currentPage"
+        (edit)="onEdit($event)"
+        (remove)="onRemove($event)"
+        (pageChange)="onPageChange($event)"
+        style="width: 100%"
+      ></ui-entity-table>
+    </div>
+  </ui-card>
+</form>
 
 <!-- Modal integrado para creación/edición -->
 <ui-modal

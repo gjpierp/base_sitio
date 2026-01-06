@@ -160,6 +160,241 @@ export function abrirEditarGeneric(
 }
 
 /**
+ * Abre un modal de creación genérico para un endpoint.
+ * Construye campos básicos si no se proveen y abre el modal en el componente destino.
+ */
+export async function abrirCrearModalGeneric(
+  thisRef: any,
+  endpoint: string,
+  fields: Array<any> = []
+) {
+  try {
+    // build default fields if none
+    if (!Array.isArray(fields) || fields.length === 0) {
+      fields = [
+        { key: 'nombre', label: 'Nombre', type: 'text', value: '' },
+        {
+          type: 'select',
+          options: [
+            { value: 'true', label: 'Sí' },
+            { value: 'false', label: 'No' },
+          ],
+          value: 'true',
+        },
+      ];
+    }
+
+    thisRef.modalTitle = `Crear ${String(endpoint).replace(/[-_]/g, ' ')}`;
+    thisRef.modalFields = fields;
+    thisRef.modalValues = {};
+    for (const f of fields) thisRef.modalValues[f.key] = f.value ?? '';
+    thisRef.modalEditingId = null;
+    thisRef.modalDeleteMode = false;
+    thisRef.modalOpen = true;
+    try {
+      thisRef.cdr?.detectChanges();
+    } catch {}
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
+  try {
+    if (thisRef.modalDeleteMode) {
+      // deletion was handled elsewhere; keep simple
+      const id = thisRef.modalEditingId ?? null;
+      if (!id) return false;
+      try {
+        const { default: Swal } = await import('sweetalert2');
+        await firstValueFrom(thisRef.api.delete(`${endpoint}/${id}`));
+        await Swal.fire('Eliminado', 'Elemento eliminado', 'success');
+        thisRef.modalOpen = false;
+        thisRef.modalDeleteMode = false;
+        thisRef.modalEditingId = null;
+        try {
+          thisRef.cdr?.detectChanges();
+        } catch {}
+        try {
+          if (typeof thisRef.load === 'function') await thisRef.load();
+          if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
+          if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
+        } catch {}
+        return true;
+      } catch (err) {
+        try {
+        } catch {}
+        try {
+          const { default: Swal } = await import('sweetalert2');
+          const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
+          await Swal.fire('Error', msg || 'No se pudo eliminar', 'error');
+        } catch {}
+        return false;
+      }
+    }
+
+    // create or update
+    try {
+      thisRef.modalSaving = true;
+      // Build payload with basic validation and type conversion
+      const payload: any = {};
+      const fields = Array.isArray(thisRef.modalFields) ? thisRef.modalFields : [];
+      for (const f of fields) {
+        const k = f.key;
+        let v = (thisRef.modalValues || {})[k];
+        if (typeof v === 'string') v = v.trim();
+        // Required check (only enforced on create), ignorando 'configuracion_por_defecto'
+        const ignoreRequired = ['configuracion_por_defecto'];
+        if (
+          !f.hidden &&
+          !thisRef.modalEditingId &&
+          (v === '' || v === null || v === undefined) &&
+          !ignoreRequired.includes(k)
+        ) {
+          // Si el campo está en la lista de ignorados, no validar como requerido
+          if (ignoreRequired.includes(k)) {
+            payload[k] = v;
+            continue;
+          }
+          try {
+            const { default: Swal } = await import('sweetalert2');
+            thisRef.modalOpen = false;
+            try {
+              thisRef.cdr?.detectChanges();
+            } catch {}
+            await Swal.fire('Error', `El campo "${f.label}" es requerido.`, 'error');
+          } catch {}
+          thisRef.modalSaving = false;
+          return false;
+        }
+        // Email simple validation
+        if (/correo|email|mail/i.test(k)) {
+          const re = /^\S+@\S+\.\S+$/;
+          if (!re.test(String(v))) {
+            try {
+              const { default: Swal } = await import('sweetalert2');
+              await Swal.fire('Error', `El campo "${f.label}" debe ser un correo válido.`, 'error');
+            } catch {}
+            thisRef.modalSaving = false;
+            return false;
+          }
+        }
+        // Convert numeric strings to numbers
+        if (typeof v === 'string' && /^\d+$/.test(v)) v = Number(v);
+        // Convert boolean-like strings
+        if (v === 'true') v = true;
+        if (v === 'false') v = false;
+        payload[k] = v;
+      }
+      // Remove id if empty (backend usually generates it on create, or it's in URL on update)
+      if (
+        payload.id === '' ||
+        payload.id === null ||
+        payload.id === undefined ||
+        thisRef.modalEditingId
+      ) {
+        delete payload.id;
+      }
+      // If editing, perform update; otherwise create
+      const id = thisRef.modalEditingId ?? null;
+      try {
+        // For usuarios endpoint, ensure backend-required fields exist when creating
+        if (!id && String(endpoint).toLowerCase() === 'usuarios') {
+          try {
+            if (!payload.contrasena) {
+              const rand = Math.random().toString(36).slice(2, 8);
+              payload.contrasena = `Pwd${rand}`; // >=6 chars
+            }
+            const nombreUsuario = payload.nombre_usuario || payload.nombre || '';
+            if (!payload.nombres) {
+              const parts = String(nombreUsuario || '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
+              payload.nombres = parts.length
+                ? parts[0]
+                : (payload.correo_electronico || 'Usuario').split('@')[0];
+            }
+            if (!payload.apellidos) {
+              const parts = String(nombreUsuario || '')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean);
+              payload.apellidos = parts.length > 1 ? parts.slice(1).join(' ') : 'N/A';
+            }
+          } catch (e) {
+            try {
+            } catch {}
+          }
+        }
+        // '[onModalConfirmGeneric] submit', // Línea eliminada por error de sintaxis
+        // Si necesitas loggear, usa console.log:
+        // console.log('[onModalConfirmGeneric] submit', endpoint, id ? `update ${id}` : 'create', payload);
+        // ...existing code...
+      } catch {}
+
+      thisRef.modalOpen = false;
+      thisRef.modalSaving = false;
+      try {
+        thisRef.cdr?.detectChanges();
+      } catch {}
+      const { default: Swal } = await import('sweetalert2');
+      if (id && typeof id !== 'undefined' && id !== null && id !== '') {
+        // update
+        console.log('[PUT usuarios] Payload enviado:', payload);
+        const res = await firstValueFrom(thisRef.api.put(`${endpoint}/${id}`, payload) as any);
+        try {
+        } catch {}
+        await Swal.fire('Guardado', 'Elemento actualizado', 'success');
+      } else {
+        // create
+        console.log('[POST usuarios] Payload enviado:', payload);
+        const res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
+        try {
+        } catch {}
+        await Swal.fire('Guardado', 'Elemento creado', 'success');
+      }
+      try {
+        if (typeof thisRef.load === 'function') await thisRef.load();
+        if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
+        if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
+      } catch {}
+      return true;
+    } catch (err) {
+      try {
+      } catch {}
+      thisRef.modalSaving = false;
+      try {
+        const { default: Swal } = await import('sweetalert2');
+        thisRef.modalOpen = false;
+        try {
+          thisRef.cdr?.detectChanges();
+        } catch {}
+        const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
+        await Swal.fire('Error', msg || 'No se pudo crear', 'error');
+      } catch {}
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}
+
+export function onModalClosedGeneric(thisRef: any) {
+  try {
+    thisRef.modalOpen = false;
+    thisRef.modalFields = [];
+    thisRef.modalValues = {};
+    thisRef.modalEditingId = null;
+    thisRef.modalDeleteMode = false;
+    try {
+      thisRef.cdr?.detectChanges();
+    } catch {}
+  } catch {}
+}
+
+/**
  * Abre un modal editable para recursos genéricos usando `swalForm`.
  * - `endpoint`: base API (p.ej. 'sitios' o 'aplicaciones_sitio')
  * - `fields`: array de definiciones { key,label,type?, options? }
@@ -375,22 +610,23 @@ export async function abrirEditarModalGeneric(
     if (!result) return false;
 
     // build payload and normalize common types
-    const payload: any = {};
+    let payload: any = {};
     for (const f of fields) {
-      if (result[f.key] !== undefined) payload[f.key] = result[f.key];
+      if (result[f.key] !== undefined && f.key !== 'id' && f.key !== 'ID' && f.key !== 'Id')
+        payload[f.key] = result[f.key];
     }
+    // Eliminar explícitamente los campos 'id', 'ID', 'Id' si existen
+    ['id', 'ID', 'Id'].forEach((k) => {
+      if (k in payload) delete payload[k];
+    });
     // convert *_id to number
     for (const k of Object.keys(payload)) {
       if (/_id$/.test(k) && payload[k] !== '' && payload[k] != null) {
         const n = Number(payload[k]);
         payload[k] = Number.isNaN(n) ? payload[k] : n;
       }
-      // convert 'activo' like fields to boolean
-      if (/^(activo|enabled|active)$/i.test(k)) {
-        if (typeof payload[k] === 'string')
-          payload[k] = payload[k] === 'true' || payload[k] === '1';
-        else payload[k] = !!payload[k];
-      }
+      if (typeof payload[k] === 'string') payload[k] = payload[k] === 'true' || payload[k] === '1';
+      else payload[k] = !!payload[k];
     }
 
     // send update
@@ -423,236 +659,4 @@ export async function abrirEditarModalGeneric(
   } catch {
     return false;
   }
-}
-
-/**
- * Abre un modal de creación genérico para un endpoint.
- * Construye campos básicos si no se proveen y abre el modal en el componente destino.
- */
-export async function abrirCrearModalGeneric(
-  thisRef: any,
-  endpoint: string,
-  fields: Array<any> = []
-) {
-  try {
-    // build default fields if none
-    if (!Array.isArray(fields) || fields.length === 0) {
-      fields = [
-        { key: 'nombre', label: 'Nombre', type: 'text', value: '' },
-        {
-          key: 'activo',
-          label: 'Activo',
-          type: 'select',
-          options: [
-            { value: 'true', label: 'Sí' },
-            { value: 'false', label: 'No' },
-          ],
-          value: 'true',
-        },
-      ];
-    }
-
-    thisRef.modalTitle = `Crear ${String(endpoint).replace(/[-_]/g, ' ')}`;
-    thisRef.modalFields = fields;
-    thisRef.modalValues = {};
-    for (const f of fields) thisRef.modalValues[f.key] = f.value ?? '';
-    thisRef.modalEditingId = null;
-    thisRef.modalDeleteMode = false;
-    thisRef.modalOpen = true;
-    try {
-      thisRef.cdr?.detectChanges();
-    } catch {}
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
-  try {
-    if (thisRef.modalDeleteMode) {
-      // deletion was handled elsewhere; keep simple
-      const id = thisRef.modalEditingId ?? null;
-      if (!id) return false;
-      try {
-        const { default: Swal } = await import('sweetalert2');
-        await firstValueFrom(thisRef.api.delete(`${endpoint}/${id}`));
-        await Swal.fire('Eliminado', 'Elemento eliminado', 'success');
-        thisRef.modalOpen = false;
-        thisRef.modalDeleteMode = false;
-        thisRef.modalEditingId = null;
-        try {
-          thisRef.cdr?.detectChanges();
-        } catch {}
-        try {
-          if (typeof thisRef.load === 'function') await thisRef.load();
-          if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
-          if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
-        } catch {}
-        return true;
-      } catch (err) {
-        try {
-        } catch {}
-        try {
-          const { default: Swal } = await import('sweetalert2');
-          const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
-          await Swal.fire('Error', msg || 'No se pudo eliminar', 'error');
-        } catch {}
-        return false;
-      }
-    }
-
-    // create or update
-    try {
-      thisRef.modalSaving = true;
-      // Build payload with basic validation and type conversion
-      const payload: any = {};
-      const fields = Array.isArray(thisRef.modalFields) ? thisRef.modalFields : [];
-      for (const f of fields) {
-        const k = f.key;
-        let v = (thisRef.modalValues || {})[k];
-        if (typeof v === 'string') v = v.trim();
-        // Required check (only enforced on create), ignorando 'configuracion_por_defecto' y 'id_configuracion_default'
-        const ignoreRequired = ['configuracion_por_defecto', 'id_configuracion_default'];
-        if (
-          !f.hidden &&
-          !thisRef.modalEditingId &&
-          (v === '' || v === null || v === undefined) &&
-          !ignoreRequired.includes(k)
-        ) {
-          // Si el campo está en la lista de ignorados, no validar como requerido
-          if (ignoreRequired.includes(k)) {
-            payload[k] = v;
-            continue;
-          }
-          try {
-            const { default: Swal } = await import('sweetalert2');
-            thisRef.modalOpen = false;
-            try {
-              thisRef.cdr?.detectChanges();
-            } catch {}
-            await Swal.fire('Error', `El campo "${f.label}" es requerido.`, 'error');
-          } catch {}
-          thisRef.modalSaving = false;
-          return false;
-        }
-        // Email simple validation
-        if (/correo|email|mail/i.test(k)) {
-          const re = /^\S+@\S+\.\S+$/;
-          if (!re.test(String(v))) {
-            try {
-              const { default: Swal } = await import('sweetalert2');
-              await Swal.fire('Error', `El campo "${f.label}" debe ser un correo válido.`, 'error');
-            } catch {}
-            thisRef.modalSaving = false;
-            return false;
-          }
-        }
-        // Convert numeric strings to numbers
-        if (typeof v === 'string' && /^\d+$/.test(v)) v = Number(v);
-        // Convert boolean-like strings
-        if (v === 'true') v = true;
-        if (v === 'false') v = false;
-        payload[k] = v;
-      }
-      // Remove id if empty (backend usually generates it on create, or it's in URL on update)
-      if (payload.id === '' || payload.id === null || payload.id === undefined) {
-        delete payload.id;
-      }
-      // If editing, perform update; otherwise create
-      const id = thisRef.modalEditingId ?? null;
-      try {
-        // For usuarios endpoint, ensure backend-required fields exist when creating
-        if (!id && String(endpoint).toLowerCase() === 'usuarios') {
-          try {
-            if (!payload.contrasena) {
-              const rand = Math.random().toString(36).slice(2, 8);
-              payload.contrasena = `Pwd${rand}`; // >=6 chars
-            }
-            const nombreUsuario = payload.nombre_usuario || payload.nombre || '';
-            if (!payload.nombres) {
-              const parts = String(nombreUsuario || '')
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean);
-              payload.nombres = parts.length
-                ? parts[0]
-                : (payload.correo_electronico || 'Usuario').split('@')[0];
-            }
-            if (!payload.apellidos) {
-              const parts = String(nombreUsuario || '')
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean);
-              payload.apellidos = parts.length > 1 ? parts.slice(1).join(' ') : 'N/A';
-            }
-          } catch (e) {
-            try {
-            } catch {}
-          }
-        }
-        // '[onModalConfirmGeneric] submit', // Línea eliminada por error de sintaxis
-        // Si necesitas loggear, usa console.log:
-        // console.log('[onModalConfirmGeneric] submit', endpoint, id ? `update ${id}` : 'create', payload);
-        // ...existing code...
-      } catch {}
-
-      thisRef.modalOpen = false;
-      thisRef.modalSaving = false;
-      try {
-        thisRef.cdr?.detectChanges();
-      } catch {}
-      const { default: Swal } = await import('sweetalert2');
-      if (id && typeof id !== 'undefined' && id !== null && id !== '') {
-        // update
-        console.log('[PUT usuarios] Payload enviado:', payload);
-        const res = await firstValueFrom(thisRef.api.put(`${endpoint}/${id}`, payload) as any);
-        try {
-        } catch {}
-        await Swal.fire('Guardado', 'Elemento actualizado', 'success');
-      } else {
-        // create
-        console.log('[POST usuarios] Payload enviado:', payload);
-        const res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
-        try {
-        } catch {}
-        await Swal.fire('Guardado', 'Elemento creado', 'success');
-      }
-      try {
-        if (typeof thisRef.load === 'function') await thisRef.load();
-        if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
-        if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
-      } catch {}
-      return true;
-    } catch (err) {
-      try {
-      } catch {}
-      thisRef.modalSaving = false;
-      try {
-        const { default: Swal } = await import('sweetalert2');
-        thisRef.modalOpen = false;
-        try {
-          thisRef.cdr?.detectChanges();
-        } catch {}
-        const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
-        await Swal.fire('Error', msg || 'No se pudo crear', 'error');
-      } catch {}
-      return false;
-    }
-  } catch {
-    return false;
-  }
-}
-
-export function onModalClosedGeneric(thisRef: any) {
-  try {
-    thisRef.modalOpen = false;
-    thisRef.modalFields = [];
-    thisRef.modalValues = {};
-    thisRef.modalEditingId = null;
-    thisRef.modalDeleteMode = false;
-    try {
-      thisRef.cdr?.detectChanges();
-    } catch {}
-  } catch {}
 }

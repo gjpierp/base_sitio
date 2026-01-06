@@ -5,6 +5,5 @@ export interface HistorialAcceso {
   fecha_salida?: string | null;
   direccion_ip?: string | null;
   user_agent?: string | null;
-
   [key: string]: any;
 }

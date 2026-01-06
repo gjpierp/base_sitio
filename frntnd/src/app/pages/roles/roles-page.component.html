@@ -1,54 +1,110 @@
-<div class="page-animate" [class.page-ready]="datosListos">
-  <ui-card [title]="title" [subtitle]="subtitle">
-    <div
-      class="spread"
-      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
-    >
-      <ui-spinner *ngIf="loading" label="Cargando"></ui-spinner>
-      <div *ngIf="!loading && error" class="muted">{{ error }}</div>
-      <ng-container *ngIf="!loading">
-        <div style="margin-left: auto">
-          <button type="button" class="btn primary" (click)="openCreateModal()">
-            <span style="display: inline-flex; align-items: center; gap: 0.5rem">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              Crear
-            </span>
-          </button>
-        </div>
-      </ng-container>
-    </div>
-    <div *ngIf="!loading && datosListos">
-      <ui-entity-table
-        [title]="title"
-        [subtitle]="subtitle"
-        [total]="totalRoles"
-        [page]="currentPage"
-        (pageChange)="onPageChange($event)"
-        [columns]="columns"
-        [data]="data"
-        [loading]="loading"
-        [error]="error"
-        (edit)="onEdit($event)"
-        (remove)="onRemove($event)"
-      ></ui-entity-table>
+<form (ngSubmit)="aplicarFiltros()">
+  <!-- Card de título, subtítulo y botón crear -->
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
     </div>
   </ui-card>
-</div>
+
+  <!-- Card de filtros -->
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div
+      style="
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroNombre"
+        name="filtroNombre"
+        placeholder="Nombre"
+        style="width: 180px"
+      />
+      <input
+        type="text"
+        [(ngModel)]="filtroDescripcion"
+        name="filtroDescripcion"
+        placeholder="Descripción"
+        style="width: 180px"
+      />
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Estado</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        title="Buscar"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="primary"
+        icon="clear"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        title="Limpiar"
+        (pressed)="limpiarFiltros()"
+      ></ui-button>
+    </div>
+  </ui-card>
+
+  <!-- Card de registros -->
+  <ui-card style="margin-top: 1.5rem">
+    <div style="width: 100%">
+      <ng-container *ngIf="loading">
+        <ui-spinner></ui-spinner>
+      </ng-container>
+      <ng-container *ngIf="!loading">
+        <ui-entity-table
+          [title]="title"
+          [subtitle]="subtitle"
+          [columns]="columns"
+          [data]="formattedData"
+          [total]="totalRoles"
+          [loading]="loading"
+          [error]="error"
+          [page]="currentPage"
+          (edit)="openEditModal($event)"
+          (remove)="onRemove($event)"
+          (pageChange)="onPageChange($event)"
+          style="width: 100%"
+        ></ui-entity-table>
+      </ng-container>
+    </div>
+    <div
+      class="table-pagination"
+      style="
+        margin-top: 0.75rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+      "
+    >
+      <ui-pagination></ui-pagination>
+    </div>
+  </ui-card>
+</form>
 
 <!-- Integrated modal for create/edit/delete -->
 <ui-modal
