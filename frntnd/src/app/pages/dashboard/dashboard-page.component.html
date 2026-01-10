@@ -1,57 +1,74 @@
-<div class="page-animate" [class.page-ready]="datosListos">
-  <section class="hero">
-    <div class="hero-inner container">
-      <div>
-        <h1>Admin-Sitio</h1>
-        <p class="muted">Gestión de usuarios y administración.</p>
-        <div class="hero-actions">
-          <ui-button
-            label="Usuarios"
-            variant="secondary"
-            icon="group"
-            routerLink="/usuarios"
-          ></ui-button>
+<div class="dashboard-container">
+  <!-- Encabezado con botón de refrescar -->
+  <div
+    style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    "
+  >
+    <div>
+      <h2 style="margin: 0; font-weight: bold; font-size: 20px">{{ title }}</h2>
+      <div style="color: #888; font-size: 14px; margin-top: 0.2em">{{ subtitle }}</div>
+    </div>
+    <ui-button
+      variant="secondary"
+      icon="refresh"
+      [iconOnly]="true"
+      ariaLabel="Refrescar"
+      title="Refrescar datos"
+      (pressed)="refrescar()"
+    ></ui-button>
+  </div>
+
+  <div
+    *ngIf="loading && !datosListos"
+    style="display: flex; justify-content: center; padding: 2rem"
+  >
+    <ui-spinner label="Cargando dashboard..."></ui-spinner>
+  </div>
+
+  <ng-container *ngIf="datosListos">
+    <!-- Tarjetas de Estadísticas -->
+    <div class="stats-grid">
+      <ui-card class="stat-card" (click)="irA('/usuarios')" style="cursor: pointer">
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.usuarios }}</div>
+          <div class="stat-label">Usuarios</div>
         </div>
-      </div>
+      </ui-card>
+
+      <ui-card class="stat-card" (click)="irA('/aplicaciones-sitio')" style="cursor: pointer">
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.apps }}</div>
+          <div class="stat-label">Aplicaciones</div>
+        </div>
+      </ui-card>
+
+      <ui-card class="stat-card" (click)="irA('/configuracion')" style="cursor: pointer">
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.config }}</div>
+          <div class="stat-label">Configuraciones</div>
+        </div>
+      </ui-card>
     </div>
-  </section>
+
+    <!-- Tabla de Actividad Reciente -->
+    <div style="margin-top: 2rem">
+      <ui-card title="Actividad Reciente del Sistema">
+        <ui-entity-table
+          [columns]="activityColumns"
+          [data]="formattedActivity"
+          [total]="0"
+          [loading]="loading"
+          [error]="error"
+          [page]="1"
+          [pageSize]="5"
+          (edit)="onEdit($event)"
+          class="w-full mx-auto block"
+        ></ui-entity-table>
+      </ui-card>
+    </div>
+  </ng-container>
 </div>
-
-<section class="container" style="margin-top: var(--space-6)">
-  <div class="grid">
-    <a *ngFor="let s of stats" class="card card-pad stat" [routerLink]="getRouteFor(s.label)">
-      <div class="stat-header">
-        <span class="material-symbols-outlined">{{ s.icon }}</span>
-        <ui-badge [text]="s.label" [variant]="s.variant"></ui-badge>
-      </div>
-      <div class="stat-value">{{ s.value }}</div>
-      <div class="muted">{{ s.label }} totales</div>
-    </a>
-  </div>
-</section>
-
-<section class="container" style="margin-top: var(--space-6)">
-  <ui-card title="Accesos rápidos" subtitle="Navega por las secciones más usadas">
-    <div class="quick-grid">
-      <a class="quick" routerLink="/roles"
-        ><span class="material-symbols-outlined">shield_person</span> Roles</a
-      >
-      <a class="quick" routerLink="/permisos"
-        ><span class="material-symbols-outlined">key</span> Permisos</a
-      >
-      <a class="quick" routerLink="/menus"
-        ><span class="material-symbols-outlined">view_list</span> Menús</a
-      >
-      <!-- Enlace a territorios/paises eliminado -->
-      <a class="quick" routerLink="/busquedas/general"
-        ><span class="material-symbols-outlined">search</span> Búsquedas</a
-      >
-    </div>
-  </ui-card>
-</section>
-
-<section class="container" style="margin-top: var(--space-6)">
-  <div class="hero-actions">
-    <div class="card card-pad"></div>
-  </div>
-</section>

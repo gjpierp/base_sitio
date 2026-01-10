@@ -1,5 +1,5 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
@@ -21,9 +21,11 @@ export class HistorialAccionesPageComponent implements OnInit {
   error?: string;
   datosListos = false;
   currentPage = 1;
+  pageSize = 10;
 
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   ngOnInit() {
     this.load();
@@ -32,14 +34,36 @@ export class HistorialAccionesPageComponent implements OnInit {
   async load() {
     this.loading = true;
     try {
-      const res: any = await firstValueFrom(this.api.get<any>('historial_acciones') as any);
-      this.data = Array.isArray(res) ? res : res?.data || [];
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const results = await firstValueFrom(
+        forkJoin({
+          historialAccionesRes: this.api.get<any>('historial_acciones', {
+            desde: offset,
+            limite: this.pageSize,
+          }),
+        })
+      );
+      this.data = Array.isArray(results.historialAccionesRes)
+        ? results.historialAccionesRes
+        : results.historialAccionesRes?.data || [];
       this.datosListos = true;
       this.currentPage = 1;
     } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar historial';
-      this.data = [];
-      this.datosListos = false;
+      this.ngZone.run(() => {
+        // Manejo robusto de errores de red y autenticación
+        const status = (err as any)?.status;
+        if (status === 401) {
+          this.error = 'No autorizado. Por favor, inicia sesión.';
+        } else if ((err as any)?.msg) {
+          this.error = (err as any).msg;
+        } else {
+          this.error = 'No se pudo cargar historial de acciones';
+        }
+        this.data = [];
+        this.loading = false;
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      });
     }
     this.loading = false;
     try {

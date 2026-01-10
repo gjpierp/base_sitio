@@ -9,11 +9,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
-  const token = isBrowser
+  let token = isBrowser
     ? window.localStorage.getItem('x-token') || window.localStorage.getItem('token')
     : null;
 
-  if (token) {
+  // Validar formato JWT: tres partes separadas por punto
+  const isValidJwt = token && token.split('.').length === 3;
+
+  if (isValidJwt) {
     req = req.clone({
       setHeaders: {
         'x-token': token,

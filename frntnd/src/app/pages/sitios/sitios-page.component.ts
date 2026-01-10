@@ -18,7 +18,8 @@ import { NotificationService } from '../../services/notification.service';
 import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal.component';
 import { onPageChangeGeneric, onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
-import { SITIO_SCHEMA } from '../../models/sitio';
+import { SITIO_SCHEMA } from '../../models/schema/sitio.schema';
+import { EstadoEntity } from '../../models/entities/estado.entity';
 
 @Component({
   selector: 'page-sitios',
@@ -35,15 +36,27 @@ import { SITIO_SCHEMA } from '../../models/sitio';
   templateUrl: './sitios-page.component.html',
   styleUrls: ['./sitios-page.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
+  styles: [
+    `
+      :host ::ng-deep th:last-child,
+      :host ::ng-deep td:last-child {
+        text-align: center !important;
+      }
+      :host ::ng-deep td:last-child > div {
+        justify-content: center !important;
+      }
+    `,
+  ],
 })
 export class SitiosPageComponent implements OnInit {
   // Filtros de búsqueda
   filtroNombre: string = '';
-  filtroDominio: string = '';
+  filtroCodigo: string = '';
   filtroEstado: string = '';
 
   title = 'Sitios';
-  subtitle = 'Sitios registrados';
+  subtitle = 'Sitios registrados en el sistema';
+  estados: EstadoEntity[] = [];
   data: any[] = [];
   formattedData: any[] = [];
   loading = false;
@@ -60,6 +73,9 @@ export class SitiosPageComponent implements OnInit {
   modalEditingId: any = null;
   modalDeleteMode = false;
   currentPage = 1;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 20, 50];
+  totalPages = 1;
 
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
@@ -73,7 +89,8 @@ export class SitiosPageComponent implements OnInit {
   ngOnInit(): void {
     const preloaded = this.route.snapshot.data['pre'];
     if (preloaded) {
-      this.procesarDatosSitios(preloaded.sitios || [], preloaded.total || 0);
+      this.estados = preloaded.estados || [];
+      this.procesarDatos(preloaded.sitios || [], preloaded.total || 0);
       this.datosListos = true;
     } else {
       this.cargarDatosAsync();
@@ -86,13 +103,12 @@ export class SitiosPageComponent implements OnInit {
       const nombre = this.filtroNombre.toLowerCase();
       filtrados = filtrados.filter((s) => (s.nombre || '').toLowerCase().includes(nombre));
     }
-    if (this.filtroDominio) {
-      const dominio = this.filtroDominio.toLowerCase();
-      filtrados = filtrados.filter((s) => (s.dominio || '').toLowerCase().includes(dominio));
+    if (this.filtroCodigo) {
+      const codigo = this.filtroCodigo.toLowerCase();
+      filtrados = filtrados.filter((s) => (s.codigo || '').toLowerCase().includes(codigo));
     }
     if (this.filtroEstado) {
-      const estado = this.filtroEstado.toLowerCase();
-      filtrados = filtrados.filter((s) => (s.nombre_estado || '').toLowerCase().includes(estado));
+      filtrados = filtrados.filter((s) => String(s.id_estado) === String(this.filtroEstado));
     }
     this.formattedData = filtrados;
     this.total = filtrados.length;
@@ -100,7 +116,7 @@ export class SitiosPageComponent implements OnInit {
 
   limpiarFiltros() {
     this.filtroNombre = '';
-    this.filtroDominio = '';
+    this.filtroCodigo = '';
     this.filtroEstado = '';
     this.formattedData = this.data;
     this.total = this.data.length;
@@ -115,11 +131,35 @@ export class SitiosPageComponent implements OnInit {
     });
     this.error = undefined;
     try {
-      const res: any = await firstValueFrom(this.api.get<any>('sitios', { desde: 0 }));
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const [sitiosRes, estadosRes] = await firstValueFrom(
+        forkJoin([
+          this.api.get<any>('sitios', { desde: offset, limite: this.pageSize }),
+          this.api.get<any>('estados'),
+        ])
+      );
       pending = false;
       this.ngZone.run(() => {
-        const rows = res?.sitios || res?.data || [];
-        this.procesarDatosSitios(rows, res?.total);
+        // Manejo global de errores
+        if (sitiosRes?.error) {
+          this.error = sitiosRes.msg || 'Error al cargar sitios';
+          this.data = [];
+          this.formattedData = [];
+          this.loading = false;
+          this.datosListos = false;
+          this.cdr.detectChanges();
+          return;
+        }
+        if (estadosRes?.error) {
+          this.error = estadosRes.msg || 'Error al cargar estados';
+          this.estados = [];
+        } else {
+          this.estados = estadosRes?.estados || estadosRes?.data || [];
+        }
+        const rows = Array.isArray(sitiosRes)
+          ? sitiosRes
+          : sitiosRes?.sitios || sitiosRes?.data || [];
+        this.procesarDatos(rows, sitiosRes?.total);
         this.loading = false;
         this.datosListos = true;
         this.cdr.detectChanges();
@@ -127,7 +167,7 @@ export class SitiosPageComponent implements OnInit {
     } catch (err) {
       pending = false;
       this.ngZone.run(() => {
-        this.error = (err as any)?.error?.msg || 'No se pudo cargar sitios';
+        this.error = 'No se pudo cargar sitios';
         this.data = [];
         this.formattedData = [];
         this.loading = false;
@@ -152,14 +192,22 @@ export class SitiosPageComponent implements OnInit {
     sortKey?: string;
     sortDir?: 'asc' | 'desc';
   }) {
-    try {
-      this.currentPage = Number(evt.page) || 1;
-    } catch {}
-    onPageChangeGeneric(this, evt, 'sitios', (r: any) => ({
-      id: r.id_sitio ?? r.id ?? r.ID ?? '',
-      nombre: r.nombre ?? r.nombre_sitio ?? '',
-      dominio: r.dominio ?? r.url ?? r.host ?? '',
-    }));
+    this.currentPage = Number(evt.page) || 1;
+    this.pageSize = Number(evt.pageSize) || this.pageSize;
+    if (typeof this.cargarDatosAsync === 'function') {
+      this.cargarDatosAsync();
+    } else if (typeof this.load === 'function') {
+      this.load();
+    } else if (typeof this.refrescar === 'function') {
+      this.refrescar();
+    }
+  }
+
+  onPageSizeChange(size: any) {
+    this.pageSize = Number(size);
+    this.totalPages = Math.max(1, Math.ceil(this.total / this.pageSize));
+    this.currentPage = 1;
+    this.load();
   }
 
   onTableReady() {
@@ -176,27 +224,32 @@ export class SitiosPageComponent implements OnInit {
     this.modalEditingId = null;
     this.modalDeleteMode = false;
     this.modalLoading = true;
+    this.modalError = '';
+
+    // Reinicio forzado
     this.modalOpen = false;
-    this.cdr.detectChanges();
-    this.modalOpen = true;
     this.cdr.detectChanges();
     try {
       this.ngZone.run(() => {
-        this.modalFields = this.buildSitioFields({}, {}, false);
+        this.modalFields = this.buildFields({}, {}, false);
         this.modalValues = {};
         for (const f of this.modalFields) {
           this.modalValues[f.key] = f.value ?? '';
         }
         this.modalLoading = false;
+        this.modalOpen = true;
         this.cdr.detectChanges();
       });
     } catch (err) {
-      this.modalOpen = false;
+      this.modalError = 'Error al preparar el formulario de creación';
+      this.modalLoading = false;
+      this.modalOpen = true;
       this.cdr.detectChanges();
     }
   }
 
   async onEdit(sitio: any) {
+    console.log('[onEdit] sitio:', sitio);
     try {
       await this.openEditModal(sitio);
       return;
@@ -212,14 +265,21 @@ export class SitiosPageComponent implements OnInit {
     this.modalDeleteMode = false;
     this.modalEditingId = null;
     this.modalLoading = true;
+    this.modalError = '';
+
+    // Reinicio forzado
     this.modalOpen = false;
-    this.cdr.detectChanges();
-    this.modalOpen = true;
     this.cdr.detectChanges();
     try {
       const sRow = sitio ? { ...sitio } : {};
       const id = sRow.id || sRow.id_sitio || sRow.ID;
-      if (!id) throw new Error('Sitio sin ID');
+      if (!id) {
+        this.modalError = 'No se encontró un identificador válido para el sitio.';
+        this.modalLoading = false;
+        this.modalOpen = true;
+        this.cdr.detectChanges();
+        return;
+      }
       let sDetail = sRow;
       try {
         const res: any = await firstValueFrom(this.api.get(`sitios/${id}`));
@@ -229,20 +289,23 @@ export class SitiosPageComponent implements OnInit {
         console.warn('Usando datos de fila por error en detalle:', e);
       }
       this.ngZone.run(() => {
-        this.modalFields = this.buildSitioFields({}, sDetail, true);
+        this.modalFields = this.buildFields({}, sDetail, true);
         const values: any = {};
         this.modalFields.forEach((f) => (values[f.key] = f.value));
         this.modalValues = values;
         this.modalEditingId = sDetail.id_sitio || id;
         this.modalLoading = false;
+        this.modalOpen = true;
         this.cdr.detectChanges();
       });
     } catch (err) {
-      this.modalOpen = false;
-      this.notify.warning('No se pudo cargar el sitio para edición');
+      this.modalError = 'No se pudo cargar el sitio para edición';
+      this.modalLoading = false;
+      this.modalOpen = true;
       this.cdr.detectChanges();
     }
   }
+  modalError: string = '';
 
   onRemove(sitio: any) {
     try {
@@ -283,22 +346,24 @@ export class SitiosPageComponent implements OnInit {
     await this.cargarDatosAsync();
   }
 
-  procesarDatosSitios(rows: any[], total: number) {
-    this.data = (Array.isArray(rows) ? rows : []).map((s: any) => ({
-      ...s,
-      nombre: s['nombre'] || '',
-      dominio: s['dominio'] || '',
-      codigo: s['codigo'] || '',
-      descripcion: s['descripcion'] || '',
-      id_estado: s['id_estado'] ?? 1,
-    }));
+  procesarDatos(rows: any[], total: number) {
+    this.data = (Array.isArray(rows) ? rows : []).map((s: any) => {
+      const id = s['id_sitio'] ?? s['id'] ?? s['ID'] ?? '';
+      return {
+        ...s,
+        id, // Asegura que cada fila tenga un campo 'id' para la tabla y eventos
+        nombre: s['nombre'] || '',
+        codigo: s['codigo'] || '',
+        descripcion: s['descripcion'] || '',
+        id_estado: s['id_estado'] ?? 1,
+      };
+    });
     this.formattedData = this.data.map((s) => ({ ...s }));
     this.total = Number(total) || this.data.length || 0;
   }
 
-  buildSitioFields(opts: any = {}, defaults: any = {}, isEdit: boolean = false) {
-    const schemaFields =
-      SITIO_SCHEMA && Array.isArray(SITIO_SCHEMA.fields) ? SITIO_SCHEMA.fields : [];
+  buildFields(opts: any = {}, defaults: any = {}, isEdit: boolean = false) {
+    const schemaFields = SITIO_SCHEMA && Array.isArray(SITIO_SCHEMA) ? SITIO_SCHEMA : [];
     const fields: any[] = schemaFields.map((s: any) => {
       const key = s.key;
       const base: any = {
@@ -311,10 +376,7 @@ export class SitiosPageComponent implements OnInit {
         hidden: !!s.hidden || (isEdit ? !!s.hiddenOnEdit : !!s.hiddenOnCreate),
       };
       if (base.type === 'select' && key === 'id_estado') {
-        base.options = [
-          { value: '1', label: 'Activo' },
-          { value: '0', label: 'Inactivo' },
-        ];
+        base.options = this.estados.map((e) => ({ value: String(e.id_estado), label: e.nombre }));
       }
       let val: any = undefined;
       if (defaults && typeof defaults === 'object') {
@@ -344,10 +406,9 @@ export class SitiosPageComponent implements OnInit {
   get columns(): { key: string; label: string }[] {
     return [
       { key: 'nombre', label: 'Nombre' },
-      { key: 'dominio', label: 'Dominio' },
       { key: 'codigo', label: 'Código' },
       { key: 'descripcion', label: 'Descripción' },
-      { key: 'nombre_estado', label: 'Estado' },
+      { key: 'id_estado', label: 'Estado' },
     ];
   }
 }

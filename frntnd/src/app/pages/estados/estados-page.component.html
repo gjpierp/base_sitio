@@ -1,50 +1,75 @@
-<ui-card [title]="title" [subtitle]="subtitle">
-  <div class="spread" style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem">
-    <ng-container *ngIf="loading">
-      <ui-spinner label="Cargando"></ui-spinner>
-    </ng-container>
-    <ng-container *ngIf="!loading && error">
-      <div class="muted">{{ error }}</div>
-    </ng-container>
-    <ng-container *ngIf="!loading">
-      <div style="margin-left: auto">
-        <a class="btn primary" href="/estados/crear">
-          <span style="display: inline-flex; align-items: center; gap: 0.5rem">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Crear
-          </span>
-        </a>
+<form (ngSubmit)="aplicarFiltros()">
+  <!-- Card de título -->
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
       </div>
-    </ng-container>
-  </div>
-  <ng-container *ngIf="!loading && datosListos">
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
+    </div>
+  </ui-card>
+
+  <!-- Card de filtros -->
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: center;">
+      <input type="text" [(ngModel)]="filtroNombre" name="filtroNombre" placeholder="Nombre" style="width: 200px" />
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button type="submit" variant="primary" icon="search" [iconOnly]="true" ariaLabel="Buscar" title="Buscar"></ui-button>
+      <ui-button type="button" variant="primary" icon="clear" [iconOnly]="true" ariaLabel="Limpiar" title="Limpiar" (pressed)="limpiarFiltros()"></ui-button>
+    </div>
+  </ui-card>
+
+  <!-- Card de registros -->
+  <ui-card>
     <ui-entity-table
       [title]="title"
       [subtitle]="subtitle"
-      [total]="total"
-      (pageChange)="onPageChange($event)"
       [columns]="columns"
-      [data]="data"
+      [data]="formattedData"
+      [total]="total"
       [loading]="loading"
       [error]="error"
+      [page]="currentPage"
+      [pageSize]="pageSize"
       (edit)="onEdit($event)"
       (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
     ></ui-entity-table>
-    [page]="currentPage"
-  </ng-container>
-</ui-card>
+  </ui-card>
+</form>
+
+<!-- Modal -->
+<ui-modal [isOpen]="modalOpen" [title]="modalTitle" (confirmed)="onModalConfirm()" (closed)="onModalClosed()">
+  <div class="content">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <form *ngIf="!modalLoading && modalFields.length" (submit)="$event.preventDefault(); onModalConfirm()">
+      <table class="form-table">
+        <tr *ngFor="let f of modalFields">
+          <th><label [for]="f.key">{{ f.label }}</label></th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key"></textarea>
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key" />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </div>
+</ui-modal>

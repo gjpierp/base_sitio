@@ -12,7 +12,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { UiButtonComponent } from '../../ui-form/ui-button/ui-button.component';
 import { UiSpinnerComponent } from '../../ui-feedback/ui-spinner/ui-spinner.component';
-import { UiCardComponent } from '../../ui-data/ui-card/ui-card.component';
 import { UiPaginationComponent } from '../../ui-navigation/ui-pagination/ui-pagination.component';
 import { ConfigService } from '../../../services/config.service';
 
@@ -24,20 +23,14 @@ export interface ColumnDef {
 @Component({
   selector: 'ui-entity-table',
   standalone: true,
-  imports: [
-    CommonModule,
-    UiButtonComponent,
-    UiSpinnerComponent,
-    UiCardComponent,
-    UiPaginationComponent,
-  ],
+  imports: [CommonModule, UiButtonComponent, UiSpinnerComponent, UiPaginationComponent],
   templateUrl: './ui-entity-table.component.html',
   styleUrls: ['./ui-entity-table.component.css'],
 })
 export class UiEntityTableComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] || changes['columns']) {
+    if (changes['data'] || changes['columns'] || changes['total']) {
       this.cdr.markForCheck();
     }
   }
@@ -50,6 +43,7 @@ export class UiEntityTableComponent implements OnInit, OnChanges {
   /** pageSize may be provided by parent; if not, we use configured default */
   @Input() pageSize?: number;
   @Input() total = 0;
+  @Input() pageSizeOptions: number[] = [5, 10, 25, 50, 100];
 
   private _defaultPageSize = 10;
   private configService = inject(ConfigService);

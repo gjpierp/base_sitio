@@ -1,5 +1,5 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,11 +33,13 @@ export class UsuariosJerarquiasPageComponent implements OnInit {
   total = 0;
   datosListos = false;
   currentPage = 1;
+  pageSize = 10;
 
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
   private notify = inject(NotificationService);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
 
   constructor() {}
 
@@ -56,28 +58,64 @@ export class UsuariosJerarquiasPageComponent implements OnInit {
 
   async cargarDatosAsync() {
     this.loading = true;
+    let pending = true;
     try {
-      const res: any = await firstValueFrom(this.api.get<any>('usuarios_jerarquias'));
-      const rows = Array.isArray(res?.usuarios_jerarquias)
-        ? res.usuarios_jerarquias
-        : Array.isArray(res)
-        ? res
-        : [];
-      this.data = rows.map((r: any) => ({
-        id_usuario: r.id_usuario,
-        nombre_usuario: r.nombre_usuario ?? r.usuario ?? '',
-        id_jerarquia: r.id_jerarquia,
-        nombre_jerarquia: r.nombre_jerarquia ?? r.jerarquia ?? '',
-      }));
-      this.total = this.data.length;
-      this.datosListos = true;
-      this.cdr.detectChanges();
-    } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar usuarios_jerarquias';
-      this.data = [];
-      this.datosListos = false;
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const results = await firstValueFrom(
+        forkJoin({
+          usuariosJerarquiasRes: this.api.get<any>('usuarios_jerarquias', {
+            desde: offset,
+            limite: this.pageSize,
+          }),
+        })
+      );
+      this.loading = true;
+      let pending = true;
+      try {
+        const offset = (this.currentPage - 1) * this.pageSize;
+        const results = await firstValueFrom(
+          forkJoin({
+            usuariosJerarquiasRes: this.api.get<any>('usuarios_jerarquias', {
+              desde: offset,
+              limite: this.pageSize,
+            }),
+          })
+        );
+        pending = false;
+        this.ngZone.run(() => {
+          const res = results.usuariosJerarquiasRes;
+          // Manejo global de errores
+          if (res?.error) {
+            this.error = res.msg || 'Error al cargar usuarios_jerarquias';
+            this.data = [];
+            this.datosListos = false;
+            this.cdr.detectChanges();
+            return;
+          }
+          const rows = Array.isArray(res?.usuarios_jerarquias)
+            ? res.usuarios_jerarquias
+            : Array.isArray(res)
+            ? res
+            : [];
+          this.data = rows.map((r: any) => ({
+            id_usuario: r.id_usuario,
+            nombre_usuario: r.nombre_usuario ?? r.usuario ?? '',
+            id_jerarquia: r.id_jerarquia,
+            nombre_jerarquia: r.nombre_jerarquia ?? r.jerarquia ?? '',
+          }));
+          this.total = res?.total || this.data.length;
+          this.datosListos = true;
+          this.cdr.detectChanges();
+        });
+      } catch (err) {
+        this.error = 'No se pudo cargar usuarios_jerarquias';
+        this.data = [];
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      }
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
   refrescar() {

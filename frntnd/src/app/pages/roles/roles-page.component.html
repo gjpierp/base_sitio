@@ -1,5 +1,4 @@
 <form (ngSubmit)="aplicarFiltros()">
-  <!-- Card de título, subtítulo y botón crear -->
   <ui-card>
     <div style="display: flex; flex-direction: column; gap: 0.5rem">
       <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
@@ -17,7 +16,6 @@
     </div>
   </ui-card>
 
-  <!-- Card de filtros -->
   <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
     <div
       style="
@@ -33,13 +31,6 @@
         [(ngModel)]="filtroNombre"
         name="filtroNombre"
         placeholder="Nombre"
-        style="width: 180px"
-      />
-      <input
-        type="text"
-        [(ngModel)]="filtroDescripcion"
-        name="filtroDescripcion"
-        placeholder="Descripción"
         style="width: 180px"
       />
       <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
@@ -68,82 +59,169 @@
     </div>
   </ui-card>
 
-  <!-- Card de registros -->
-  <ui-card style="margin-top: 1.5rem">
-    <div style="width: 100%">
-      <ng-container *ngIf="loading">
-        <ui-spinner></ui-spinner>
-      </ng-container>
-      <ng-container *ngIf="!loading">
-        <ui-entity-table
-          [title]="title"
-          [subtitle]="subtitle"
-          [columns]="columns"
-          [data]="formattedData"
-          [total]="totalRoles"
-          [loading]="loading"
-          [error]="error"
-          [page]="currentPage"
-          (edit)="openEditModal($event)"
-          (remove)="onRemove($event)"
-          (pageChange)="onPageChange($event)"
-          style="width: 100%"
-        ></ui-entity-table>
-      </ng-container>
-    </div>
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+
+    <!-- Paginación visual -->
     <div
-      class="table-pagination"
+      *ngIf="total > pageSize"
       style="
-        margin-top: 0.75rem;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.5rem;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
       "
     >
-      <ui-pagination></ui-pagination>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <button
+          type="button"
+          (click)="currentPage = 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          «
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = currentPage - 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          ‹
+        </button>
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        <button
+          type="button"
+          (click)="currentPage = currentPage + 1; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = totalPages; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          »
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <span style="font-size: 13px">Registros por página:</span>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)" style="width: 70px">
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+        </select>
+      </div>
+      <div style="font-size: 13px; color: #888">Total: {{ total }}</div>
     </div>
   </ui-card>
 </form>
 
-<!-- Integrated modal for create/edit/delete -->
 <ui-modal
+  #modalRef
   [isOpen]="modalOpen"
   [title]="modalTitle"
   (confirmed)="onModalConfirm()"
   (closed)="onModalClosed()"
 >
   <div class="content">
-    <form *ngIf="modalFields.length" (submit)="$event.preventDefault(); onModalConfirm()">
-      <div class="form-grid" [class.many-fields]="modalFields.length > 6">
-        <div class="form-row" *ngFor="let f of modalFields">
-          <label class="form-label" [for]="f.key" title="{{ f.label }}">{{ f.label }}</label>
-          <div class="form-input">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <div
+      *ngIf="!modalLoading && modalDeleteMode"
+      style="padding: 2rem; text-align: center; font-size: 1.1em"
+    >
+      <span>
+        ¿Estás seguro que deseas eliminar el rol
+        <b>{{ modalValues.nombre || '' }}</b
+        >?
+      </span>
+    </div>
+    <table class="form-table" *ngIf="!modalLoading && !modalDeleteMode && modalFields.length">
+      <ng-container *ngFor="let f of modalFields">
+        <tr *ngIf="!f.hidden">
+          <th>
+            <label
+              [for]="f.key"
+              style="
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+                display: inline-block;
+              "
+              >{{ f.label }}</label
+            >
+          </th>
+          <td>
             <ng-container [ngSwitch]="f.type">
               <ng-container *ngSwitchCase="'text'">
-                <input [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key" />
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
               </ng-container>
               <ng-container *ngSwitchCase="'select'">
-                <select [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key">
-                  <option *ngFor="let o of f.options || []" [value]="o.value">{{ o.label }}</option>
+                <select
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [disabled]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                >
+                  <option *ngFor="let o of f.options || []" [ngValue]="o.value">
+                    {{ o.label }}
+                  </option>
                 </select>
               </ng-container>
               <ng-container *ngSwitchCase="'textarea'">
-                <textarea [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key"></textarea>
+                <textarea
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                ></textarea>
+              </ng-container>
+              <ng-container *ngSwitchCase="'password'">
+                <input
+                  type="password"
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
               </ng-container>
               <ng-container *ngSwitchDefault>
-                <input [id]="f.key" [(ngModel)]="modalValues[f.key]" [name]="f.key" />
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
               </ng-container>
             </ng-container>
-          </div>
-        </div>
-      </div>
-    </form>
-    <div *ngIf="!modalFields.length && modalDeleteMode" style="padding: 1rem">
-      <p>
-        ¿Confirma eliminar el rol "<strong>{{ modalValues.nombre }}</strong
-        >"?
-      </p>
-    </div>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
   </div>
 </ui-modal>

@@ -1,5 +1,5 @@
-<div>
-  <ui-card>
+<form (ngSubmit)="aplicarFiltros()" style="margin-bottom: 0">
+  <ui-card class="spread" style="align-items: center; margin-bottom: 1rem">
     <div style="display: flex; align-items: center; justify-content: space-between">
       <div>
         <span style="font-size: 1.5em; font-weight: 600">{{ title }}</span>
@@ -16,12 +16,8 @@
       ></ui-button>
     </div>
   </ui-card>
-
-  <ui-card title="Filtros">
-    <form
-      (ngSubmit)="aplicarFiltros()"
-      style="margin-bottom: 0; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center"
-    >
+  <ui-card title="Filtros" style="margin-bottom: 1rem">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center">
       <input
         type="text"
         [(ngModel)]="filtroNombre"
@@ -31,64 +27,56 @@
       />
       <input
         type="text"
-        [(ngModel)]="filtroDominio"
-        name="filtroDominio"
-        placeholder="Dominio"
+        [(ngModel)]="filtroCodigo"
+        name="filtroCodigo"
+        placeholder="Código"
         style="width: 180px"
       />
-      <input
-        type="text"
-        [(ngModel)]="filtroEstado"
-        name="filtroEstado"
-        placeholder="Estado"
-        style="width: 160px"
-      />
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
       <ui-button
         type="submit"
         variant="primary"
         icon="search"
         [iconOnly]="true"
         ariaLabel="Buscar"
-        style="height: 32px"
+        title="Buscar"
       ></ui-button>
       <ui-button
         type="button"
-        variant="secondary"
-        icon="close"
+        variant="primary"
+        icon="clear"
         [iconOnly]="true"
         ariaLabel="Limpiar"
+        title="Limpiar"
         (pressed)="limpiarFiltros()"
-        style="height: 32px"
       ></ui-button>
-    </form>
-  </ui-card>
-
-  <div class="spread" style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem">
-    <ng-container *ngIf="loading">
-      <ui-spinner label="Cargando"></ui-spinner>
-    </ng-container>
-    <ng-container *ngIf="!loading && error">
-      <div class="muted">{{ error }}</div>
-    </ng-container>
-  </div>
-  <div style="display: flex; justify-content: center; align-items: center; width: 100%">
-    <div style="width: 100%; max-width: 1400px">
-      <ui-entity-table
-        [title]="title"
-        [subtitle]="subtitle"
-        [columns]="columns"
-        [data]="formattedData"
-        [total]="total"
-        [loading]="loading"
-        [error]="error"
-        [page]="currentPage"
-        (edit)="onEdit($event)"
-        (remove)="onRemove($event)"
-        (pageChange)="onPageChange($event)"
-      ></ui-entity-table>
     </div>
-  </div>
-</div>
+  </ui-card>
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></ui-entity-table>
+  </ui-card>
+</form>
 
 <!-- Modal integrado para creación/edición/eliminación -->
 <ui-modal
@@ -102,15 +90,18 @@
     <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
       <ui-spinner label="Cargando"></ui-spinner>
     </div>
+    <div *ngIf="!modalLoading && modalError" style="color: #c00; padding: 1rem; text-align: center">
+      {{ modalError }}
+    </div>
     <!-- Mensaje de confirmación de eliminación -->
     <div
       *ngIf="!modalLoading && modalDeleteMode"
       style="padding: 2rem; text-align: center; font-size: 1.1em"
     >
-      <span
-        >¿Estás seguro que deseas eliminar el sitio <b>{{ modalValues.nombre || '' }}</b
-        >?</span
-      >
+      <span>
+        ¿Estás seguro que deseas eliminar el sitio <b>{{ modalValues.nombre || '' }}</b
+        >?
+      </span>
     </div>
     <table class="form-table" *ngIf="!modalLoading && !modalDeleteMode && modalFields.length">
       <ng-container *ngFor="let f of modalFields">
@@ -147,7 +138,7 @@
                   [disabled]="f.readonly"
                   style="width: 420px; max-width: 100%; box-sizing: border-box"
                 >
-                  <option *ngFor="let o of f.options || []" [ngValue]="o.value">
+                  <option *ngFor="let o of f.options || []" [value]="o.value">
                     {{ o.label }}
                   </option>
                 </select>

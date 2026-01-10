@@ -1,76 +1,80 @@
-.entity-table {
-  --table-gap: 0.5rem;
-}
-.entity-table .table-wrap {
-  overflow: auto;
-}
-.entity-table table {
+:host {
+  display: block;
   width: 100%;
-  border-collapse: collapse;
 }
-.entity-table th,
-.entity-table td {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #e6e6e6;
-  text-align: left;
-}
-.entity-table tbody tr:hover {
-  background: var(--table-row-hover, #fafafa);
-}
-
-/* Responsive: show data-label before cell content on narrow screens */
-@media (max-width: 720px) {
-  .entity-table table,
-  .entity-table thead,
-  .entity-table tbody,
-  .entity-table th,
-  .entity-table td,
-  .entity-table tr {
-    display: block;
-  }
-  .entity-table thead {
-    display: none;
-  }
-  .entity-table td {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem;
-  }
-  .entity-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    margin-right: 0.5rem;
-  }
-}
-.responsive-table {
+ui-card {
+  display: block;
   width: 100%;
-  border-collapse: collapse;
+  box-sizing: border-box;
 }
-.responsive-table th,
-.responsive-table td {
-  padding: 0.5rem;
+.entity-table-container {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.header {
+  padding: 1rem;
   border-bottom: 1px solid #eee;
-  text-align: left;
 }
-
-.actions-col {
-  display: flex;
-  width: 20%;
-  gap: 0.5rem;
-  text-align: center;
+.header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.table-responsive {
+  position: relative;
+  overflow-x: auto;
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
   white-space: nowrap;
 }
-
-.actions-col ui-button {
-  margin: 0 4px;
+.table th,
+.table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
 }
-
-.actions-col ui-button {
-  padding: 0; /* Sin padding para evitar espacio extra */
-  border: none; /* Opcional, dependiendo del estilo que quieras */
-  background: none; /* Eliminar el fondo si es necesario */
+.table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
 }
-
-.actions-col i {
-  font-size: 1.5rem; /* Ajusta el tamaño del ícono según sea necesario */
+.actions-header {
+  text-align: right;
+}
+.actions-cell {
+  text-align: right;
+}
+.actions-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.no-data {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.footer {
+  padding: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #eee;
+  width: 100%;
+  box-sizing: border-box;
+  clear: both;
 }

@@ -1,0 +1,26 @@
+/* CSS robusto adaptado de usuarios-page.component.css para usuarios-jerarquias */
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.modal-content-75 {
+  width: 75% !important;
+  margin: 0 auto;
+}
+.form-table th {
+  text-align: left !important;
+  padding-right: 5px !important;
+  width: 1%;
+  white-space: nowrap;
+}
+.form-table td {
+  padding-left: 5px !important;
+}

@@ -1,9 +1,0 @@
-export interface Permission {
-  id?: number | string;
-  nombre: string;
-  descripcion?: string;
-  id_permiso?: number | string;
-  id_estado?: number | string;
-
-  [key: string]: any;
-}

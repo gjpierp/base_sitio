@@ -1,0 +1,153 @@
+<form (ngSubmit)="aplicarFiltros()">
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
+    </div>
+  </ui-card>
+
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div
+      style="
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroNombre"
+        name="filtroNombre"
+        placeholder="Nombre"
+        style="width: 180px"
+      />
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Estado</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        title="Buscar"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="primary"
+        icon="clear"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        title="Limpiar"
+        (pressed)="limpiarFiltros()"
+      ></ui-button>
+    </div>
+  </ui-card>
+
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+
+    <div
+      *ngIf="total > pageSize"
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+      "
+    >
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <button
+          type="button"
+          (click)="currentPage = 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          «
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = currentPage - 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          ‹
+        </button>
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        <button
+          type="button"
+          (click)="currentPage = currentPage + 1; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = totalPages; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          »
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <span style="font-size: 13px">Registros por página:</span>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)" style="width: 70px">
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+        </select>
+      </div>
+      <div style="font-size: 13px; color: #888">Total: {{ total }}</div>
+    </div>
+  </ui-card>
+</form>
+
+<ui-modal
+  #modalRef
+  [isOpen]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <div
+      *ngIf="!modalLoading && modalDeleteMode"
+      style="padding: 2rem; text-align: center; font-size: 1.1em"
+    >
+      <span>
+        ¿Estás seguro que deseas eliminar la entidad
+        <b>{{ modalValues.alias_nombre || modalValues.nombre_tabla || '' }}</b
+        >?
+      </span>
+    </div>
+  </div>
+</ui-modal>

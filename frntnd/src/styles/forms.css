@@ -38,3 +38,20 @@
   font-size: 0.875rem;
   color: #6b7280;
 }
+
+/* Estilos globales para modales de formularios */
+.modal-content-75 {
+  width: 75% !important;
+  margin: 0 auto;
+}
+
+.form-table th {
+  text-align: left !important;
+  padding-right: 5px !important;
+  width: 1%;
+  white-space: nowrap;
+}
+
+.form-table td {
+  padding-left: 5px !important;
+}

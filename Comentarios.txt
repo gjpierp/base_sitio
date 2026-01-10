@@ -1,0 +1,35 @@
+Comentarios FrondEnd, quiero que normalices los comentarios en todos los componentes
+
+Comentario de cabecera, debe ir sobre el component y debajo del ultimo import.
+/**
+ * Resumen del componente.
+ * Fecha             Autor                   Versión           Descripción
+ * ---------------------------------------------------------------------------------------------------------------------------------
+ * @date dd-mm-yyyy @author Gerardo Paiva   @version 1.0.0    @description Descripción del componente.
+ */
+
+ Comentario de Metodos y Funciones, debe ir sobre cada metodo y funcion, sin romper el codigo. La fecha dd-mm-yyyy, debe ser el dia cuando se generaron los /**
+ * @description Descripción de la función o método
+ * @author Gerardo Paiva
+ * @date dd-mm-yyyy
+ */
+
+Comentarios BackEnd
+
+Comentario de cabecera, debe ir sobre el component y debajo del ultimo import.
+/**
+ * Resumen del componente.
+ * Ruta: /API/[Componente]
+ * Fecha             Autor                   Versión           Descripción
+ * ---------------------------------------------------------------------------------------------------------------------------------
+ * @date dd-mm-yyyy @author Gerardo Paiva   @version 1.0.0    @description Descripción del componente.
+ */
+
+ Comentario de Metodos y Funciones, debe ir sobre cada metodo y funcion, sin romper el codigo. La fecha dd-mm-yyyy, debe ser el dia cuando se generaron los comentarios.
+ Debes reemplara 
+ /**
+ * [Metodo]: /api/[Componente]/[Parametro]
+ * @description Descripción de la función o método
+ * @author Gerardo Paiva
+ * @date dd-mm-yyyy
+ */

@@ -1,185 +1,139 @@
-/**
- * Componente para el dashboard principal del sistema.
- * Fecha  Autor Versión Descripción
- * 28-12-2025 Gerardo Paiva 1.0.0 Estadísticas y navegación principal.
- */
-import { Component, Inject, OnInit, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
-import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
-import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
-import { UiBadgeComponent } from '../../components/ui-form/ui-badge/ui-badge.component';
-import { Router, RouterModule } from '@angular/router';
-import { SidebarStateService } from '../../core/services/sidebar-state.service';
-import { ApiService } from '../../services/api.service';
-import { forkJoin, of } from 'rxjs';
+import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
-type Variant = 'primary' | 'success' | 'warning' | 'danger';
-interface Stat {
-  label: string;
-  value: number;
-  icon: string;
-  variant: Variant;
-}
+import { CommonModule } from '@angular/common';
+import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
+import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
+import { ApiService } from '../../services/api.service';
+import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 
 @Component({
   selector: 'page-dashboard',
   standalone: true,
-  imports: [CommonModule, UiCardComponent, UiButtonComponent, UiBadgeComponent, RouterModule],
+  imports: [
+    CommonModule,
+    UiButtonComponent,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiEntityTableComponent
+  ],
   templateUrl: './dashboard-page.component.html',
   styleUrls: ['./dashboard-page.component.css'],
 })
 export class DashboardPageComponent implements OnInit {
+  // 1. Propiedades
   title = 'Dashboard';
+  subtitle = 'Resumen del sistema';
+
+  // Datos
+  stats = {
+    usuarios: 0,
+    apps: 0,
+    config: 0
+  };
+  actividadReciente: any[] = [];
+  formattedActivity: any[] = [];
+
+  // Estado de carga
+  loading = false;
+  error?: string;
   datosListos = false;
 
-  isLoggedIn = false;
+  // Inyecciones
+  private api = inject(ApiService);
+  private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
 
-  stats: Stat[] = [
-    { label: 'Usuarios', value: 0, icon: 'group', variant: 'primary' },
-    { label: 'Roles', value: 0, icon: 'shield_person', variant: 'success' },
-    { label: 'Permisos', value: 0, icon: 'key', variant: 'warning' },
-    { label: 'Menús', value: 0, icon: 'view_list', variant: 'primary' },
-  ];
-  /**
-   * @description Constructor de la clase DashboardPageComponent.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  constructor(
-    private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private sidebarState: SidebarStateService,
-    private api: ApiService,
-    private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
-  ) {}
-
-  /**
-   * @description Inicializa el ciclo de vida del componente y verifica si el usuario está logueado.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
+  // 2. Ciclo de Vida
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('x-token');
-      this.isLoggedIn = !!token;
+    const preloaded = this.route.snapshot.data['pre'];
+    if (preloaded) {
+      this.stats = preloaded.stats || { usuarios: 0, apps: 0, config: 0 };
+      this.procesarActividad(preloaded.actividadReciente || []);
+      this.datosListos = true;
+    } else {
+      this.cargarDatosAsync();
     }
-    // Cargar estadísticas reales del backend
-    this.cargarStats();
-
-    // Re-cargar estadísticas tras login desde otras partes de la app (e.g. social login)
-    try {
-      if (typeof window !== 'undefined' && (window as any).addEventListener) {
-        (window as any).addEventListener('app:login', () => {
-          try {
-            this.ngZone.run(() => this.cargarStats());
-          } catch {}
-        });
-      }
-    } catch {}
-
-    // Re-cargar estadísticas cuando la navegación aterrice en /dashboard (router reuse cases)
-    try {
-      this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((ev: any) => {
-        try {
-          if (ev && ev.urlAfterRedirects && ev.urlAfterRedirects.indexOf('/dashboard') === 0) {
-            this.ngZone.run(() => this.cargarStats());
-          }
-        } catch {}
-      });
-    } catch {}
   }
 
-  /**
-   * @description Carga conteos reales para el dashboard desde los endpoints listar.
-   * Intenta usar el campo `total` si está presente; si no, usa la longitud del arreglo.
-   */
-  private cargarStats() {
-    const usuarios$ = this.api
-      .get<any>('usuarios', { desde: 0, limite: 1 })
-      .pipe(catchError(() => of({ usuarios: [], total: 0 })));
-    const roles$ = this.api
-      .get<any>('roles', { desde: 0, limite: 1 })
-      .pipe(catchError(() => of({ roles: [], total: 0 })));
-    const permisos$ = this.api
-      .get<any>('permisos', { desde: 0, limite: 1 })
-      .pipe(catchError(() => of({ permisos: [], total: 0 })));
-    const menus$ = this.api
-      .get<any>('menus', { desde: 0, limite: 1 })
-      .pipe(catchError(() => of({ menus: [], total: 0 })));
+  // 3. Carga y Procesamiento
+  async refrescar() {
+    await this.cargarDatosAsync();
+  }
 
-    forkJoin([usuarios$, roles$, permisos$, menus$]).subscribe({
-      next: ([uRes, rRes, pRes, mRes]) => {
-        const countFrom = (res: any, key: string) => {
-          const arr = Array.isArray(res?.[key]) ? res[key] : Array.isArray(res) ? res : [];
-          const total = Number(res?.total) || arr.length || 0;
-          return total;
+  async cargarDatosAsync() {
+    let pending = true;
+    setTimeout(() => { if (pending) this.loading = true; });
+    this.error = undefined;
+
+    try {
+      // Replicar lógica del resolver para refresco manual
+      const reqs = {
+        usuarios: this.api.getPaginated('usuarios', { limit: 1 }).pipe(catchError(() => of({ total: 0 }))),
+        apps: this.api.getPaginated('aplicaciones_sitio', { limit: 1 }).pipe(catchError(() => of({ total: 0 }))),
+        config: this.api.getPaginated('configuraciones', { limit: 1 }).pipe(catchError(() => of({ total: 0 }))),
+        auditoria: this.api.getPaginated('auditoria', { limit: 5, sort: 'fecha', order: 'desc' }).pipe(catchError(() => of({ data: [] })))
+      };
+
+      const res: any = await firstValueFrom(forkJoin(reqs));
+
+      pending = false;
+      this.ngZone.run(() => {
+        this.stats = {
+          usuarios: Number(res.usuarios?.total) || 0,
+          apps: Number(res.apps?.total) || 0,
+          config: Number(res.config?.total) || 0
         };
-        const usuariosTotal = countFrom(uRes, 'usuarios');
-        const rolesTotal = countFrom(rRes, 'roles');
-        const permisosTotal = countFrom(pRes, 'permisos');
-        const menusTotal = countFrom(mRes, 'menus');
-        // Ensure updates happen in a later tick to avoid ExpressionChangedAfterItHasBeenCheckedError
-        setTimeout(() => {
-          this.stats = [
-            { label: 'Usuarios', value: usuariosTotal, icon: 'group', variant: 'primary' },
-            { label: 'Roles', value: rolesTotal, icon: 'shield_person', variant: 'success' },
-            { label: 'Permisos', value: permisosTotal, icon: 'key', variant: 'warning' },
-            { label: 'Menús', value: menusTotal, icon: 'view_list', variant: 'primary' },
-          ];
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        }, 0);
-      },
-      error: () => {
-        // Mantener valores en 0 si hay error
-        setTimeout(() => {
-          this.stats = [
-            { label: 'Usuarios', value: 0, icon: 'group', variant: 'primary' },
-            { label: 'Roles', value: 0, icon: 'shield_person', variant: 'success' },
-            { label: 'Permisos', value: 0, icon: 'key', variant: 'warning' },
-            { label: 'Menús', value: 0, icon: 'view_list', variant: 'primary' },
-          ];
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        }, 0);
-      },
-    });
-  }
-
-  /**
-   * @description Devuelve la ruta de listado según la etiqueta del stat.
-   */
-  getRouteFor(label: string): string {
-    const key = label.toLowerCase();
-    if (key.includes('usuario')) return '/usuarios';
-    if (key.includes('rol')) return '/roles';
-    if (key.includes('permiso')) return '/permisos';
-    if (key.includes('menú') || key.includes('menu')) return '/menus';
-    return '/dashboard';
-  }
-
-  /**
-   * @description Cierra la sesión del usuario y redirige al login.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  logout(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      this.sidebarState.clearExpansionState();
-      localStorage.removeItem('x-token');
-      // Limpiar datos sensibles y caches locales al hacer logout
-      try {
-        localStorage.removeItem('menu');
-        localStorage.removeItem('roles');
-        localStorage.removeItem('permisos');
-      } catch {}
+        const rows = res.auditoria?.data || res.auditoria?.auditoria || [];
+        this.procesarActividad(rows);
+        
+        this.loading = false;
+        this.datosListos = true;
+        this.cdr.detectChanges();
+      });
+    } catch (err) {
+      pending = false;
+      this.ngZone.run(() => {
+        this.error = (err as any)?.error?.msg || 'No se pudo cargar el dashboard';
+        this.loading = false;
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      });
     }
-    this.router.navigateByUrl('/login');
   }
+
+  private procesarActividad(rows: any[]) {
+    this.actividadReciente = (Array.isArray(rows) ? rows : []).map((r: any) => ({
+      ...r,
+      id: r.id_auditoria ?? r.id,
+      usuario_nombre: r.usuario?.nombre_usuario ?? r.nombre_usuario ?? r.usuario ?? 'Sistema',
+      fecha_fmt: r.fecha ? new Date(r.fecha).toLocaleString() : '',
+      accion: r.accion || 'Desconocido',
+      entidad: r.entidad || '-'
+    }));
+    this.formattedActivity = [...this.actividadReciente];
+  }
+
+  // 4. Navegación
+  irA(ruta: string) {
+    this.router.navigate([ruta]);
+  }
+
+  // 5. Getters
+  get activityColumns() {
+    return [
+      { key: 'fecha_fmt', label: 'Fecha' },
+      { key: 'usuario_nombre', label: 'Usuario' },
+      { key: 'accion', label: 'Acción' },
+      { key: 'entidad', label: 'Entidad' }
+    ];
+  }
+
+  // Métodos dummy para satisfacer la interfaz de ui-entity-table si se requiere
+  onEdit(item: any) {}
+  onRemove(item: any) {}
 }

@@ -1,73 +1,192 @@
-<ui-card [title]="title" subtitle="Opciones del sistema">
-  <div class="spread" style="margin-bottom: 1rem">
-    @if (loading) {
-    <ui-spinner label="Cargando"></ui-spinner>
-    } @if (!loading && error) {
-    <div class="muted">{{ error }}</div>
-    }
-  </div>
-
-  <!-- Selector de tema -->
-  <div style="margin-bottom: 1rem">
-    <app-theme-selector></app-theme-selector>
-  </div>
-
-  @if (!loading && datosListos) {
-  <table class="responsive-table" aria-describedby="config-desc">
-    <caption id="config-desc">
-      Listado de opciones
-    </caption>
-    <thead>
-      <tr>
-        <th scope="col">Clave</th>
-        <th scope="col">Valor</th>
-        <th scope="col">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (c of data; track c.clave) {
-      <tr>
-        <td [attr.data-label]="'Clave'">{{ c.clave }}</td>
-        <td [attr.data-label]="'Valor'">{{ c.valor }}</td>
-        <td class="actions" [attr.data-label]="'Acciones'">
-          <ui-button
-            variant="outline"
-            ariaLabel="Editar"
-            (pressed)="abrirEditar(c)"
-            label="Editar"
-          ></ui-button>
-        </td>
-      </tr>
-      }
-    </tbody>
-  </table>
-  @if (data.length === 0) {
-  <div class="muted">No hay datos para mostrar.</div>
-  } }
-
-  <!-- Modal de edición simple -->
-  <ui-modal
-    [isOpen]="editOpen"
-    title="Editar opción"
-    confirmLabel="Guardar"
-    cancelLabel="Cancelar"
-    (closed)="cancelar()"
-    (confirmed)="guardarEdicion()"
-  >
-    <div class="form-grid">
-      <ui-input
-        label="Clave"
-        [(value)]="editarClave"
-        placeholder="Clave"
-        [disabled]="true"
-        style="width: 360px; max-width: 100%; box-sizing: border-box"
-      ></ui-input>
-      <ui-input
-        label="Valor"
-        [(value)]="editarValor"
-        placeholder="Valor"
-        style="width: 360px; max-width: 100%; box-sizing: border-box"
-      ></ui-input>
+<form (ngSubmit)="aplicarFiltros()">
+  <!-- Card de título, subtítulo y botón crear -->
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
     </div>
-  </ui-modal>
-</ui-card>
+  </ui-card>
+
+  <!-- Card de filtros -->
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div
+      style="
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroClave"
+        name="filtroClave"
+        placeholder="Clave"
+        style="width: 180px"
+      />
+      <input
+        type="text"
+        [(ngModel)]="filtroValor"
+        name="filtroValor"
+        placeholder="Valor"
+        style="width: 180px"
+      />
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Estado</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+      <select [(ngModel)]="filtroUsuario" name="filtroUsuario" style="width: 160px">
+        <option value="">Usuario</option>
+        <option *ngFor="let u of usuarios" [value]="u.id_usuario">{{ u.nombre_usuario }}</option>
+      </select>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        title="Buscar"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="primary"
+        icon="clear"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        title="Limpiar"
+        (pressed)="limpiarFiltros()"
+      ></ui-button>
+    </div>
+  </ui-card>
+
+  <!-- Card de registros -->
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+  </ui-card>
+</form>
+
+<!-- Modal integrado para creación/edición -->
+<ui-modal
+  #modalRef
+  [isOpen]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+
+    <!-- Mensaje de confirmación de eliminación -->
+    <div
+      *ngIf="!modalLoading && modalDeleteMode"
+      style="padding: 2rem; text-align: center; font-size: 1.1em"
+    >
+      <span
+        >¿Estás seguro que deseas eliminar la configuración <b>{{ modalValues.clave || '' }}</b
+        >?</span
+      >
+    </div>
+
+    <table class="form-table" *ngIf="!modalLoading && !modalDeleteMode && modalFields.length">
+      <ng-container *ngFor="let f of modalFields">
+        <tr *ngIf="!f.hidden">
+          <th>
+            <label
+              [for]="f.key"
+              style="
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+                display: inline-block;
+              "
+              >{{ f.label }}</label
+            >
+          </th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchCase="'select'">
+                <select
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [disabled]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                >
+                  <option *ngFor="let o of f.options || []" [ngValue]="o.value">
+                    {{ o.label }}
+                  </option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                ></textarea>
+              </ng-container>
+              <ng-container *ngSwitchCase="'password'">
+                <input
+                  type="password"
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
+  </div>
+</ui-modal>

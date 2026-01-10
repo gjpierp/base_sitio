@@ -1,116 +1,302 @@
-/**
- * Componente para la gestión y listado de permisos en el sistema.
- * Fecha  Autor Versión Descripción
- * 28-12-2025 Gerardo Paiva 1.0.0 Listado, edición y eliminación de permisos.
- */
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  OnInit,
+  ChangeDetectionStrategy,
+  NgZone,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
 import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
-import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
 import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
 import { ApiService } from '../../services/api.service';
-import { Permission } from '../../models/permission';
+import { NotificationService } from '../../services/notification.service';
+import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal.component';
+import { onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
+import { PERMISO_SCHEMA } from '../../models/schema/permiso.schema';
 
+/**
+ * Componente para la gestión y listado de permisos en el sistema.
+ * Fecha             Autor                   Versión           Descripción
+ * @date 09-01-2026 @author Gerardo Paiva   @version 1.0.0    @description Listado, edición y eliminación de permisos.
+ */
 @Component({
   selector: 'page-permisos',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    UiButtonComponent,
     UiCardComponent,
     UiSpinnerComponent,
     UiEntityTableComponent,
-    UiButtonComponent,
+    UiModalComponent,
   ],
   templateUrl: './permisos-page.component.html',
   styleUrls: ['./permisos-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.Default,
+  styles: [
+    `
+      :host ::ng-deep th:last-child,
+      :host ::ng-deep td:last-child {
+        text-align: center !important;
+      }
+      :host ::ng-deep td:last-child > div {
+        justify-content: center !important;
+      }
+    `,
+  ],
 })
-export class PermisosPageComponent {
-  // --- VARIABLES PRINCIPALES ---
+export class PermisosPageComponent implements OnInit {
   title = 'Permisos';
   subtitle = 'Permisos';
-  private api = inject(ApiService);
-  private cdr = inject(ChangeDetectorRef);
-  columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'codigo', label: 'Código' },
-    { key: 'descripcion', label: 'Descripción' },
-  ];
-  data: Permission[] = [];
+  atributos: any[] = [];
+  filtroNombre: string = '';
+  filtroEstado: string = '';
+  estadoActivoId: string = '';
+  estados: any[] = [];
+  data: any[] = [];
+  formattedData: any[] = [];
   loading = false;
   error?: string;
-  totalPermisos = 0;
   datosListos = false;
+  camposLista: string[] = [];
+  camposCrear: string[] = [];
+  camposEditar: string[] = [];
+  camposDetalle: string[] = [];
+  total = 0;
   currentPage = 1;
-  nuevo = { codigo: '', descripcion: '' };
-  // Estado de modales
-  editOpen = false;
-  deleteOpen = false;
-  seleccionado: any = null;
-  editCodigo = '';
-  editDescripcion = '';
-  modalError = '';
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 20, 50];
+  totalPages = 1;
+  modalOpen = false;
+  modalTitle = '';
+  modalFields: any[] = [];
+  modalValues: any = {};
+  modalSaving = false;
+  modalLoading = false;
+  modalEditingId: any = null;
+  modalDeleteMode = false;
+  permisoAEliminar: any = null;
+  private api = inject(ApiService);
+  private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  private notify = inject(NotificationService);
+  private router = inject(Router);
+  private ngZone = inject(NgZone);
 
   /**
-   * @description Constructor de la clase PermisosPageComponent.
+   * @description Método de inicialización del componente.
+   * Carga los datos precargados por el Resolver o los obtiene de forma asíncrona.
    * @author Gerardo Paiva
-   * @date 28-12-2025
+   * @date 09-01-2026
    */
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  constructor() {
-    const pre = this.route.snapshot.data?.['pre'];
-    if (pre) {
-      const rows = Array.isArray(pre.permisos) ? pre.permisos : [];
-      this.data = rows.map((r: any) => this.normalizePermiso(r));
-      this.totalPermisos = Number(pre.total) || this.data.length;
-      this.loading = false;
+  async ngOnInit() {
+    const preloaded = this.route.snapshot.data['pre'];
+    if (preloaded) {
+      this.estados = preloaded.estados || [];
+      // Inicializar filtro de estado activo si existe
+      const estadoActivo = this.estados.find((e) => e.nombre?.toLowerCase() === 'activo');
+      if (estadoActivo) {
+        this.estadoActivoId = String(estadoActivo.id_estado);
+        this.filtroEstado = this.estadoActivoId;
+        preloaded.permisos = (preloaded.permisos || []).filter(
+          (p: any) => String(p.id_estado) === String(this.estadoActivoId)
+        );
+      }
+      let permisosFiltrados = preloaded.permisos || [];
+      this.procesarDatos(permisosFiltrados, preloaded.total || permisosFiltrados.length);
       this.datosListos = true;
-      try {
-        this.cdr.detectChanges();
-      } catch {}
     } else {
-      this.cargar();
+      await this.cargarDatosAsync();
     }
   }
 
-  refrescar() {
-    this.cargar();
+  /**
+   * @description Aplica los filtros de búsqueda sobre la lista de permisos y luego limpia los campos de filtro.
+   * @author Gerardo Paiva
+   * @date 09-01-2026
+   */
+  aplicarFiltros() {
+    // Lógica extensible para futuros filtros
+    let filtrados = this.data;
+    if (this.filtroNombre) {
+      const nombre = this.filtroNombre.toLowerCase();
+      filtrados = filtrados.filter((p) => (p.nombre || '').toLowerCase().includes(nombre));
+    }
+    if (this.filtroEstado) {
+      filtrados = filtrados.filter((p) => String(p.id_estado) === String(this.filtroEstado));
+    }
+    // Aquí se pueden agregar más filtros fácilmente
+    this.procesarDatos(filtrados, filtrados.length);
+    // Limpiar todos los filtros (igual que usuarios-page)
+    this.filtroNombre = '';
+    this.filtroEstado = '';
   }
 
   /**
-   * @description Inicializa el ciclo de vida del componente y limpia el filtro persistido.
+   * @description Limpia los campos de filtro y restaura la lista completa de permisos.
    * @author Gerardo Paiva
-   * @date 28-12-2025
+   * @date 09-01-2026
    */
-  ngOnInit() {
+  limpiarFiltros() {
+    this.filtroNombre = '';
+    this.filtroEstado = '';
+    this.procesarDatos(this.data, this.data.length);
+  }
+
+  /**
+   * @description Carga inicial (alias) usado por otras páginas para refrescar la lista.
+   * @author Gerardo Paiva
+   * @date 09-01-2026
+   */
+  async load() {
+    this.currentPage = 1;
+    await this.cargarDatosAsync();
+  }
+
+  /**
+   * Refresca los datos de la tabla de permisos.
+   */
+  async refrescar(): Promise<void> {
+    // Refresca la página actual con los filtros activos
+    await this.cargarDatosAsync();
+  }
+
+  /**
+   * @description Carga todos los datos requeridos de forma asíncrona y en orden.
+   * @author Gerardo Paiva
+   * @date 09-01-2026
+   */
+  async cargarDatosAsync() {
+    let pending = true;
+    setTimeout(() => {
+      if (pending) {
+        this.loading = true;
+      }
+    });
+    this.error = undefined;
     try {
-      localStorage.removeItem('table:permisos:filterText');
-    } catch {}
-  }
-
-  /**
-   * @description Carga la lista de permisos desde la API.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  cargar() {
-    this.loading = true;
-    // Cargar primera página con límite por defecto (el backend usa items_per_page si no se indica limite)
-    this.api.getPaginated('permisos', { desde: 0 }).subscribe({
-      next: (resp) => {
-        const rows = resp.data || [];
-        this.data = rows.map((r: any) => this.normalizePermiso(r));
-        this.totalPermisos = Number(resp.total) || this.data.length;
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const results = await firstValueFrom(
+        forkJoin({
+          permisosRes: this.api.get<any>('permisos', { desde: offset, limite: this.pageSize }),
+        })
+      );
+      pending = false;
+      this.ngZone.run(() => {
+        const { permisosRes } = results;
+        // Manejo global de errores
+        if (permisosRes?.error) {
+          this.error = permisosRes.msg || 'Error al cargar permisos';
+          this.data = [];
+          this.formattedData = [];
+          this.loading = false;
+          this.datosListos = false;
+          this.cdr.detectChanges();
+          return;
+        }
+        const rows = Array.isArray(permisosRes)
+          ? permisosRes
+          : Array.isArray(permisosRes?.permisos)
+          ? permisosRes.permisos
+          : [];
+        this.procesarDatos(rows, permisosRes?.total);
         this.loading = false;
         this.datosListos = true;
-      },
-      error: () => {
+        this.cdr.detectChanges();
+      });
+    } catch (err) {
+      pending = false;
+      this.ngZone.run(() => {
         this.error = 'No se pudo cargar permisos';
+        this.data = [];
+        this.formattedData = [];
         this.loading = false;
-      },
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      });
+    }
+  }
+
+  /**
+   * @description Procesa los datos crudos de permisos para la tabla.
+   * Centraliza la lógica para usarla tanto en carga inicial como en refresco.
+   * @author Gerardo Paiva
+   * @date 09-01-2026
+   */
+  private procesarDatos(rows: any[], total: number) {
+    // Mapear los nombres de las FK para mostrar en la tabla
+    this.data = (Array.isArray(rows) ? rows : []).map((p: any) => {
+      const nombre_estado =
+        this.estados.find((e) => String(e.id_estado) === String(p.id_estado))?.nombre || '';
+      return {
+        ...p,
+        nombre_estado,
+      };
     });
+    let camposLista: string[] = [];
+    let camposCrear: string[] = [];
+    let camposEditar: string[] = [];
+    let camposDetalle: string[] = [];
+    if (this.atributos && this.atributos.length > 0) {
+      camposLista = this.atributos
+        .filter((a: any) => a.ver_en_lista !== false && !a.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((a: any) => a.key || a.nombre || a.campo);
+      camposCrear = this.atributos
+        .filter((a: any) => a.ver_en_crear !== false && !a.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((a: any) => a.key || a.nombre || a.campo);
+      camposEditar = this.atributos
+        .filter((a: any) => a.ver_en_editar !== false && !a.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((a: any) => a.key || a.nombre || a.campo);
+      camposDetalle = this.atributos
+        .filter((a: any) => a.ver_en_detalle !== false && !a.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((a: any) => a.key || a.nombre || a.campo);
+    } else {
+      camposLista = (Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [])
+        .filter((f: any) => f.ver_en_lista && !f.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((f: any) => f.key);
+      camposCrear = (Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [])
+        .filter((f: any) => f.ver_en_crear && !f.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((f: any) => f.key);
+      camposEditar = (Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [])
+        .filter((f: any) => f.ver_en_editar && !f.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((f: any) => f.key);
+      camposDetalle = (Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [])
+        .filter((f: any) => f.ver_en_detalle && !f.hidden)
+        .sort((a: any, b: any) => (a.orden ?? 999) - (b.orden ?? 999))
+        .map((f: any) => f.key);
+    }
+    this.camposLista = camposLista;
+    this.camposCrear = camposCrear;
+    this.camposEditar = camposEditar;
+    this.camposDetalle = camposDetalle;
+    if (this.data && this.data.length > 0) {
+      const keys = Object.keys(this.data[0]);
+      this.formattedData = this.data.map((p: any) => {
+        const obj: any = {};
+        for (const k of keys) {
+          obj[k] = p[k];
+        }
+        return obj;
+      });
+    } else {
+      this.formattedData = [];
+    }
+    this.total = Number(total) || this.data.length || 0;
+    this.totalPages = Math.max(1, Math.ceil(this.total / this.pageSize));
   }
 
   onPageChange(evt: {
@@ -120,201 +306,17 @@ export class PermisosPageComponent {
     sortKey?: string;
     sortDir?: 'asc' | 'desc';
   }) {
-    this.currentPage = evt.page;
-    const desde = (evt.page - 1) * evt.pageSize;
-    const limite = evt.pageSize;
-    this.loading = true;
-    this.datosListos = false;
-    try {
-      this.cdr.detectChanges();
-    } catch {}
-    const term = (evt.term || '').trim();
-    const sortKey = (evt.sortKey || '').trim();
-    const sortDir = (evt.sortDir || 'asc').toLowerCase() as 'asc' | 'desc';
-    const applySort = (list: any[]) => {
-      if (!sortKey) return list;
-      const sorted = [...list].sort((a, b) => {
-        const va = a?.[sortKey];
-        const vb = b?.[sortKey];
-        const na = va === null || va === undefined;
-        const nb = vb === null || vb === undefined;
-        if (na && nb) return 0;
-        if (na) return 1;
-        if (nb) return -1;
-        const ta = typeof va;
-        const tb = typeof vb;
-        if (ta === 'number' && tb === 'number') {
-          return sortDir === 'asc' ? va - vb : vb - va;
-        }
-        const sa = String(va).toLowerCase();
-        const sb = String(vb).toLowerCase();
-        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
-      });
-      return sorted;
-    };
-    if (term) {
-      this.api.get<any>(`todo/coleccion/permisos/${encodeURIComponent(term)}`).subscribe({
-        next: (resp) => {
-          const list = Array.isArray((resp as any)?.resultados)
-            ? (resp as any).resultados
-            : Array.isArray(resp)
-            ? (resp as any)
-            : [];
-          const mapped = list.map((r: any) => this.normalizePermiso(r));
-          const ordered = applySort(mapped);
-          this.totalPermisos = ordered.length;
-          this.data = ordered.slice(desde, desde + limite);
-          this.loading = false;
-          this.datosListos = true;
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo filtrar permisos';
-          this.loading = false;
-        },
-      });
-    } else {
-      this.api.getPaginated('permisos', { desde, limite, sortKey, sortDir }).subscribe({
-        next: (resp) => {
-          const rows = resp.data || [];
-          const mapped = rows.map((r: any) => ({
-            id: r.id_permiso ?? r.id ?? '',
-            codigo: r.codigo ?? r.nombre ?? '',
-            nombre: r.codigo ?? r.nombre ?? '',
-            descripcion: r.descripcion ?? undefined,
-          }));
-          const ordered = applySort(mapped);
-          this.data = ordered;
-          this.totalPermisos = Number(resp.total) || ordered.length;
-          this.loading = false;
-          this.datosListos = true;
-          try {
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo cargar permisos';
-          this.loading = false;
-        },
-      });
-    }
+    // Lógica robusta y extensible igual a usuarios-page
+    this.currentPage = Number(evt.page) || 1;
+    this.pageSize = Number(evt.pageSize) || this.pageSize;
+    this.cargarDatosAsync();
   }
 
-  /**
-   * @description Crea un nuevo permiso utilizando los datos del formulario local.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  crear() {
-    const body = { codigo: this.nuevo.codigo, descripcion: this.nuevo.descripcion };
-    this.api.post('permisos', body).subscribe({
-      next: () => {
-        this.nuevo = { codigo: '', descripcion: '' };
-        this.cargar();
-      },
-      error: () => (this.error = 'No se pudo crear el permiso'),
-    });
-  }
-
-  /**
-   * @description Abre el modal de edición para un permiso específico.
-   * @param row Datos del permiso a editar.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  abrirEditar(row: any) {
-    try {
-      const id = row?.id ?? row?.id_permiso ?? null;
-      if (id) {
-        this.router.navigate(['/permisos/crear'], { queryParams: { id } });
-        return;
-      }
-    } catch (err) {}
-    this.seleccionado = row;
-    this.editCodigo = row?.codigo ?? row?.nombre ?? '';
-    this.editDescripcion = row?.descripcion ?? '';
-    this.editOpen = true;
-  }
-
-  onCreate() {
-    try {
-      this.router.navigate(['/permisos/crear']);
-    } catch {}
-  }
-
-  /**
-   * @description Guarda los cambios realizados en la edición de un permiso.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  guardarEdicion() {
-    const id = this.seleccionado?.id;
-    if (!id) return this.cerrarEditar();
-    const codigo = (this.editCodigo || '').trim();
-    if (!codigo) {
-      this.modalError = 'El código es requerido';
-      return;
-    }
-    this.api.put(`permisos/${id}`, { codigo, descripcion: this.editDescripcion }).subscribe({
-      next: () => {
-        this.cerrarEditar();
-        this.cargar();
-      },
-      error: () => (this.error = 'No se pudo editar el permiso'),
-    });
-  }
-
-  /**
-   * @description Cierra el modal de edición y limpia los datos temporales.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  cerrarEditar() {
-    this.editOpen = false;
-    this.seleccionado = null;
-    this.editCodigo = '';
-    this.editDescripcion = '';
-    this.modalError = '';
-  }
-
-  /**
-   * @description Abre el modal de confirmación para eliminar un permiso.
-   * @param row Permiso seleccionado para eliminar.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  confirmarEliminar(row: any) {
-    this.seleccionado = row;
-    this.deleteOpen = true;
-  }
-
-  /**
-   * @description Cierra el modal de eliminación y limpia la selección.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  cerrarEliminar() {
-    this.deleteOpen = false;
-    this.seleccionado = null;
-  }
-
-  /**
-   * @description Elimina el permiso seleccionado tras confirmación del usuario.
-   * @author Gerardo Paiva
-   * @date 28-12-2025
-   */
-  eliminarSeleccionado() {
-    const id = this.seleccionado?.id;
-    if (!id) return this.cerrarEliminar();
-    this.api.delete(`permisos/${id}`).subscribe({
-      next: () => {
-        this.cerrarEliminar();
-        this.cargar();
-      },
-      error: () => (this.error = 'No se pudo eliminar el permiso'),
-    });
+  onPageSizeChange(size: any) {
+    this.pageSize = Number(size);
+    this.totalPages = Math.max(1, Math.ceil(this.total / this.pageSize));
+    this.currentPage = 1;
+    this.cargarDatosAsync();
   }
 
   onTableReady() {
@@ -324,29 +326,206 @@ export class PermisosPageComponent {
     } catch {}
   }
 
-  private normalizePermiso(r: any) {
-    if (!r || typeof r !== 'object') return { id: '', codigo: '', nombre: '', descripcion: '' };
-    const id = r.id_permiso ?? r.id ?? r.ID ?? r.permiso_id ?? '';
-    const codigo = r.codigo ?? r.codigo_permiso ?? r.cod ?? r.nombre ?? r.nombre_permiso ?? '';
-    const descripcion = r.descripcion ?? r.desc ?? r.descripcion_permiso ?? undefined;
-    const nombre = codigo ?? descripcion ?? '';
-    return { id, codigo, nombre, descripcion };
-  }
-
-  // Normalized handlers for templates expecting onEdit/onRemove
-  onEdit(e: any) {
+  async openCreateModal() {
+    this.modalTitle = 'Crear permiso';
+    this.modalFields = [];
+    this.modalValues = {};
+    this.modalEditingId = null;
+    this.modalDeleteMode = false;
+    this.modalLoading = true;
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+    this.modalOpen = true;
+    this.cdr.detectChanges();
     try {
-      return (this as any).abrirEditar ? (this as any).abrirEditar(e) : undefined;
+      if (!this.datosListos) {
+        await this.cargarDatosAsync();
+      }
+      this.ngZone.run(() => {
+        const estadoOptions = (Array.isArray(this.estados) ? this.estados : [])
+          .filter((e) => e)
+          .map((e: any) => ({
+            value:
+              e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
+                ? String(e.id_estado)
+                : e.id != null && e.id !== '' && !isNaN(Number(e.id))
+                ? String(e.id)
+                : '',
+            label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
+          }));
+        this.modalFields = this.buildFields({ estadoOptions }, {}, false);
+        this.modalValues = {};
+        for (const f of this.modalFields) {
+          if (f.type === 'select') {
+            this.modalValues[f.key] = f.value != null && f.value !== '' ? f.value : null;
+          } else {
+            this.modalValues[f.key] = f.value ?? '';
+          }
+        }
+        this.modalLoading = false;
+        this.cdr.detectChanges();
+      });
     } catch (err) {
-      // noop
+      this.modalOpen = false;
+      this.cdr.detectChanges();
     }
   }
 
-  onRemove(e: any) {
+  async onEdit(permiso: any) {
     try {
-      return (this as any).confirmarEliminar ? (this as any).confirmarEliminar(e) : undefined;
-    } catch (err) {
-      // noop
+      await this.openEditModal(permiso);
+      return;
+    } catch (err: any) {
+      this.notify.warning('No se pudo iniciar la edición del permiso: ' + (err?.message || ''));
     }
+  }
+
+  async openEditModal(permiso: any) {
+    this.modalTitle = 'Editar permiso';
+    this.modalFields = [];
+    this.modalValues = {};
+    this.modalDeleteMode = false;
+    this.modalEditingId = null;
+    this.modalLoading = true;
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+    this.modalOpen = true;
+    this.cdr.detectChanges();
+    try {
+      const pRow = permiso ? { ...permiso } : {};
+      const id = pRow.id || pRow.id_permiso || pRow.ID;
+      if (!id) throw new Error('Permiso sin ID');
+      let pDetail = pRow;
+      try {
+        const res: any = await firstValueFrom(this.api.get(`permisos/${id}`));
+        const payload = res?.data ?? res;
+        if (payload) pDetail = { ...pDetail, ...payload };
+      } catch (e) {
+        console.warn('Usando datos de fila por error en detalle:', e);
+      }
+      if (!this.datosListos) {
+        await this.cargarDatosAsync();
+      }
+      this.ngZone.run(() => {
+        const estadoOptions = (Array.isArray(this.estados) ? this.estados : [])
+          .filter((e) => e)
+          .map((e: any) => ({
+            value:
+              e.id_estado != null && e.id_estado !== '' && !isNaN(Number(e.id_estado))
+                ? String(e.id_estado)
+                : e.id != null && e.id !== '' && !isNaN(Number(e.id))
+                ? String(e.id)
+                : '',
+            label: e.nombre ?? e.title ?? String(e.id_estado ?? e.id ?? ''),
+          }));
+        this.modalFields = this.buildFields({ estadoOptions }, pDetail, true);
+        const values: any = {};
+        this.modalFields.forEach((f) => {
+          if (pDetail && pDetail[f.key] !== undefined && pDetail[f.key] !== null) {
+            values[f.key] = String(pDetail[f.key]);
+          } else {
+            values[f.key] = f.value ?? '';
+          }
+        });
+        this.modalValues = values;
+        this.modalEditingId = pDetail.id_permiso || id;
+        this.modalLoading = false;
+        this.cdr.detectChanges();
+      });
+    } catch (err) {
+      this.modalOpen = false;
+      this.notify.warning('No se pudo cargar el permiso para edición');
+      this.cdr.detectChanges();
+    }
+  }
+
+  onRemove(permiso: any) {
+    try {
+      this.modalFields = [];
+      this.modalValues = { nombre: permiso?.nombre ?? '' };
+      this.modalTitle = 'Eliminar permiso';
+      this.modalEditingId = Number(permiso?.id || permiso?.id_permiso || permiso?.ID);
+      this.modalDeleteMode = true;
+      this.modalLoading = false;
+      this.modalOpen = true;
+      setTimeout(() => this.cdr.detectChanges(), 0);
+    } catch (err) {
+      this.notify.warning('No se pudo iniciar la eliminación');
+    }
+  }
+
+  async onModalConfirm(): Promise<void> {
+    try {
+      const success = await onModalConfirmGeneric(this, 'permisos');
+      this.modalOpen = false;
+      this.modalDeleteMode = false;
+      this.modalEditingId = null;
+      this.cdr.detectChanges();
+      if (!success) return;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await this.cargarDatosAsync();
+      this.cdr.detectChanges();
+    } catch (e) {
+      this.notify.warning('Error al confirmar el modal');
+    }
+  }
+
+  onModalClosed(): void {
+    try {
+      onModalClosedGeneric(this);
+    } catch (e) {
+      this.notify.warning('Error al cerrar el modal');
+    }
+  }
+
+  openNewPermiso(): void {}
+
+  private buildFields(opts: any = {}, defaults: any = {}, isEdit: boolean = false) {
+    const estadoOptions = opts.estadoOptions ?? [];
+    const schemaFields = PERMISO_SCHEMA && Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [];
+    const fields: any[] = schemaFields.map((s: any) => {
+      const key = s.key;
+      const base: any = {
+        key,
+        label: s.label ?? key,
+        type: s.type ?? 'text',
+        readonly: !!s.readonly || (isEdit && !!s.readonlyOnEdit),
+        verEnCrear: !!s.verEnCrear,
+        verEnEditar: !!s.verEnEditar,
+        verEnLista: !!s.verEnLista,
+        hidden: isEdit ? !s.verEnEditar : !s.verEnCrear,
+        // robustez: valor por defecto y opciones
+        value:
+          defaults && typeof defaults === 'object' && defaults[key] != null
+            ? String(defaults[key])
+            : '',
+      };
+      if (base.type === 'select') {
+        if (key === 'id_estado') base.options = estadoOptions;
+        else if (
+          key === 'activo' ||
+          key === 'habilitado' ||
+          key === 'visible' ||
+          key === 'borrado'
+        ) {
+          base.options = [
+            { value: 'true', label: 'Sí' },
+            { value: 'false', label: 'No' },
+          ];
+        }
+      }
+      return base;
+    });
+    return fields;
+  }
+  /**
+   * Devuelve las columnas visibles en la tabla de permisos.
+   * @author Gerardo Paiva
+   * @date 09-01-2026
+   */
+  get columns(): { key: string; label: string }[] {
+    return (Array.isArray(PERMISO_SCHEMA) ? PERMISO_SCHEMA : [])
+      .filter((f) => f.verEnLista && !f.hidden)
+      .map((f) => ({ key: f.key, label: f.label ?? f.key }));
   }
 }

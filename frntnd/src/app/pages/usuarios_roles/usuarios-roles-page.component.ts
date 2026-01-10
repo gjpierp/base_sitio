@@ -31,6 +31,7 @@ export class UsuariosRolesPageComponent implements OnInit {
   total = 0;
   datosListos = false;
   currentPage = 1;
+  pageSize = 10;
 
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
@@ -55,7 +56,18 @@ export class UsuariosRolesPageComponent implements OnInit {
   async cargarDatosAsync() {
     this.loading = true;
     try {
-      const res: any = await firstValueFrom(this.api.get<any>('usuarios_roles'));
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const res: any = await firstValueFrom(
+        this.api.get<any>('usuarios_roles', { desde: offset, limite: this.pageSize })
+      );
+      // Manejo global de errores
+      if (res?.error) {
+        this.error = res.msg || 'Error al cargar usuarios_roles';
+        this.data = [];
+        this.datosListos = false;
+        this.cdr.detectChanges();
+        return;
+      }
       const rows = Array.isArray(res?.usuarios_roles)
         ? res.usuarios_roles
         : Array.isArray(res)
@@ -67,32 +79,21 @@ export class UsuariosRolesPageComponent implements OnInit {
         id_rol: r.id_rol,
         nombre_rol: r.nombre_rol ?? r.rol ?? '',
       }));
-      this.total = this.data.length;
+      this.total = res?.total || this.data.length;
       this.datosListos = true;
       this.cdr.detectChanges();
     } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar usuarios_roles';
+      this.error = 'No se pudo cargar usuarios_roles';
       this.data = [];
       this.datosListos = false;
+      this.cdr.detectChanges();
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
   refrescar() {
     this.cargarDatosAsync();
-  }
-
-  onPageChange(evt: {
-    page: number;
-    pageSize: number;
-    term?: string;
-    sortKey?: string;
-    sortDir?: 'asc' | 'desc';
-  }) {
-    this.currentPage = evt.page;
-    try {
-      this.cdr.detectChanges();
-    } catch {}
   }
 
   onEdit(item: any) {

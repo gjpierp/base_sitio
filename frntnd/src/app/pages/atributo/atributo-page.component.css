@@ -1,0 +1,7 @@
+:host ::ng-deep th:last-child,
+:host ::ng-deep td:last-child {
+  text-align: center !important;
+}
+:host ::ng-deep td:last-child > div {
+  justify-content: center !important;
+}

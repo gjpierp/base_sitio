@@ -1,5 +1,14 @@
-.toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
+/* Migración a Tailwind:
+   Elimina este archivo y usa clases utilitarias en el HTML:
+   <div class="toolbar flex justify-end mb-4"></div>
+   <table class="responsive-table w-full border-collapse bg-[var(--bg-card)] shadow-sm">
+   <th class="text-left px-3 py-2 border-b border-[var(--color-border)] bg-transparent text-[var(--color-text)] font-semibold text-[var(--text-md)]"></th>
+   <td class="px-3 py-2 border-b border-gray-100 align-middle text-[var(--text-md)]"></td>
+   <div class="actions flex gap-2 justify-end"></div>
+   <label class="text-left"></label>
+   <ui-entity-table class="w-full block"></ui-entity-table>
+   Responsive:
+   <thead class="hidden md:table-header-group">
+   <tbody class="block md:table-row-group">
+   <tr class="block md:table-row mb-3">
+*/

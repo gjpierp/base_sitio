@@ -11,17 +11,20 @@ export const estadosResolver: ResolveFn<{
   const api = inject(ApiService);
   const sortKey = (route?.data as any)?.sortKey ?? 'nombre';
   const sortDir = (route?.data as any)?.sortDir ?? 'asc';
+
+  // Cargar estados paginados
   const estados$ = api
-    .get<any>('estados', { desde: 0, sortKey, sortDir })
+    .getPaginated('estados', { desde: 0, limit: 20, sort: sortKey, order: sortDir })
     .pipe(catchError(() => of({ estados: [], total: 0 })));
-  return forkJoin([estados$]).pipe(
-    map(([resp]) => {
-      const estados = Array.isArray((resp as any)?.estados)
-        ? (resp as any).estados
-        : Array.isArray(resp)
-        ? (resp as any)
+
+  return forkJoin({ res: estados$ }).pipe(
+    map(({ res }) => {
+      const estados = Array.isArray((res as any)?.estados)
+        ? (res as any).estados
+        : Array.isArray((res as any)?.data)
+        ? (res as any).data
         : [];
-      const total = Number((resp as any)?.total) || estados.length || 0;
+      const total = Number((res as any)?.total) || estados.length || 0;
       return { estados, total };
     })
   );

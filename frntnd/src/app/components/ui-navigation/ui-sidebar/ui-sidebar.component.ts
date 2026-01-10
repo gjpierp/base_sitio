@@ -85,22 +85,39 @@ export class UiSidebarComponent implements OnInit, OnDestroy {
     this.menuItems = [];
     this.loading = true;
     // Forzar carga del árbol desde backend
-    this.api.get<{ ok: boolean; menus: any[] }>('menus/arbol').subscribe({
-      next: (resp) => {
-        const arbol = Array.isArray(resp?.menus) ? resp.menus : [];
-        this.menuItems = this.sanitizeMenuTree(arbol);
-        localStorage.setItem('menu', JSON.stringify(this.menuItems));
-        this.loading = false;
-        this.autoExpandForCurrentRoute();
-        this.notify.success('Menú recargado', 1500);
-      },
-      error: () => {
-        this.menuItems = [];
-        this.errorMsg = 'No se pudo cargar el menú';
-        this.loading = false;
-        this.notify.error('Error al recargar menú');
-      },
-    });
+    this.api
+      .get<
+        | { ok: boolean; menus: any[] }
+        | { error: boolean; msg: string; status?: number; detail: any }
+      >('menus/arbol')
+      .subscribe({
+        next: (resp) => {
+          if ((resp as any)?.error) {
+            this.menuItems = [];
+            if ((resp as any).status === 401) {
+              this.errorMsg = 'No autorizado. Por favor, inicia sesión.';
+              localStorage.removeItem('menu');
+              this.isLoggedIn = false;
+            } else {
+              this.errorMsg = (resp as any).msg || 'No se pudo cargar el menú';
+            }
+            this.loading = false;
+            return;
+          }
+          const arbol = Array.isArray((resp as any)?.menus) ? (resp as any).menus : [];
+          this.menuItems = this.sanitizeMenuTree(arbol);
+          localStorage.setItem('menu', JSON.stringify(this.menuItems));
+          this.loading = false;
+          this.autoExpandForCurrentRoute();
+          this.notify.success('Menú recargado', 1500);
+        },
+        error: () => {
+          this.menuItems = [];
+          this.errorMsg = 'No se pudo cargar el menú';
+          this.loading = false;
+          this.notify.error('Error al recargar menú');
+        },
+      });
   }
   // ...resto de la clase igual...
   ngOnDestroy(): void {
@@ -110,57 +127,91 @@ export class UiSidebarComponent implements OnInit, OnDestroy {
         window.removeEventListener('app:login', this.loginListener as EventListener);
     } catch {}
   }
+  /**
+   * Sincroniza el menú lateral según el estado de login y el cache local.
+   * - Si el usuario está logueado y hay menú válido en localStorage, lo usa.
+   * - Si el menú cacheado está corrupto o vacío, lo limpia y recarga desde backend.
+   * - Si no hay menú cacheado, lo pide al backend y lo guarda en localStorage.
+   */
   private syncLoginAndMaybeLoad() {
     if (!this.isBrowser) return;
-    // Verificar token
+    // 1. Verificar si el usuario está logueado
     const token = localStorage.getItem('x-token') || localStorage.getItem('token');
     this.isLoggedIn = !!token;
     this.errorMsg = null;
     if (!this.isLoggedIn) {
       this.menuItems = [];
+      localStorage.removeItem('menu');
       return;
     }
-    // Intentar cargar menú desde localStorage
+    // 2. Intentar cargar menú desde localStorage
+    let menuStr = null;
     try {
-      const menuStr = localStorage.getItem('menu');
-      if (menuStr) {
-        const menuRaw = JSON.parse(menuStr);
-        if (Array.isArray(menuRaw)) {
-          // Intentar normalizar cualquier forma que venga del cache
-          const sanitized = this.sanitizeMenuTree(menuRaw);
-          if (Array.isArray(sanitized) && sanitized.length) {
-            this.menuItems = sanitized;
-            this.autoExpandForCurrentRoute();
-            return;
-          }
-          // Si el cache tenía entradas pero la sanitización no produjo nada,
-          // limpiar cache y forzar recarga desde backend
-          if (menuRaw.length) {
-            localStorage.removeItem('menu');
+      menuStr = localStorage.getItem('menu');
+    } catch {}
+    let menuRaw: any = null;
+    let sanitized: any[] = [];
+    let cacheValido = false;
+    if (menuStr) {
+      try {
+        menuRaw = JSON.parse(menuStr);
+        if (Array.isArray(menuRaw) && menuRaw.length > 0) {
+          sanitized = this.sanitizeMenuTree(menuRaw);
+          if (Array.isArray(sanitized) && sanitized.length > 0) {
+            cacheValido = true;
           }
         }
+      } catch (e) {
+        // JSON corrupto
+        localStorage.removeItem('menu');
       }
-    } catch (e) {
-      this.menuItems = [];
-      this.errorMsg = 'Error al leer menú local';
-      // continuar y reintentar carga desde backend
     }
-    // Si no hay menú en localStorage, intentar cargar árbol desde backend
+    if (cacheValido) {
+      this.menuItems = sanitized;
+      this.autoExpandForCurrentRoute();
+      return;
+    } else {
+      // Si el cache estaba corrupto o vacío, limpiar y recargar
+      localStorage.removeItem('menu');
+    }
+    // 3. Si no hay menú válido en cache, cargar desde backend
     this.loading = true;
-    this.api.get<{ ok: boolean; menus: any[] }>('menus/arbol').subscribe({
-      next: (resp) => {
-        const arbol = Array.isArray(resp?.menus) ? resp.menus : [];
-        this.menuItems = this.sanitizeMenuTree(arbol);
-        localStorage.setItem('menu', JSON.stringify(this.menuItems));
-        this.loading = false;
-        this.autoExpandForCurrentRoute();
-      },
-      error: () => {
-        this.menuItems = [];
-        this.errorMsg = 'No se pudo cargar el menú';
-        this.loading = false;
-      },
-    });
+    this.api
+      .get<
+        | { ok: boolean; menus: any[] }
+        | { error: boolean; msg: string; status?: number; detail: any }
+      >('menus/arbol')
+      .subscribe({
+        next: (resp) => {
+          if ((resp as any)?.error) {
+            this.menuItems = [];
+            if ((resp as any).status === 401) {
+              this.errorMsg = 'No autorizado. Por favor, inicia sesión.';
+              localStorage.removeItem('menu');
+              this.isLoggedIn = false;
+            } else {
+              this.errorMsg = (resp as any).msg || 'No se pudo cargar el menú';
+            }
+            this.loading = false;
+            return;
+          }
+          const arbol = Array.isArray((resp as any)?.menus) ? (resp as any).menus : [];
+          const sanitizedBackend = this.sanitizeMenuTree(arbol);
+          this.menuItems = sanitizedBackend;
+          if (sanitizedBackend.length > 0) {
+            localStorage.setItem('menu', JSON.stringify(sanitizedBackend));
+          } else {
+            localStorage.removeItem('menu');
+          }
+          this.loading = false;
+          this.autoExpandForCurrentRoute();
+        },
+        error: () => {
+          this.menuItems = [];
+          this.errorMsg = 'No se pudo cargar el menú';
+          this.loading = false;
+        },
+      });
   }
 
   private autoExpandForCurrentRoute(): void {

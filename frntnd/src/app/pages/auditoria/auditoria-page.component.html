@@ -1,31 +1,70 @@
-<div class="page-animate" [class.page-ready]="datosListos">
-  <ui-card [title]="title" [subtitle]="subtitle">
-    <div
-      class="spread"
-      style="margin-bottom: 1rem; align-items: center; display: flex; gap: 0.5rem"
-    >
-      <ng-container *ngIf="loading">
-        <ui-spinner label="Cargando"></ui-spinner>
-      </ng-container>
-      <ng-container *ngIf="!loading && error">
-        <div class="muted">{{ error }}</div>
-      </ng-container>
-      <ng-container *ngIf="!loading">
-        <div style="margin-left: auto">
-          <a class="btn primary" href="/auditoria/crear">Crear</a>
-        </div>
-      </ng-container>
+<form (ngSubmit)="aplicarFiltros()">
+  <!-- Card de título -->
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <!-- Auditoría es solo lectura, no hay botón crear -->
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
     </div>
-    <ng-container *ngIf="!loading && datosListos">
-      <ui-entity-table
-        [title]="title"
-        [subtitle]="subtitle"
-        [total]="data.length"
-        [columns]="columns"
-        [data]="data"
-        [loading]="loading"
-        [error]="error"
-      ></ui-entity-table>
-    </ng-container>
   </ui-card>
-</div>
+
+  <!-- Card de filtros -->
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: center;">
+      <select [(ngModel)]="filtroUsuario" name="filtroUsuario" style="width: 200px">
+        <option value="">Todos los usuarios</option>
+        <option *ngFor="let u of usuariosLista" [value]="u.id_usuario">{{ u.nombre_usuario }}</option>
+      </select>
+      <input type="text" [(ngModel)]="filtroAccion" name="filtroAccion" placeholder="Acción (ej. LOGIN)" style="width: 180px" />
+      <input type="text" [(ngModel)]="filtroEntidad" name="filtroEntidad" placeholder="Entidad" style="width: 180px" />
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button type="submit" variant="primary" icon="search" [iconOnly]="true" ariaLabel="Buscar" title="Buscar"></ui-button>
+      <ui-button type="button" variant="primary" icon="clear" [iconOnly]="true" ariaLabel="Limpiar" title="Limpiar" (pressed)="limpiarFiltros()"></ui-button>
+    </div>
+  </ui-card>
+
+  <!-- Card de registros -->
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      [pageSize]="pageSize"
+      (edit)="onView($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+  </ui-card>
+</form>
+
+<!-- Modal de Detalle -->
+<ui-modal [isOpen]="modalOpen" [title]="modalTitle" (confirmed)="onModalConfirm()" (closed)="onModalClosed()">
+  <div class="content">
+    <div *ngIf="modalLoading" style="display: flex; justify-content: center; padding: 1rem">
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <table class="form-table" *ngIf="!modalLoading && modalFields.length">
+      <tr *ngFor="let f of modalFields">
+        <th><label>{{ f.label }}</label></th>
+        <td>
+          <ng-container [ngSwitch]="f.type">
+            <ng-container *ngSwitchCase="'textarea'">
+              <textarea [value]="modalValues[f.key]" readonly></textarea>
+            </ng-container>
+            <ng-container *ngSwitchDefault>
+              <input [value]="modalValues[f.key]" readonly />
+            </ng-container>
+          </ng-container>
+        </td>
+      </tr>
+    </table>
+  </div>
+</ui-modal>

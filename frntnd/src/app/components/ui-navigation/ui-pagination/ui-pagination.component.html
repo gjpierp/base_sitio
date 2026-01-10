@@ -1,41 +1,167 @@
 @if (totalPages > 1) {
-<nav class="ui-pagination" aria-label="Paginación">
-  <button class="icon-btn" [disabled]="page === 1" (click)="goTo(1)" aria-label="Primera">
-    <span class="material-symbols-outlined" aria-hidden="true">first_page</span>
-  </button>
-
-  <button class="icon-btn" [disabled]="page === 1" (click)="goTo(page - 1)" aria-label="Anterior">
-    <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
-  </button>
-
-  @for (p of pages; track p) {
-  <button
-    class="page-num"
-    [class.active]="p === page"
-    (click)="goTo(p)"
-    [attr.aria-current]="p === page ? 'page' : null"
-    aria-label="Página {{ p }}"
+<div class="ui-pagination-row">
+  <!-- Paginación global HTML proporcionada -->
+  <!-- <div
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    "
   >
-    {{ p }}
-  </button>
-  }
-
-  <button
-    class="icon-btn"
-    [disabled]="page === totalPages"
-    (click)="goTo(page + 1)"
-    aria-label="Siguiente"
-  >
-    <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
-  </button>
-
-  <button
-    class="icon-btn"
-    [disabled]="page === totalPages"
-    (click)="goTo(totalPages)"
-    aria-label="Última"
-  >
-    <span class="material-symbols-outlined" aria-hidden="true">last_page</span>
-  </button>
-</nav>
+    <div style="display: flex; align-items: center; gap: 0.5rem">
+      <button
+        type="button"
+        title="Primera página"
+        style="background: none; border: none; cursor: pointer; font-size: 20px"
+        disabled=""
+      >
+        <span class="material-icons">first_page</span>
+      </button>
+      <button
+        type="button"
+        title="Anterior"
+        style="background: none; border: none; cursor: pointer; font-size: 20px"
+        disabled=""
+      >
+        <span class="material-icons">chevron_left</span>
+      </button>
+      <button
+        type="button"
+        style="
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 50%;
+          margin: 0 2px;
+          font-weight: bold;
+          color: currentColor;
+        "
+        disabled=""
+        class="active-page"
+      >
+        1
+      </button>
+      <button
+        type="button"
+        style="
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 50%;
+          margin: 0 2px;
+          font-weight: bold;
+          color: currentColor;
+        "
+      >
+        2
+      </button>
+      <button
+        type="button"
+        style="
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 50%;
+          margin: 0 2px;
+          font-weight: bold;
+          color: currentColor;
+        "
+      >
+        3
+      </button>
+      <button
+        type="button"
+        style="
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          min-width: 32px;
+          min-height: 32px;
+          border-radius: 50%;
+          margin: 0 2px;
+          font-weight: bold;
+          color: currentColor;
+        "
+      >
+        4
+      </button>
+      <button
+        type="button"
+        title="Siguiente"
+        style="background: none; border: none; cursor: pointer; font-size: 20px"
+      >
+        <span class="material-icons">chevron_right</span>
+      </button>
+      <button
+        type="button"
+        title="Última página"
+        style="background: none; border: none; cursor: pointer; font-size: 20px"
+      >
+        <span class="material-icons">last_page</span>
+      </button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem">
+      <span style="font-size: 13px">Registros por página:</span>
+      <select style="width: 70px" class="ng-untouched ng-pristine ng-valid">
+        <option value="0: 5">5</option>
+        <option value="1: 10">10</option>
+        <option value="2: 20">20</option>
+        <option value="3: 50">50</option>
+      </select>
+    </div>
+    <div style="font-size: 13px; color: #888">Total: 37</div>
+  </div> -->
+  <div class="ui-pagination-controls">
+    <button class="icon-btn" [disabled]="page === 1" (click)="goTo(1)" aria-label="Primera">
+      <span class="material-symbols-outlined" aria-hidden="true">first_page</span>
+    </button>
+    <button class="icon-btn" [disabled]="page === 1" (click)="goTo(page - 1)" aria-label="Anterior">
+      <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+    </button>
+    @for (p of pages; track p) {
+    <button
+      class="page-num"
+      [class.active]="p === page"
+      (click)="goTo(p)"
+      [attr.aria-current]="p === page ? 'page' : null"
+      aria-label="Página {{ p }}"
+    >
+      {{ p }}
+    </button>
+    }
+    <button
+      class="icon-btn"
+      [disabled]="page === totalPages"
+      (click)="goTo(page + 1)"
+      aria-label="Siguiente"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+    </button>
+  </div>
+  <!-- <div class="ui-pagination-info">
+    <button
+      class="icon-btn"
+      [disabled]="page === totalPages"
+      (click)="goTo(totalPages)"
+      aria-label="Última"
+      style="margin-right: 8px"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">last_page</span>
+    </button>
+    Página <span class="current-page-box">{{ page }}</span> de {{ totalPages }}
+  </div> -->
+</div>
 }

@@ -35,7 +35,14 @@ export class HistorialContrasenasPageComponent implements OnInit {
       this.data = Array.isArray(res) ? res : res?.data || [];
       this.datosListos = true;
     } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar historial';
+      const status = (err as any)?.status;
+      if (status === 401) {
+        this.error = 'No autorizado. Por favor, inicia sesión.';
+      } else if ((err as any)?.msg) {
+        this.error = (err as any).msg;
+      } else {
+        this.error = 'No se pudo cargar historial';
+      }
       this.data = [];
       this.datosListos = false;
     }

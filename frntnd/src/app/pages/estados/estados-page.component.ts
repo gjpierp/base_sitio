@@ -1,252 +1,286 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { toPromise } from '../../utils/promise-utils';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
-import { ApiService } from '../../services/api.service';
-import { Estado } from '../../models/estado';
-import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
 import { UiCardComponent } from '../../components/ui-data/ui-card/ui-card.component';
+import { UiSpinnerComponent } from '../../components/ui-feedback/ui-spinner/ui-spinner.component';
+import { UiButtonComponent } from '../../components/ui-form/ui-button/ui-button.component';
+import { ApiService } from '../../services/api.service';
+import { UiEntityTableComponent } from '../../components/ui-templates/ui-entity-table/ui-entity-table.component';
+import { UiModalComponent } from '../../components/ui-feedback/ui-modal/ui-modal.component';
 import { NotificationService } from '../../services/notification.service';
+import { onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
+import { ESTADO_SCHEMA } from '../../models/schema/estado.schema';
 
 @Component({
   selector: 'page-estados',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiEntityTableComponent, UiSpinnerComponent, UiCardComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UiButtonComponent,
+    UiCardComponent,
+    UiSpinnerComponent,
+    UiEntityTableComponent,
+    UiModalComponent,
+  ],
   templateUrl: './estados-page.component.html',
   styleUrls: ['./estados-page.component.css'],
 })
 export class EstadosPageComponent implements OnInit {
+  // 1. Propiedades
   title = 'Estados';
-  subtitle = 'Estados';
-  data: Estado[] = [];
+  subtitle = 'Catálogo de estados del sistema';
+
+  // Filtros
+  filtroNombre: string = '';
+
+  // Datos
+  data: any[] = [];
+  formattedData: any[] = [];
+
+  // Estado de carga
   loading = false;
   error?: string;
   datosListos = false;
+
+  // Paginación
   total = 0;
   currentPage = 1;
+  pageSize = 20;
+  totalPages = 1;
+  sortKey = 'nombre';
+  sortDir = 'asc';
 
-  estadoAEliminar: any = null;
-  estadoAEditar: any = null;
+  // Modal
+  modalOpen = false;
+  modalTitle = '';
+  modalFields: any[] = [];
+  modalValues: any = {};
+  modalSaving = false;
+  modalLoading = false;
+  modalEditingId: any = null;
+  modalDeleteMode = false;
 
+  // Inyecciones
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  private ngZone = inject(NgZone);
   private notify = inject(NotificationService);
 
-  constructor() {}
-
-  ngOnInit() {
-    const pre = this.route.snapshot.data?.['pre'];
-    if (pre) {
-      const rows = Array.isArray(pre.estados) ? pre.estados : [];
-      this.data = rows.map((r: any) => ({
-        id_estado: Number(r.id_estado ?? r.id ?? r.ID ?? 0),
-        nombre: r.nombre ?? r.nombre_estado ?? r.name ?? '',
-        descripcion: r.descripcion ?? r.descripcion_estado ?? r.desc ?? '',
-      }));
-      this.total = Number(pre.total) || this.data.length || 0;
+  // 2. Ciclo de Vida
+  ngOnInit(): void {
+    const preloaded = this.route.snapshot.data['pre'];
+    if (preloaded) {
+      const estados = preloaded.estados || [];
+      this.procesarDatos(estados, preloaded.total || estados.length);
       this.datosListos = true;
-      this.cdr.detectChanges();
     } else {
       this.cargarDatosAsync();
     }
   }
 
-  get columns() {
-    return [
-      { key: 'nombre', label: 'Nombre' },
-      { key: 'descripcion', label: 'Descripción' },
-    ];
+  // 3. Lógica de Filtros
+  aplicarFiltros() {
+    let filtrados = this.data;
+    if (this.filtroNombre) {
+      const term = this.filtroNombre.toLowerCase();
+      filtrados = filtrados.filter((r) => (r.nombre || '').toLowerCase().includes(term));
+    }
+    this.formattedData = filtrados;
+    this.total = filtrados.length;
   }
 
-  get dataFormateada() {
-    return this.data.map((e) => ({
-      ...e,
-    }));
+  limpiarFiltros() {
+    this.filtroNombre = '';
+    this.formattedData = this.data;
+    this.total = this.data.length;
+  }
+
+  // 4. Carga y Procesamiento
+  async load() {
+    await this.cargarDatosAsync();
   }
 
   async cargarDatosAsync() {
-    this.loading = true;
+    let pending = true;
+    setTimeout(() => {
+      if (pending) this.loading = true;
+    });
+    this.error = undefined;
+
     try {
-      const res: any = await toPromise(this.api.getPaginated<any>('estados', { desde: 0 }));
-      const toArray = (v: any): any[] => {
-        if (Array.isArray(v)) return v;
-        if (v && typeof v === 'object') {
-          if (Array.isArray(v.data)) return v.data;
-          if (Array.isArray(v.items)) return v.items;
-          if (Array.isArray(v.rows)) return v.rows;
-          try {
-            const values = Object.values(v);
-            if (Array.isArray(values)) return values as any[];
-          } catch {}
+      const offset = (this.currentPage - 1) * this.pageSize;
+      const results = await firstValueFrom(
+        forkJoin({
+          estadosRes: this.api.get<any>('estados', { desde: offset, limite: this.pageSize }),
+        })
+      );
+      pending = false;
+      this.ngZone.run(() => {
+        const estadosRes = results?.estadosRes;
+        // Manejo global de errores
+        if (estadosRes?.error) {
+          this.error = estadosRes.msg || 'Error al cargar estados';
+          this.data = [];
+          this.formattedData = [];
+          this.loading = false;
+          this.datosListos = false;
+          this.cdr.detectChanges();
+          return;
         }
-        return [];
-      };
-      let rows: any[] = [];
-      const candidates = [res?.data, res?.estados, res?.items, res?.rows, res];
-      for (const c of candidates) {
-        const arr = toArray(c);
-        if (arr.length) {
-          rows = arr;
-          break;
-        }
-      }
-      this.data = rows.map((r: any) => ({
-        id_estado: Number(r.id_estado ?? r.id ?? r.ID ?? 0),
-        nombre: r.nombre ?? r.nombre_estado ?? r.name ?? '',
-        descripcion: r.descripcion ?? r.descripcion_estado ?? r.desc ?? '',
-      }));
-      this.total = Number(res?.total) || rows.length || 0;
-      this.datosListos = true;
-      this.cdr.detectChanges();
+        const rows = estadosRes?.estados || estadosRes?.data || estadosRes?.items || [];
+        const total = estadosRes?.total ?? rows.length;
+        this.procesarDatos(rows, total);
+        this.loading = false;
+        this.datosListos = true;
+        this.cdr.detectChanges();
+      });
     } catch (err) {
-      this.error = (err as any)?.error?.msg || 'No se pudo cargar estados';
-      this.data = [];
-      this.datosListos = false;
+      pending = false;
+      this.ngZone.run(() => {
+        this.error = 'No se pudo cargar estados';
+        this.data = [];
+        this.formattedData = [];
+        this.loading = false;
+        this.datosListos = false;
+        this.cdr.detectChanges();
+      });
     }
-    this.loading = false;
   }
 
+  private procesarDatos(rows: any[], total: number) {
+    this.data = (Array.isArray(rows) ? rows : []).map((r: any) => ({
+      ...r,
+      id: r.id_estado ?? r.id,
+      nombre: r.nombre ?? '',
+      descripcion: r.descripcion ?? '',
+    }));
+    this.formattedData = [...this.data];
+    this.total = Number(total) || this.data.length || 0;
+    this.totalPages = Math.max(1, Math.ceil(this.total / this.pageSize));
+  }
+
+  // 5. Eventos de Tabla
   onPageChange(evt: {
     page: number;
     pageSize: number;
     term?: string;
     sortKey?: string;
-    sortDir?: 'asc' | 'desc';
+    sortDir?: string;
   }) {
-    const desde = (evt.page - 1) * evt.pageSize;
-    const limite = evt.pageSize;
-    const term = (evt.term || '').trim();
-    const sortKey = (evt.sortKey || '').trim();
-    const sortDir = (evt.sortDir || 'asc').toLowerCase() as 'asc' | 'desc';
-    const applySort = (list: any[]) => {
-      if (!sortKey) return list;
-      const sorted = [...list].sort((a, b) => {
-        const va = a?.[sortKey];
-        const vb = b?.[sortKey];
-        const na = va === null || va === undefined;
-        const nb = vb === null || vb === undefined;
-        if (na && nb) return 0;
-        if (na) return 1;
-        if (nb) return -1;
-        const ta = typeof va;
-        const tb = typeof vb;
-        if (ta === 'number' && tb === 'number') {
-          return sortDir === 'asc' ? va - vb : vb - va;
-        }
-        const sa = String(va).toLowerCase();
-        const sb = String(vb).toLowerCase();
-        return sortDir === 'asc' ? sa.localeCompare(sb) : sb.localeCompare(sa);
-      });
-      return sorted;
-    };
-    this.loading = true;
-    this.datosListos = false;
-    try {
-      this.cdr.detectChanges();
-    } catch {}
-    if (term) {
-      this.api.get<any>(`todo/coleccion/estados/${encodeURIComponent(term)}`).subscribe({
-        next: (res) => {
-          const list = Array.isArray((res as any)?.resultados)
-            ? (res as any).resultados
-            : Array.isArray((res as any)?.estados)
-            ? (res as any).estados
-            : Array.isArray(res)
-            ? (res as any)
-            : [];
-          const mapped = list.map((r: any) => ({
-            id_estado: Number(r.id_estado ?? r.id ?? r.ID ?? 0),
-            nombre: r.nombre ?? r.name ?? '',
-            descripcion: r.descripcion ?? r.desc ?? '',
-          }));
-          const ordered = applySort(mapped);
-          this.total = ordered.length;
-          this.data = ordered.slice(desde, desde + limite);
-          this.loading = false;
-          try {
-            this.datosListos = true;
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo filtrar estados';
-          this.loading = false;
-        },
-      });
-    } else {
-      this.api.get<any>('estados', { desde, limite, sortKey, sortDir }).subscribe({
-        next: (res) => {
-          const rows = Array.isArray(res?.estados) ? res.estados : Array.isArray(res) ? res : [];
-          const mapped = rows.map((r: any) => ({
-            id_estado: Number(r.id_estado ?? r.id ?? r.ID ?? 0),
-            nombre: r.nombre ?? r.name ?? '',
-            descripcion: r.descripcion ?? r.desc ?? '',
-          }));
-          const ordered = applySort(mapped);
-          this.data = ordered;
-          this.total = Number((res as any)?.total) || ordered.length;
-          this.loading = false;
-          try {
-            this.datosListos = true;
-            this.cdr.detectChanges();
-          } catch {}
-        },
-        error: () => {
-          this.error = 'No se pudo cargar estados';
-          this.loading = false;
-        },
-      });
-    }
-  }
-
-  refrescar() {
+    this.currentPage = Number(evt.page) || 1;
+    this.pageSize = Number(evt.pageSize) || 20;
+    this.sortKey = evt.sortKey || 'nombre';
+    this.sortDir = evt.sortDir || 'asc';
     this.cargarDatosAsync();
   }
 
-  onEditEstado(e: any) {
-    this.estadoAEditar = e;
-    try {
-      const id = e?.id_estado || e?.id || e?.ID;
-      if (id) {
-        this.router.navigate(['/estados/crear'], { queryParams: { id } });
-        return;
-      }
-    } catch {}
-    this.notify.warning('No se pudo iniciar la edición');
+  // 6. Modal (Crear/Editar)
+  async openCreateModal() {
+    this.modalTitle = 'Crear estado';
+    this.modalFields = this.buildFields({});
+    this.modalValues = {};
+    this.modalEditingId = null;
+    this.modalDeleteMode = false;
+    this.modalLoading = false;
+
+    // Reinicio forzado
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+    this.modalOpen = true;
+    this.cdr.detectChanges();
   }
 
-  onRemoveEstado(e: any) {
-    this.estadoAEliminar = e;
-    if (confirm('¿Seguro que deseas eliminar este estado?')) {
-      alert('Estado eliminado: ' + JSON.stringify(e));
-    }
-  }
+  async onEdit(item: any) {
+    this.modalTitle = 'Editar estado';
+    this.modalFields = [];
+    this.modalValues = {};
+    this.modalDeleteMode = false;
+    this.modalEditingId = null;
+    this.modalLoading = true;
 
-  // Generic handlers for consistency across pages (normalize API)
-  onEdit(e: any) {
+    // Reinicio forzado
+    this.modalOpen = false;
+    this.cdr.detectChanges();
+    this.modalOpen = true;
+    this.cdr.detectChanges();
+
     try {
-      return (this as any).onEditEstado ? (this as any).onEditEstado(e) : undefined;
+      const id = item.id || item.id_estado;
+      let detail = item;
+      try {
+        const res: any = await firstValueFrom(this.api.get(`estados/${id}`));
+        if (res) detail = { ...detail, ...res };
+      } catch {}
+
+      this.ngZone.run(() => {
+        this.modalFields = this.buildFields(detail);
+        this.modalValues = { ...detail };
+        this.modalEditingId = id;
+        this.modalLoading = false;
+        this.cdr.detectChanges();
+      });
     } catch (err) {
-      // swallow to avoid breaking templates
+      this.modalOpen = false;
+      this.notify.warning('No se pudo cargar el estado');
     }
   }
 
-  onRemove(e: any) {
+  onRemove(item: any) {
     try {
-      return (this as any).onRemoveEstado ? (this as any).onRemoveEstado(e) : undefined;
+      this.modalFields = [];
+      this.modalValues = { nombre: item?.nombre ?? '' };
+      this.modalTitle = 'Eliminar estado';
+      this.modalEditingId = item?.id || item?.id_estado;
+      this.modalDeleteMode = true;
+      this.modalLoading = false;
+      this.modalOpen = true;
+      setTimeout(() => this.cdr.detectChanges(), 0);
     } catch (err) {
-      // swallow
+      this.notify.warning('No se pudo iniciar la eliminación');
     }
   }
 
-  onTableReady() {
-    this.datosListos = true;
+  async onModalConfirm() {
     try {
+      const success = await onModalConfirmGeneric(this, 'estados');
+      this.modalOpen = false;
+      this.modalDeleteMode = false;
+      this.modalEditingId = null;
       this.cdr.detectChanges();
-    } catch {}
+      if (!success) return;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await this.cargarDatosAsync();
+      this.cdr.detectChanges();
+    } catch (e) {
+      this.notify.warning('Error al confirmar el modal');
+    }
+  }
+
+  onModalClosed() {
+    try {
+      onModalClosedGeneric(this);
+    } catch (e) {
+      this.notify.warning('Error al cerrar el modal');
+    }
+  }
+
+  private buildFields(defaults: any = {}) {
+    const valOr = (k: string) => defaults[k] ?? '';
+    return [
+      { key: 'nombre', label: 'Nombre', type: 'text', value: valOr('nombre') },
+      { key: 'descripcion', label: 'Descripción', type: 'textarea', value: valOr('descripcion') },
+    ];
+  }
+
+  // 7. Getters
+
+  get columns(): { key: string; label: string }[] {
+    return (ESTADO_SCHEMA as any[])
+      .filter((f) => f.showInTable !== false && !f.hidden)
+      .map((f) => ({ key: f.key, label: f.label ?? f.key }));
   }
 }

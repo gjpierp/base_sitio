@@ -1,76 +1,58 @@
-<ui-card>
-  <div class="spread" style="margin-bottom: 1rem">
-    <ng-container *ngIf="loading">
-      <ui-spinner label="Cargando"></ui-spinner>
-    </ng-container>
-    <ng-container *ngIf="!loading && error">
-      <div class="muted">{{ error }}</div>
-    </ng-container>
-    <div
-      style="
-        font-size: 11px;
-        color: #888;
-        background: #f8f8f8;
-        border: 1px solid #eee;
-        padding: 4px;
-        margin-bottom: 6px;
-      "
-    >
-      <table class="responsive-table">
-        <thead>
-          <tr>
-            <th *ngFor="let col of visibleColumns; trackBy: trackByCol" scope="col">
-              {{ col.label }}
-            </th>
-            <th scope="col" class="actions-col">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of data; trackBy: trackByRow">
-            <td *ngFor="let col of visibleColumns">{{ row[col.key] }}</td>
-            <td class="actions-col" [attr.data-label]="'Acciones'">
-              <ui-button
-                variant="success"
-                ariaLabel="Editar Fila"
-                (pressed)="onEdit(row)"
-                title="Editar"
-                [iconOnly]="true"
-              >
-                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
-              </ui-button>
-              <ui-button
-                variant="danger"
-                ariaLabel="Eliminar Fila"
-                (pressed)="onRemove(row)"
-                title="Eliminar"
-                [iconOnly]="true"
-              >
-                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
-              </ui-button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div *ngIf="data.length === 0" class="muted">No hay datos para mostrar.</div>
-    </div>
+<table class="table w-full mresponsive-table bg-center">
+  <thead>
+    <tr>
+      <th *ngFor="let col of visibleColumns; trackBy: trackByCol" scope="col">
+        {{ col.label }}
+      </th>
+      <th *ngIf="edit.observed || remove.observed" class="actions-header">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let row of data; trackBy: trackByRow">
+      <td *ngFor="let col of visibleColumns; trackBy: trackByCol">
+        {{ row[col.key] }}
+      </td>
+      <td *ngIf="edit.observed || remove.observed" class="actions-cell">
+        <div class="actions-wrapper">
+          <ui-button
+            label="Editar"
+            variant="success"
+            icon="edit"
+            [iconOnly]="true"
+            (pressed)="emitEdit(row)"
+            ariaLabel="Editar"
+          ></ui-button>
+          <ui-button
+            label="Eliminar"
+            variant="danger"
+            icon="delete"
+            [iconOnly]="true"
+            (pressed)="emitRemove(row)"
+            ariaLabel="Eliminar"
+          ></ui-button>
+        </div>
+      </td>
+    </tr>
+    <tr *ngIf="!loading && (!data || data.length === 0)">
+      <td
+        [attr.colspan]="visibleColumns.length + (edit.observed || remove.observed ? 1 : 0)"
+        class="no-data"
+      >
+        No hay datos disponibles
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-    <div
-      class="table-pagination"
-      style="
-        margin-top: 0.75rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-      "
-    >
-      <ui-pagination
-        [page]="page"
-        [pageSize]="effectivePageSize"
-        [totalItems]="total"
-        [maxPages]="5"
-        (pageChange)="onPage($event)"
-      ></ui-pagination>
-    </div>
-  </div>
-</ui-card>
+<div *ngIf="loading" class="loading-shade">
+  <ui-spinner></ui-spinner>
+</div>
+<div class="footer w-full bg-center">
+  <ui-pagination
+    [page]="page"
+    [pageSize]="effectivePageSize"
+    [totalItems]="total"
+    (pageChange)="onPage($event)"
+  >
+  </ui-pagination>
+</div>

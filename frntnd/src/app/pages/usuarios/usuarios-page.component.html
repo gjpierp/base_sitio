@@ -54,6 +54,10 @@
         <option value="">Rol</option>
         <option *ngFor="let r of roles" [value]="r.id_rol">{{ r.nombre }}</option>
       </select>
+      <select [(ngModel)]="filtroJerarquia" name="filtroJerarquia" style="width: 160px">
+        <option value="">Jerarquía</option>
+        <option *ngFor="let j of jerarquias" [value]="j.id_jerarquia">{{ j.nombre }}</option>
+      </select>
     </div>
     <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
       <ui-button
@@ -77,22 +81,72 @@
   </ui-card>
 
   <!-- Card de registros -->
-  <ui-card style="margin-top: 1.5rem">
-    <div style="width: 100%">
-      <ui-entity-table
-        [title]="title"
-        [subtitle]="subtitle"
-        [columns]="columns"
-        [data]="formattedData"
-        [total]="totalUsuarios"
-        [loading]="loading"
-        [error]="error"
-        [page]="currentPage"
-        (edit)="onEdit($event)"
-        (remove)="onRemove($event)"
-        (pageChange)="onPageChange($event)"
-        style="width: 100%"
-      ></ui-entity-table>
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+
+    <!-- Paginación visual -->
+    <div
+      *ngIf="total > pageSize"
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+      "
+    >
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <button
+          type="button"
+          (click)="currentPage = 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          «
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = currentPage - 1; cargarDatosAsync()"
+          [disabled]="currentPage === 1"
+        >
+          ‹
+        </button>
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        <button
+          type="button"
+          (click)="currentPage = currentPage + 1; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          (click)="currentPage = totalPages; cargarDatosAsync()"
+          [disabled]="currentPage === totalPages"
+        >
+          »
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem">
+        <span style="font-size: 13px">Registros por página:</span>
+        <select [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)" style="width: 70px">
+          <option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+        </select>
+      </div>
+      <div style="font-size: 13px; color: #888">Total: {{ total }}</div>
     </div>
   </ui-card>
 </form>

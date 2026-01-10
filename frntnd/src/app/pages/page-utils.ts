@@ -125,27 +125,6 @@ export function abrirEditarGeneric(
     // Allow id === 0 (falsy) but not null/undefined
     if (id !== null && id !== undefined) {
       try {
-        // Try to open modal editor generically using abrirEditarModalGeneric
-        try {
-          const base =
-            String(routePath || '')
-              .replace(/^\//, '')
-              .split('/')[0] || '';
-          if (base) {
-            // build API endpoint name (use underscore for API routes)
-            const apiEndpoint = String(base).replace(/-/g, '_');
-            // fields left undefined so modal will build from detail dynamically
-            // call the generic modal helper in background (non-blocking)
-            try {
-              if (typeof abrirEditarModalGeneric === 'function') {
-                // call async helper but don't await to keep this function sync
-                void abrirEditarModalGeneric(thisRef, row, apiEndpoint, [], idKeys).catch(() => {});
-                return true;
-              }
-            } catch {}
-          }
-        } catch {}
-
         // fallback: navigate to routePath with query id
         if (String(routePath).startsWith('/')) {
           thisRef.router.navigate([routePath], { queryParams: { id } });
@@ -235,150 +214,181 @@ export async function onModalConfirmGeneric(thisRef: any, endpoint: string) {
     }
 
     // create or update
-    try {
-      thisRef.modalSaving = true;
-      // Build payload with basic validation and type conversion
-      const payload: any = {};
-      const fields = Array.isArray(thisRef.modalFields) ? thisRef.modalFields : [];
-      for (const f of fields) {
-        const k = f.key;
-        let v = (thisRef.modalValues || {})[k];
-        if (typeof v === 'string') v = v.trim();
-        // Required check (only enforced on create), ignorando 'configuracion_por_defecto'
-        const ignoreRequired = ['configuracion_por_defecto'];
-        if (
-          !f.hidden &&
-          !thisRef.modalEditingId &&
-          (v === '' || v === null || v === undefined) &&
-          !ignoreRequired.includes(k)
-        ) {
-          // Si el campo está en la lista de ignorados, no validar como requerido
-          if (ignoreRequired.includes(k)) {
-            payload[k] = v;
-            continue;
-          }
+    thisRef.modalSaving = true;
+    // Build payload with basic validation and type conversion
+    const payload: any = {};
+    const fields = Array.isArray(thisRef.modalFields) ? thisRef.modalFields : [];
+    // Lista de campos calculados que NO deben enviarse al backend
+    const camposCalculados = ['nombre_menu_padre', 'nombre_aplicacion', 'nombre_estado'];
+    for (const f of fields) {
+      const k = f.key;
+      if (camposCalculados.includes(k)) continue; // Omitir campos calculados
+      let v = (thisRef.modalValues || {})[k];
+      if (typeof v === 'string') v = v.trim();
+      // Required check (only enforced on create), ignorando 'configuracion_por_defecto'
+      const ignoreRequired = ['configuracion_por_defecto'];
+      if (
+        !f.hidden &&
+        !thisRef.modalEditingId &&
+        (v === '' || v === null || v === undefined) &&
+        !ignoreRequired.includes(k)
+      ) {
+        // Si el campo está en la lista de ignorados, no validar como requerido
+        if (ignoreRequired.includes(k)) {
+          payload[k] = v;
+          continue;
+        }
+        try {
+          const { default: Swal } = await import('sweetalert2');
+          thisRef.modalOpen = false;
+          try {
+            thisRef.cdr?.detectChanges();
+          } catch {}
+          await Swal.fire('Error', `El campo "${f.label}" es requerido.`, 'error');
+        } catch {}
+        thisRef.modalSaving = false;
+        return false;
+      }
+      // Email simple validation
+      if (/correo|email|mail/i.test(k)) {
+        const re = /^\S+@\S+\.\S+$/;
+        if (!re.test(String(v))) {
           try {
             const { default: Swal } = await import('sweetalert2');
-            thisRef.modalOpen = false;
-            try {
-              thisRef.cdr?.detectChanges();
-            } catch {}
-            await Swal.fire('Error', `El campo "${f.label}" es requerido.`, 'error');
+            await Swal.fire('Error', `El campo "${f.label}" debe ser un correo válido.`, 'error');
           } catch {}
           thisRef.modalSaving = false;
           return false;
         }
-        // Email simple validation
-        if (/correo|email|mail/i.test(k)) {
-          const re = /^\S+@\S+\.\S+$/;
-          if (!re.test(String(v))) {
-            try {
-              const { default: Swal } = await import('sweetalert2');
-              await Swal.fire('Error', `El campo "${f.label}" debe ser un correo válido.`, 'error');
-            } catch {}
-            thisRef.modalSaving = false;
-            return false;
-          }
-        }
-        // Convert numeric strings to numbers
-        if (typeof v === 'string' && /^\d+$/.test(v)) v = Number(v);
-        // Convert boolean-like strings
-        if (v === 'true') v = true;
-        if (v === 'false') v = false;
-        payload[k] = v;
       }
-      // Remove id if empty (backend usually generates it on create, or it's in URL on update)
+      // Convert numeric strings to numbers
+      if (typeof v === 'string' && /^\d+$/.test(v)) v = Number(v);
+      // Convert boolean-like strings
+      if (v === 'true') v = true;
+      if (v === 'false') v = false;
+      payload[k] = v;
+    }
+    // Limpieza extra: eliminar campos vacíos, nulos o no permitidos
+    Object.keys(payload).forEach((k) => {
       if (
-        payload.id === '' ||
-        payload.id === null ||
-        payload.id === undefined ||
-        thisRef.modalEditingId
+        payload[k] === '' ||
+        payload[k] === null ||
+        typeof payload[k] === 'undefined' ||
+        (Array.isArray(payload[k]) && payload[k].length === 0)
       ) {
-        delete payload.id;
+        delete payload[k];
       }
-      // If editing, perform update; otherwise create
-      const id = thisRef.modalEditingId ?? null;
-      try {
-        // For usuarios endpoint, ensure backend-required fields exist when creating
-        if (!id && String(endpoint).toLowerCase() === 'usuarios') {
-          try {
-            if (!payload.contrasena) {
-              const rand = Math.random().toString(36).slice(2, 8);
-              payload.contrasena = `Pwd${rand}`; // >=6 chars
-            }
-            const nombreUsuario = payload.nombre_usuario || payload.nombre || '';
-            if (!payload.nombres) {
-              const parts = String(nombreUsuario || '')
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean);
-              payload.nombres = parts.length
-                ? parts[0]
-                : (payload.correo_electronico || 'Usuario').split('@')[0];
-            }
-            if (!payload.apellidos) {
-              const parts = String(nombreUsuario || '')
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean);
-              payload.apellidos = parts.length > 1 ? parts.slice(1).join(' ') : 'N/A';
-            }
-          } catch (e) {
-            try {
-            } catch {}
+    });
+    // Remove id if empty (backend usually generates it on create, o está en URL en update)
+    if (
+      payload.id === '' ||
+      payload.id === null ||
+      payload.id === undefined ||
+      thisRef.modalEditingId
+    ) {
+      delete payload.id;
+    }
+    // If editing, perform update; otherwise create
+    const id = thisRef.modalEditingId ?? null;
+    try {
+      // Para usuarios endpoint, asegurar campos requeridos por backend
+      if (!id && String(endpoint).toLowerCase() === 'usuarios') {
+        try {
+          if (!payload.contrasena) {
+            const rand = Math.random().toString(36).slice(2, 8);
+            payload.contrasena = `Pwd${rand}`; // >=6 chars
           }
-        }
-        // '[onModalConfirmGeneric] submit', // Línea eliminada por error de sintaxis
-        // Si necesitas loggear, usa console.log:
-        // console.log('[onModalConfirmGeneric] submit', endpoint, id ? `update ${id}` : 'create', payload);
-        // ...existing code...
-      } catch {}
+          const nombreUsuario = payload.nombre_usuario || payload.nombre || '';
+          if (!payload.nombres) {
+            const parts = String(nombreUsuario || '')
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean);
+            payload.nombres = parts.length
+              ? parts[0]
+              : (payload.correo_electronico || 'Usuario').split('@')[0];
+          }
+          if (!payload.apellidos) {
+            const parts = String(nombreUsuario || '')
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean);
+            payload.apellidos = parts.length > 1 ? parts.slice(1).join(' ') : 'N/A';
+          }
+        } catch (e) {}
+      }
+      // Log de payload para depuración
+      if (typeof window !== 'undefined' && window?.location?.hostname === 'localhost') {
+        console.log(`[${id ? 'PUT' : 'POST'} ${endpoint}] Payload enviado:`, payload);
+      }
+    } catch {}
 
-      thisRef.modalOpen = false;
-      thisRef.modalSaving = false;
-      try {
-        thisRef.cdr?.detectChanges();
-      } catch {}
-      const { default: Swal } = await import('sweetalert2');
+    thisRef.modalOpen = false;
+    thisRef.modalSaving = false;
+    try {
+      thisRef.cdr?.detectChanges();
+    } catch {}
+    const { default: Swal } = await import('sweetalert2');
+    let res: any;
+    try {
       if (id && typeof id !== 'undefined' && id !== null && id !== '') {
         // update
-        console.log('[PUT usuarios] Payload enviado:', payload);
-        const res = await firstValueFrom(thisRef.api.put(`${endpoint}/${id}`, payload) as any);
-        try {
-        } catch {}
+        res = await firstValueFrom(thisRef.api.put(`${endpoint}/${id}`, payload) as any);
         await Swal.fire('Guardado', 'Elemento actualizado', 'success');
       } else {
         // create
-        console.log('[POST usuarios] Payload enviado:', payload);
-        const res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
-        try {
-        } catch {}
+        res = await firstValueFrom(thisRef.api.post(endpoint, payload) as any);
         await Swal.fire('Guardado', 'Elemento creado', 'success');
       }
-      try {
-        if (typeof thisRef.load === 'function') await thisRef.load();
-        if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
-        if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
-      } catch {}
-      return true;
-    } catch (err) {
-      try {
-      } catch {}
-      thisRef.modalSaving = false;
-      try {
-        const { default: Swal } = await import('sweetalert2');
-        thisRef.modalOpen = false;
+      // Si el endpoint es 'menus', emitir evento para recargar el sidebar
+      if (typeof window !== 'undefined' && String(endpoint).toLowerCase().includes('menu')) {
         try {
-          thisRef.cdr?.detectChanges();
-        } catch {}
-        const msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
-        await Swal.fire('Error', msg || 'No se pudo crear', 'error');
-      } catch {}
+          const menuResp = await firstValueFrom(thisRef.api.get('menus/arbol'));
+          const menuArray = Array.isArray(menuResp)
+            ? menuResp
+            : Array.isArray(menuResp && (menuResp as any).menus)
+            ? (menuResp as any).menus
+            : [];
+          window.dispatchEvent(new CustomEvent('app:login', { detail: { menu: menuArray } }));
+        } catch {
+          window.dispatchEvent(new CustomEvent('app:login'));
+        }
+      }
+    } catch (err: any) {
+      // Manejo robusto de errores HTTP
+      let msg =
+        err?.error?.msg ||
+        err?.error?.message ||
+        err?.message ||
+        err?.statusText ||
+        'Error desconocido';
+      if (typeof msg !== 'string') msg = JSON.stringify(msg);
+      await Swal.fire('Error', msg, 'error');
+      thisRef.modalSaving = false;
       return false;
     }
-  } catch {
+    try {
+      if (typeof thisRef.load === 'function') await thisRef.load();
+      if (typeof thisRef.refrescar === 'function') await thisRef.refrescar();
+      if (typeof thisRef.cargarDatosAsync === 'function') await thisRef.cargarDatosAsync();
+    } catch {}
+    return true;
+  } catch (err) {
+    thisRef.modalSaving = false;
+    try {
+      const { default: Swal } = await import('sweetalert2');
+      thisRef.modalOpen = false;
+      try {
+        thisRef.cdr?.detectChanges();
+      } catch {}
+      let msg = (err as any)?.error?.msg || (err as any)?.message || JSON.stringify(err);
+      if (typeof msg !== 'string') msg = JSON.stringify(msg);
+      await Swal.fire('Error', msg || 'No se pudo crear', 'error');
+    } catch {}
     return false;
   }
+  // fallback por si algo falla y no retorna antes
+  return false;
 }
 
 export function onModalClosedGeneric(thisRef: any) {
@@ -394,17 +404,11 @@ export function onModalClosedGeneric(thisRef: any) {
   } catch {}
 }
 
-/**
- * Abre un modal editable para recursos genéricos usando `swalForm`.
- * - `endpoint`: base API (p.ej. 'sitios' o 'aplicaciones_sitio')
- * - `fields`: array de definiciones { key,label,type?, options? }
- *    options can be an array [{value,label}] or an object { endpoint, valueKey, labelKey }
- */
 export async function abrirEditarModalGeneric(
   thisRef: any,
   row: any,
   endpoint: string,
-  fields: Array<any>,
+  fields: Array<any> = [],
   idKeys: string[] = ['id', 'id_menu', 'ID']
 ) {
   try {

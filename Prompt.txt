@@ -1,21 +1,126 @@
+Elimina el codigo de la pages/permisos
+Actúa como un experto en Angular y desarrollo de software. Tu tarea es generar (o refactorizar) el componente pages/permisos para que siga estrictamente la arquitectura, patrones de diseño y estructura visual del componente de referencia `UsuariosPageComponent`.
 
-Crea o actualiza la pages/roles con Angular siguiendo la estructura, flujo de trabajo y el mismo diseño visual que la página de usuarios:
+Requisitos Estructurales y de Código:
 
-- Debes actualizar segun el models para tomar todos los campos de la tabla
-- Componente standalone con ChangeDetectionStrategy.Default.
-- Importa CommonModule, FormsModule y componentes UI personalizados.
-- Variables para título, subtítulo, datos, loading, error, paginación, modal y catálogo.
-- Métodos para cargar datos asíncronos, procesar y formatear la data, abrir modales de creación/edición/eliminación, y manejar confirmaciones.
-- Esquema declarativo para los campos del formulario (como SITIO_SCHEMA).
-- Modal integrado para formularios y confirmaciones.
-- Tabla principal con paginación, edición y eliminación, centrada y usando todo el espacio disponible.
-- JOIN con la tabla adm_estados para mostrar el nombre del estado en la tabla y en los filtros.
-- Filtros por los campos del models, con iconos en los botones y formato consistente.
-- Métodos de edición y eliminación usan el mismo flujo de modal y confirmación.
-- Centraliza la lógica de renderizado y actualización de estado con ChangeDetectorRef y NgZone.
-- Estructura de métodos: cargarDatosAsync, procesarDatosSitios, openCreateModal, openEditModal, onRemove, onModalConfirm, onModalClosed, refrescar, etc.
-- Helpers genéricos para confirmaciones y cierre de modal.
-- Validaciones y mapeos de datos igual que en usuarios.
-- Diseño visual moderno, responsivo e idéntico al de la página de usuarios (estructura, estilos, disposición de elementos, iconos, botones, modales y tablas).
-- El nuevo codigo debe tener la misma logica de funcionamiento que pages/usuarios.
-- Debes validar que no dejes errores.
+1.  Configuración del Componente:
+    Debe ser `standalone: true`.
+    Importar los componentes de UI estandarizados: `UiCardComponent`, `UiButtonComponent`, `UiSpinnerComponent`, `UiEntityTableComponent`, `UiModalComponent`.
+    Implementar `OnInit` y usar `ChangeDetectionStrategy.Default`.
+    implentar todos los metodos, variables y funciones de pages/usuarios
+
+2.  Carga de Datos (Patrón Híbrido):
+    En `ngOnInit`, verifica primero si existen datos precargados por un Resolver (`this.route.snapshot.data['pre']`).
+    Implementa un método `cargarDatosAsync()` que utilice `forkJoin` para traer en paralelo los catálogos necesarios (para selects) y la lista principal de datos.
+    Usa `NgZone.run(() => ...)` dentro de la suscripción para asegurar la actualización de la vista si es necesario, y gestiona las banderas `loading` y `datosListos`.
+
+3.  Gestión del Modal (Crear/Editar/Eliminar):
+    Usa un único `<ui-modal>` en el HTML para todas las acciones.
+    Implementa un método privado `build[ENTIDAD]Fields(opts, defaults, isEdit)` que retorne un array de configuración de campos (`key`, `label`, `type`, `options`, `value`).
+    El HTML del modal debe iterar sobre `modalFields` y usar un `ngSwitch` para renderizar el input correcto (text, select, textarea, password) según la configuración, tal como se hace en Usuarios.
+    Incluye la lógica para `modalDeleteMode` (modo eliminación) dentro del mismo modal.
+
+4.  Tabla y Filtros:
+    Usa el componente `<ui-entity-table>` para mostrar los datos.
+    Define las columnas mediante un getter `get columns()`.
+    Implementa la lógica de filtrado en el cliente (`aplicarFiltros`) y limpieza (`limpiarFiltros`) sobre el array `data` original, actualizando `formattedData`.
+
+5.  Estructura HTML:
+    Debe haber un `<form (ngSubmit)="aplicarFiltros()">` envolviendo el contenido principal.
+    Card 1 (Header): Título, subtítulo y botón de "Crear" alineado a la derecha.
+    Card 2 (Filtros): Inputs y Selects para filtrar, con botones de "Buscar" y "Limpiar".
+    Card 3 (Datos): Contenedor de la `<ui-entity-table>`.
+
+Contexto de la nueva página:
+Entidad: pages/permisos-page.componet
+Campos de la tabla: models/permisos
+Filtros requeridos: los necesarios desde models/permisos
+Catálogos necesarios: los necesarios desde models/permisos
+
+Genera el código completo para el archivo `.ts`, `.html` y `.css`. Implementar permisos.resolver.ts
+
+
+Revisa la pages/jerarquias, ordena el código por prioridad y convención. Compara los archivos de pages/usuarios con los de pages/jerarquias, debes pasar todo el código necesarios a jerarquias, el archivo *.component.ts, *.component.html y *.component.css Deja implementado el archivo jerarquias.resolver.ts igual al de usuarios.resolver.ts. Lo quiero igual de robusto que el que está configurado en usuarios
+
+Ordena el archivo models/adm_usuarios.ts, por prioridad y convención.
+
+Crea un CRUD robusto para la entities/adm_sesiones_activas.ts, debes considerar como base adm_usuarios.js
+
+Debes crear la carpeta pages/atributos y los archivos *.component.*, *.resolver.ts en base al los archivos que existen en la carpeta pages/usuarios. Lo quiero igual de robusto que el que está configurado en usuarios
+
+Quiero que implentes verEnCrear, verEnEditar, verEnLista en los *_SCHEMA ubicados en Models, considera que los id y fechas no se deben mostrar
+
+src/app/models/aplicacion-sitio.ts
+src/app/models/atributo.ts
+src/app/models/auditoria.ts
+src/app/models/configuracion.ts
+src/app/models/entidad.ts
+src/app/models/estado.ts
+src/app/models/historial-acceso.ts
+src/app/models/historial-accion.ts
+src/app/models/historial-contrasena.ts
+src/app/models/jerarquia.ts
+src/app/models/menu-permiso.ts
+src/app/models/menu.ts
+src/app/models/permiso.ts
+src/app/models/role-permiso.ts
+src/app/models/role.ts
+src/app/models/sesion-activa.ts
+src/app/models/sitio.ts
+src/app/models/tipo-usuario.ts
+src/app/models/usuario-aplicacion.ts
+src/app/models/usuario-jerarquia.ts
+src/app/models/usuario-rol.ts
+src/app/models/usuario.ts
+
+src/app/pages/aplicaciones-sitio
+src/app/pages/auditoria
+src/app/pages/auth
+src/app/pages/busquedas
+src/app/pages/configuracion
+src/app/pages/dashboard
+src/app/pages/estados
+src/app/pages/historial-accesos
+src/app/pages/historial-acciones
+src/app/pages/historial-contrasenas
+src/app/pages/jerarquias
+src/app/pages/menus
+src/app/pages/perfil
+src/app/pages/permisos
+src/app/pages/roles
+src/app/pages/roles_permisos
+src/app/pages/sitios
+src/app/pages/tipos-usuarios
+src/app/pages/uploads
+src/app/pages/usuarios
+src/app/pages/usuarios_jerarquias
+src/app/pages/usuarios_roles
+
+realizar los cambios necesarios para implementar verEnCrear, verEnEditar, verEnLista en los archivos src/app/pages/usuarios
+
+Debes crear la carpeta src/app/pages/configuracion y los archivos *.component.*, *.resolver.ts en base al los archivos que existen en la carpeta src/app/pages/usuarios. Lo quiero igual de robusto que el que está configurado en usuarios
+
+models/adm_aplicaciones_sitio.js
+models/adm_atributos.js
+models/adm_auditoria.js
+models/adm_configuraciones.js
+models/adm_entidades.js
+models/adm_estados.js
+models/adm_historial_accesos.js
+models/adm_historial_acciones.js
+models/adm_historial_contrasenas.js
+models/adm_jerarquias.js
+models/adm_menus_permisos.js
+models/adm_menus.js
+models/adm_permisos.js
+models/adm_roles_permisos.js
+models/adm_roles.js
+models/adm_sesiones_activas.js
+models/adm_sitios.js
+models/adm_tipos_usuario.js
+models/adm_usuarios_aplicaciones.js
+models/adm_usuarios_jerarquias.js
+models/adm_usuarios_roles.js
+models/adm_usuarios.js
+
+como implementar la union del la tabla adm_entidades y adm_atributos para que el backen obtenga la información de las tablas

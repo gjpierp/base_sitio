@@ -104,21 +104,46 @@
 .dialog {
   position: relative;
   margin: 0;
-  /* Ancho adaptable al contenido, con límites */
-  width: 800px !important;
-  min-width: 800px !important;
-  max-width: 800px !important;
-  background: var(--surface);
+  width: 60%;
+  max-width: 90%;
+  background: linear-gradient(135deg, #fff 80%, #f3f4f8 100%);
   color: var(--text);
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(60, 60, 120, 0.18), 0 1.5px 8px rgba(79, 70, 229, 0.08);
   overflow: hidden;
-  font-size: 14px;
-  line-height: 1.2;
-  /* Ensure dialog appears above backdrop and is scrollable when tall */
+  font-size: 15px;
+  line-height: 1.35;
   z-index: 20001;
-  max-height: 90vh;
-  overflow: auto;
+  max-height: 92vh;
+  animation: modalFadeIn 0.35s cubic-bezier(0.4, 1.4, 0.6, 1) both;
+  border: 1.5px solid #e5e7eb;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .dialog {
+    max-width: 98vw;
+    min-width: 0;
+    border-radius: 12px;
+    padding: 0;
+  }
+  .header,
+  .content,
+  .footer {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
 }
 
 /* DEBUG: visible outline to detect if modal is present but obscured */
@@ -137,14 +162,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 18px 24px 12px 24px;
+  border-bottom: 1.5px solid #e5e7eb;
+  background: linear-gradient(90deg, #f8fafc 80%, #eef2ff 100%);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
 }
 
 .title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  color: #3730a3;
+  letter-spacing: 0.01em;
 }
 
 .icon-btn {
@@ -165,7 +195,10 @@
 }
 
 .content {
-  padding: 12px 16px;
+  padding: 18px 24px;
+  background: #fff;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 
 /* Layout de formulario en dos columnas: labels a la izquierda, controles a la derecha */
@@ -176,10 +209,33 @@
 .content form,
 .content .slot-grid {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  column-gap: 5px;
-  row-gap: 8px;
+  grid-template-columns: 110px minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 14px;
   align-items: center;
+}
+.content input,
+.content select,
+.content textarea,
+.content .form-control {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 700px) {
+  .dialog {
+    max-width: 98vw;
+  }
+  .content .form-grid,
+  .content > form,
+  .content form,
+  .content .slot-grid {
+    grid-template-columns: 1fr;
+  }
+  .content label {
+    margin-bottom: 4px;
+  }
 }
 
 .content label {
@@ -188,22 +244,31 @@
   padding: 8px 10px;
   font-size: 14px;
   color: var(--text);
-  text-align: left;
+  text-align: left !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  display: block;
 }
 
 .content input,
 .content select,
 .content textarea,
 .content .form-control {
-  /* width: 100%; */
   font-size: 14px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
+  border: 2px solid #c7d2fe;
   box-sizing: border-box;
   background: var(--surface);
   color: var(--text);
   min-height: 36px;
+  transition: border-color 0.2s;
+}
+.content input:focus,
+.content select:focus,
+.content textarea:focus {
+  border-color: #4f46e5;
+  outline: none;
 }
 
 .content textarea {
@@ -213,10 +278,13 @@
 
 .footer {
   display: flex;
-  gap: 8px;
-  padding: 10px 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1.5px solid #e5e7eb;
+  background: #f8fafc;
   justify-content: flex-end;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
 }
 
 .btn {
@@ -339,9 +407,7 @@
   font-weight: 600;
   padding-right: 12px;
 }
-.content .form-table td {
-  /* width: auto; */
-}
+
 .content .form-table input,
 .content .form-table select,
 .content .form-table textarea {

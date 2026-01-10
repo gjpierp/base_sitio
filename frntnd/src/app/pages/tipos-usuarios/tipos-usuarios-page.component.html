@@ -1,0 +1,180 @@
+<form (ngSubmit)="aplicarFiltros()">
+  <ui-card>
+    <div style="display: flex; flex-direction: column; gap: 0.5rem">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%">
+        <h2 style="margin: 0; font-weight: bold; font-size: 16px">{{ title }}</h2>
+        <ui-button
+          variant="primary"
+          (pressed)="openCreateModal()"
+          icon="add"
+          [iconOnly]="true"
+          ariaLabel="Crear"
+          title="Crear"
+        ></ui-button>
+      </div>
+      <div style="color: #888; font-size: 12px; margin-top: 0.2em">{{ subtitle }}</div>
+    </div>
+  </ui-card>
+
+  <ui-card title="Filtros de búsqueda" style="margin-top: 1.5rem">
+    <div
+      style="
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <input
+        type="text"
+        [(ngModel)]="filtroNombre"
+        name="filtroNombre"
+        placeholder="Nombre"
+        style="width: 180px"
+      />
+      <select [(ngModel)]="filtroEstado" name="filtroEstado" style="width: 160px">
+        <option value="">Estado</option>
+        <option *ngFor="let e of estados" [value]="e.id_estado">{{ e.nombre }}</option>
+      </select>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem">
+      <ui-button
+        type="submit"
+        variant="primary"
+        icon="search"
+        [iconOnly]="true"
+        ariaLabel="Buscar"
+        title="Buscar"
+      ></ui-button>
+      <ui-button
+        type="button"
+        variant="primary"
+        icon="clear"
+        [iconOnly]="true"
+        ariaLabel="Limpiar"
+        title="Limpiar"
+        (pressed)="limpiarFiltros()"
+      ></ui-button>
+    </div>
+  </ui-card>
+
+  <ui-card>
+    <ui-entity-table
+      [title]="title"
+      [subtitle]="subtitle"
+      [columns]="columns"
+      [data]="formattedData"
+      [total]="total"
+      [loading]="loading"
+      [error]="error"
+      [page]="currentPage"
+      (edit)="onEdit($event)"
+      (remove)="onRemove($event)"
+      (pageChange)="onPageChange($event)"
+      class="w-full mx-auto block"
+    ></ui-entity-table>
+  </ui-card>
+</form>
+
+<ui-modal
+  #modalRef
+  [isOpen]="modalOpen"
+  [title]="modalTitle"
+  (confirmed)="onModalConfirm()"
+  (closed)="onModalClosed()"
+>
+  <div class="content">
+    <div
+      *ngIf="modalLoading"
+      style="display: flex; justify-content: center; padding: 1rem"
+      class="modal-content-75"
+    >
+      <ui-spinner label="Cargando"></ui-spinner>
+    </div>
+    <div
+      *ngIf="!modalLoading && modalDeleteMode"
+      style="padding: 2rem; text-align: center; font-size: 1.1em"
+    >
+      <span>
+        ¿Estás seguro que deseas eliminar el tipo de usuario
+        <b>{{ modalValues.nombre || '' }}</b
+        >?
+      </span>
+    </div>
+    <table class="form-table" *ngIf="!modalLoading && !modalDeleteMode && modalFields.length">
+      <ng-container *ngFor="let f of modalFields">
+        <tr *ngIf="!f.hidden">
+          <th>
+            <label
+              [for]="f.key"
+              style="
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 220px;
+                display: inline-block;
+              "
+            >
+              {{ f.label }}
+            </label>
+          </th>
+          <td>
+            <ng-container [ngSwitch]="f.type">
+              <ng-container *ngSwitchCase="'text'">
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchCase="'select'">
+                <select
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [disabled]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                >
+                  <option *ngFor="let o of f.options || []" [ngValue]="o.value">
+                    {{ o.label }}
+                  </option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'textarea'">
+                <textarea
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                ></textarea>
+              </ng-container>
+              <ng-container *ngSwitchCase="'password'">
+                <input
+                  type="password"
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                <input
+                  [id]="f.key"
+                  [(ngModel)]="modalValues[f.key]"
+                  [name]="f.key"
+                  [readonly]="f.readonly"
+                  style="width: 420px; max-width: 100%; box-sizing: border-box"
+                />
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
+  </div>
+</ui-modal>

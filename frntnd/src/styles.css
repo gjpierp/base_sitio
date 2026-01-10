@@ -6,158 +6,82 @@
 @import './swal2-select-style.css';
 @import './swal2-form-row.css';
 
-/* App global tweaks */
-
-button,
-.btn,
-.p-button,
-.btn-crear {
-  color: var(--color-text-inverse) !important;
-  background: var(--color-btn) !important;
-  border: 2px solid var(--color-border) !important;
-}
+/* App global tweaks y overrides que no se logran con Tailwind */
 
 :root {
   color-scheme: light;
 }
 
 body {
-  /* Usar degradado si el tema define --bg-gradient, si no fallback a --bg-main */
   background: var(--bg-gradient, var(--bg-main));
 }
 
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-}
-.sidebar {
-  width: 250px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--color-border);
-  display: flex;
-  flex-direction: column;
-}
-.sidebar .brand {
-  padding: var(--space-5);
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-}
-.content {
-  flex: 1;
-}
-.header {
-  height: 60px;
-  background: var(--bg-sidebar);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  padding: 0 var(--space-5);
-}
-.main {
-  padding: var(--space-5);
-}
-/* You can add global styles to this file, and also import other style files */
+/* Estructura principal recomendada con Tailwind:
+   Migrar el layout y los componentes principales a clases Tailwind en el HTML:
+   <div class="app-shell flex min-h-screen">
+   <aside class="sidebar w-[250px] bg-[var(--bg-sidebar)] border-r border-[var(--color-border)] flex flex-col">
+   <header class="header h-[60px] bg-[var(--bg-sidebar)] border-b border-[var(--color-border)] flex items-center px-[var(--space-5)]">
+   <main class="main p-[var(--space-5)]">
+   <div class="content flex-1">
+   <button class="bg-[var(--color-btn)] text-[var(--color-text-inverse)] border-2 border-[var(--color-border)] px-4 py-2 rounded"></button>
+   <div class="toolbar flex justify-end mb-4"></div>
+   <table class="responsive-table w-full border-collapse bg-[var(--bg-card)] shadow-sm">
+   <th class="text-left px-3 py-2 border-b border-[var(--color-border)] bg-transparent text-[var(--color-text)] font-semibold text-[var(--text-md)]"></th>
+   <td class="px-3 py-2 border-b border-gray-100 align-middle text-[var(--text-md)]"></td>
+   <div class="actions flex gap-2 justify-end"></div>
+   <label class="text-left"></label>
+   <ui-entity-table class="w-full block"></ui-entity-table>
+   <ui-modal class="modal-container" style="width:fit-content;max-width:95vw"></ui-modal>
+*/
 
-/* Header & Dashboard: botones sin fondo (forzar transparencia sobre reglas globales) */
-.ui-header .button,
-.ui-header .button-primary,
-.ui-header .button-secondary,
-.ui-header .button-outline,
-.ui-header .icon-btn,
-.ui-header button,
-.ui-header .button.button-primary,
-.ui-header .button.button-secondary,
-.ui-header .button.button-outline {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: inherit !important;
-  padding: 0 !important;
+:root {
+  color-scheme: light;
+}
+body {
+  background: var(--bg-gradient, var(--bg-main));
 }
 
-/* Dashboard hero actions and quick links */
-.hero .button,
-.hero .button-primary,
-.hero .button-secondary,
-.hero .button-outline,
-.hero-actions .button,
-.hero-actions button,
-.hero .quick,
-.hero .quick a {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: inherit !important;
-}
+/* Regla global para que los componentes dentro de main ocupen el 90% del espacio disponible en cualquier dispositivo */
 
-/* Quick cards (stat/quick) — hacer solo texto/ícono si se desea */
-.quick,
-.card .quick {
-  background: transparent !important;
-  border: 1px solid transparent !important;
-}
-
-/* Page enter animation: apply `page-animate` to page root and toggle `page-ready` when content is ready */
-.page-animate {
-  opacity: 0;
-  transform: translateY(8px) scale(0.995);
-  transition: opacity 240ms cubic-bezier(0.2, 0.9, 0.2, 1),
-    transform 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
-  will-change: opacity, transform;
-}
-.page-animate.page-ready {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/* Subtle loader shimmer when page is loading */
-.page-animate::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.03) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  opacity: 0;
-  transition: opacity 200ms ease-in-out;
-}
-.page-animate:not(.page-ready)::before {
-  opacity: 1;
-}
-
-/* Ensure page root is positioned for ::before to work */
-.page-animate {
-  position: relative;
-}
-
-/* Forzar alineación izquierda de labels en formularios y tablas de formulario */
-label,
-.ui-form .label,
-.content label,
-.content .form-table th,
-.form-table th,
-.ui-entity-table th,
-.content .slot-grid label,
-.content form label {
-  text-align: left !important;
-}
-
-/* Global overrides for UI components */
-ui-entity-table {
+/* Regla global para que los componentes dentro de main ocupen el 90% del espacio disponible, adaptado a cada dispositivo */
+main > * {
   width: 100%;
-  display: block;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
+@media (max-width: 599px) {
+  /* Celular */
+  main > * {
+    width: 98vw;
+    max-width: 98vw;
+    min-width: 0;
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1024px) {
+  /* Tablet */
+  main > * {
+    width: 94vw;
+    max-width: 900px;
+    padding-left: 3vw;
+    padding-right: 3vw;
+  }
+}
+
+@media (min-width: 1025px) {
+  /* Computadora/Notebook */
+  main > * {
+    width: 90vw;
+    max-width: 1200px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 ui-modal .modal-container,
 ui-modal .modal-dialog,
 .modal-content {

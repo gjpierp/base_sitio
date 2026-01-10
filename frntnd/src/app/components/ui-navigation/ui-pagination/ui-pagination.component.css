@@ -1,9 +1,54 @@
+/* Forzar visibilidad y fuente de los íconos de Material Icons */
+.material-icons {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  color: inherit;
+  vertical-align: middle;
+}
 .ui-pagination {
   display: flex;
   align-items: center;
   gap: 4px;
   justify-content: center;
   padding: 8px 0;
+}
+/* Mantener en la misma línea, sin separación vertical extra */
+.ui-pagination-row {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 0 0 0;
+  gap: 0;
+}
+.ui-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+}
+.ui-pagination-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  font-size: 1em;
+  margin-left: auto;
 }
 .icon-btn {
   background: transparent;
@@ -39,14 +84,27 @@
 .page-num:hover {
   transform: translateY(-2px);
 }
+
 .page-num.active {
-  background: transparent; /* sin fondo */
-  color: var(--color-primary, #4f46e5); /* destacar solo con color de texto */
-  box-shadow: none;
+  background: transparent !important;
+  color: var(--color-primary, #4f46e5);
   font-weight: 700;
-  padding-bottom: 2px; /* espacio para el subrayado */
-  border-bottom: 2px solid var(--color-primary, #4f46e5); /* subrayado sutil */
-  transition: transform 0.12s ease, color 0.12s ease, border-bottom-color 0.12s ease;
+  border-radius: 6px;
+  box-shadow: none;
+  border: 2px solid var(--color-primary, #4f46e5);
+  border-bottom: 2px solid var(--color-primary, #4f46e5);
+}
+
+.current-page-box {
+  display: inline-block;
+  min-width: 28px;
+  padding: 4px 10px;
+  background: transparent !important;
+  color: var(--color-primary, #4f46e5);
+  border-radius: 6px;
+  font-weight: bold;
+  box-shadow: none;
+  border: 2px solid var(--color-primary, #4f46e5);
 }
 
 /* Forzar transparencia y quitar sombras heredadas */

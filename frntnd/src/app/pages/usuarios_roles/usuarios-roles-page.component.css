@@ -10,39 +10,3 @@
   background: var(--bg-card, #fff);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-/* Forzar tamaño de fuente de tabla a la variable global */
-.responsive-table,
-.responsive-table th,
-.responsive-table td {
-  font-size: var(--text-md) !important;
-}
-.responsive-table .material-symbols-outlined,
-.responsive-table .material-icons {
-  font-size: var(--icon-size) !important;
-}
-.responsive-table thead th {
-  text-align: left;
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid var(--color-border, #e6e6e6);
-  background: transparent;
-  color: var(--color-text, #111);
-  font-weight: 600;
-}
-.responsive-table tbody td {
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  vertical-align: middle;
-}
-.responsive-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.responsive-table .actions {
-  display: flex;
-}
-.usuarios-roles-page {
-  padding: 1rem;
-}
-.error {
-  color: var(--color-danger, #c00);
-  margin-top: 1rem;
-}

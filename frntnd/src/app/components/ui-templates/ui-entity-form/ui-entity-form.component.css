@@ -1,63 +1,16 @@
-.form-container {
-  width: 100%;
-  font-size: 0.875rem;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 0.75rem 1rem;
-  align-items: start;
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.form-row {
-  display: contents;
-  width: 100%;
-}
-
-.form-grid ui-label {
-  justify-self: start;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  font-weight: 500;
-  padding-right: 5px;
-}
-
-.form-grid ui-input,
-.form-grid ui-selects {
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
-  display: block;
-  font-size: inherit;
-}
-
-.form-actions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
-  grid-column: 1 / -1;
-}
-.msg-error {
-  color: #f87171;
-}
-.msg-success {
-  color: #34d399;
-}
-
-.msg-error,
-.msg-success {
-  text-align: center;
-  width: 100%;
-}
-.form-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
+/* Migración a Tailwind:
+   Elimina este archivo y usa clases utilitarias en el HTML:
+   <div class="form-container w-full text-sm"></div>
+   <div class="form-grid grid grid-cols-[160px_1fr] gap-x-4 gap-y-3 items-start w-full mb-2"></div>
+   <div class="form-row contents w-full"></div>
+   <ui-label class="justify-self-start text-left flex items-center font-medium pr-1"></ui-label>
+   <ui-input class="w-full block text-left text-inherit"></ui-input>
+   <ui-selects class="w-full block text-left text-inherit"></ui-selects>
+   <div class="form-actions mt-4 flex justify-end col-span-2"></div>
+   <div class="msg-error text-red-400 text-center w-full"></div>
+   <div class="msg-success text-green-400 text-center w-full"></div>
+   <div class="form-title text-lg font-semibold mb-3"></div>
+*/
 .form-subtitle {
   font-size: 0.95rem;
   margin-bottom: 0.75rem;

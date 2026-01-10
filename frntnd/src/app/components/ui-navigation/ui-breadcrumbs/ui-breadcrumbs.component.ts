@@ -39,6 +39,8 @@ export class UiBreadcrumbsComponent implements OnDestroy {
     ver: 'Ver',
     detalles: 'Detalles',
     busquedas: 'Búsquedas',
+    dashboard: 'Inicio',
+    '': 'Inicio',
   };
 
   constructor(private router: Router, private route: ActivatedRoute) {
@@ -58,30 +60,28 @@ export class UiBreadcrumbsComponent implements OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  private buildCrumbs(route: ActivatedRoute, baseUrl = ''): Crumb[] {
-    const crumbs: Crumb[] = [];
-    const child = route.firstChild;
-    if (!child) {
-      // raíz: dashboard
-      return [{ label: 'Dashboard', url: '/' }];
-    }
-
-    // Usar snapshot de los segmentos para construir URLs acumuladas correctamente
-    const childSnapshot = child.snapshot;
-    const segments = childSnapshot.url.map((s) => s.path).filter(Boolean);
+  private buildCrumbs(route: ActivatedRoute, baseUrl = '', acc: Crumb[] = []): Crumb[] {
+    // Si no hay más hijos, devolver acumulado
+    if (!route) return acc;
+    const routeConfig = route.routeConfig;
+    const data = (routeConfig?.data as any) || {};
+    const segments = route.snapshot.url.map((s) => s.path).filter(Boolean);
     const segmentPath = segments.join('/');
     const nextUrl = segmentPath ? `${baseUrl}/${segmentPath}`.replace(/\/+/g, '/') : baseUrl || '/';
-    const routeConfig = child.routeConfig;
-    const data = (routeConfig?.data as any) || {};
     const routeKey = routeConfig?.path ?? segmentPath;
     const mappedLabel = this.labelMap[routeKey];
     const labelRaw =
       data.breadcrumb ?? data.title ?? mappedLabel ?? this.formatLabel(routeKey) ?? 'Dashboard';
-    const label = labelRaw || 'Dashboard';
-    crumbs.push({ label, url: nextUrl });
-
-    // Recorrer recursivamente usando el siguiente child
-    return crumbs.concat(this.buildCrumbs(child, nextUrl));
+    const label = labelRaw || 'Inicio';
+    // Evitar agregar rutas vacías (raíz sin label)
+    if (label && (acc.length > 0 || label.toLowerCase() !== '')) {
+      acc.push({ label, url: nextUrl });
+    }
+    // Recorrer hijos
+    if (route.firstChild) {
+      return this.buildCrumbs(route.firstChild, nextUrl, acc);
+    }
+    return acc;
   }
 
   private normalizeCrumbs(list: Crumb[]): Crumb[] {
@@ -95,14 +95,14 @@ export class UiBreadcrumbsComponent implements OnDestroy {
     }
 
     // Asegurar que siempre exista la miga raíz 'Dashboard' al inicio
-    if (dedup.length === 0 || dedup[0].label.toLowerCase() !== 'dashboard') {
-      dedup.unshift({ label: 'Dashboard', url: '/' });
+    if (dedup.length === 0 || dedup[0].label.toLowerCase() !== 'inicio') {
+      dedup.unshift({ label: 'Inicio', url: '/' });
     }
 
     // Caso especial: "Dashboard / Dashboard" -> dejar solo uno
     if (
       dedup.length > 1 &&
-      dedup[0].label.toLowerCase() === 'dashboard' &&
+      dedup[0].label.toLowerCase() === 'inicio' &&
       dedup[dedup.length - 1].label.toLowerCase() === 'dashboard'
     ) {
       return [dedup[dedup.length - 1]];

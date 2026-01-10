@@ -1,16 +1,17 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
+  private platformId = inject(PLATFORM_ID);
   // Usa proxy en navegador (/api) y URL absoluta en SSR
-  private baseUrl =
-    typeof window !== 'undefined'
-      ? '/api'
-      : process.env['BACKEND_URL'] || 'http://localhost:3005/api';
+  private baseUrl = isPlatformBrowser(this.platformId)
+    ? '/api'
+    : process.env['BACKEND_URL'] || 'http://localhost:3005/api';
 
   get<T>(path: string, params?: any) {
     let httpParams = undefined as any;
@@ -22,10 +23,30 @@ export class ApiService {
       });
     }
     try {
-      if (typeof window !== 'undefined')
+      if (isPlatformBrowser(this.platformId))
         console.debug('[ApiService] GET', `${this.baseUrl}/${path}`, params || {});
     } catch {}
-    return this.http.get<T>(`${this.baseUrl}/${path}`, { params: httpParams });
+    return this.http.get<T>(`${this.baseUrl}/${path}`, { params: httpParams }).pipe(
+      catchError((err) => {
+        // Si es error de red o backend caído
+        if (err.status === 0 || err.name === 'HttpErrorResponse') {
+          // Si es error HTTP (como 401, 403, 404, 500, etc.)
+          if (err.status && err.status !== 0) {
+            const msg = err.error?.msg || err.statusText || 'Error HTTP';
+            return of({ error: true, msg, status: err.status, detail: err });
+          }
+          // Error de red puro
+          return of({
+            error: true,
+            msg: 'No se pudo conectar con el backend',
+            status: 0,
+            detail: err,
+          });
+        }
+        // Otros errores
+        return of({ error: true, msg: 'Error desconocido', status: err.status, detail: err });
+      })
+    );
   }
 
   /**
@@ -69,11 +90,28 @@ export class ApiService {
   }
 
   post<T>(path: string, body: any) {
-    return this.http.post<T>(`${this.baseUrl}/${path}`, body);
+    // Si body es string, intentar parsear a objeto, si falla, enviar objeto vacío
+    let safeBody = body;
+    if (typeof body === 'string') {
+      try {
+        safeBody = JSON.parse(body);
+      } catch {
+        safeBody = {};
+      }
+    }
+    return this.http.post<T>(`${this.baseUrl}/${path}`, safeBody);
   }
 
   put<T>(path: string, body: any) {
-    return this.http.put<T>(`${this.baseUrl}/${path}`, body);
+    let safeBody = body;
+    if (typeof body === 'string') {
+      try {
+        safeBody = JSON.parse(body);
+      } catch {
+        safeBody = {};
+      }
+    }
+    return this.http.put<T>(`${this.baseUrl}/${path}`, safeBody);
   }
 
   /**
