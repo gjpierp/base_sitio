@@ -1,4 +1,11 @@
-import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  OnInit,
+  NgZone,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -27,6 +34,7 @@ import { ESTADO_SCHEMA } from '../../models/schema/estado.schema';
   ],
   templateUrl: './estados-page.component.html',
   styleUrls: ['./estados-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EstadosPageComponent implements OnInit {
   // 1. Propiedades

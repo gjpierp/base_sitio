@@ -8,6 +8,7 @@ import {
   ChangeDetectorRef,
   OnChanges,
   SimpleChanges,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiButtonComponent } from '../../ui-form/ui-button/ui-button.component';
@@ -26,6 +27,7 @@ export interface ColumnDef {
   imports: [CommonModule, UiButtonComponent, UiSpinnerComponent, UiPaginationComponent],
   templateUrl: './ui-entity-table.component.html',
   styleUrls: ['./ui-entity-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiEntityTableComponent implements OnInit, OnChanges {
   private cdr = inject(ChangeDetectorRef);

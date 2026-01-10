@@ -42,7 +42,7 @@ import { onModalConfirmGeneric, onModalClosedGeneric } from '../page-utils';
   ],
   templateUrl: './usuarios-page.component.html',
   styleUrls: ['./usuarios-page.component.css'],
-  changeDetection: ChangeDetectionStrategy.Default,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       :host ::ng-deep th:last-child,

@@ -7,12 +7,14 @@ export interface UiRadioOption {
   disabled?: boolean;
 }
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-radios',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './ui-radios.component.html',
   styleUrl: './ui-radios.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiRadiosComponent {
   private static idCounter = 0;

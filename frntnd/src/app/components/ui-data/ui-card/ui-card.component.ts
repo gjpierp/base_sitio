@@ -1,6 +1,11 @@
-import { Component, Input, AfterContentInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  AfterContentInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'ui-card',
@@ -8,6 +13,7 @@ import { ChangeDetectorRef } from '@angular/core';
   imports: [CommonModule],
   templateUrl: './ui-card.component.html',
   styleUrls: ['./ui-card.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiCardComponent implements AfterContentInit {
   @Input() title?: string;

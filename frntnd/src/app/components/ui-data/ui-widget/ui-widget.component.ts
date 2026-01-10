@@ -2,12 +2,14 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiIconsComponent } from '../../ui-media/ui-icons/ui-icons.component';
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-widget',
   standalone: true,
   imports: [CommonModule, UiIconsComponent],
   templateUrl: './ui-widget.component.html',
   styleUrls: ['./ui-widget.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiWidgetComponent {
   @Input() title: string = '';

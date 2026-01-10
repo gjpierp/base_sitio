@@ -1,4 +1,10 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -21,6 +27,7 @@ import { NotificationService } from '../../services/notification.service';
   ],
   templateUrl: './usuarios-roles-page.component.html',
   styleUrls: ['./usuarios-roles-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsuariosRolesPageComponent implements OnInit {
   title = 'Usuarios - Roles';
@@ -93,6 +100,21 @@ export class UsuariosRolesPageComponent implements OnInit {
   }
 
   refrescar() {
+    this.cargarDatosAsync();
+  }
+
+  onPageChange(ev: {
+    page: number;
+    pageSize: number;
+    term?: string;
+    sortKey?: string;
+    sortDir?: 'asc' | 'desc';
+  }) {
+    if (!ev || ev.page === this.currentPage) {
+      return;
+    }
+    this.currentPage = ev.page;
+    this.pageSize = ev.pageSize || this.pageSize;
     this.cargarDatosAsync();
   }
 

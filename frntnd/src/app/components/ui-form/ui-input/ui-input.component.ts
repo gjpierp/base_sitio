@@ -2,12 +2,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-input',
   standalone: true,
   templateUrl: './ui-input.component.html',
   styleUrls: ['./ui-input.component.css'],
   imports: [FormsModule, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiInputComponent {
   private static idCounter = 0;

@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiButtonComponent } from '../ui-button/ui-button.component';
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-form-actions',
   standalone: true,
@@ -20,5 +21,6 @@ import { UiButtonComponent } from '../ui-button/ui-button.component';
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiFormActionsComponent {}

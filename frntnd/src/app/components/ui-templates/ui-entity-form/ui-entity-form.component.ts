@@ -14,6 +14,7 @@ export interface FieldDef {
   options?: any[];
 }
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-entity-form',
   standalone: true,
@@ -28,6 +29,7 @@ export interface FieldDef {
   ],
   templateUrl: './ui-entity-form.component.html',
   styleUrls: ['./ui-entity-form.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiEntityFormComponent {
   @Input() model: any = {};

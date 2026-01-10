@@ -6,6 +6,7 @@ import {
   OnInit,
   OnChanges,
   SimpleChanges,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiInputComponent } from '../../ui-form/ui-input/ui-input.component';
@@ -31,6 +32,7 @@ import { UiTdComponent } from './ui-td/ui-td.component';
   ],
   templateUrl: './ui-table.component.html',
   styleUrl: './ui-table.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiTableComponent implements OnInit, OnChanges {
   @Input() columns: { key: string; label: string; type?: string }[] = [];

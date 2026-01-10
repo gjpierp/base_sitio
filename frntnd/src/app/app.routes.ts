@@ -9,7 +9,7 @@ import { estadosResolver } from './pages/estados/estados.resolver';
 import { jerarquiasResolver } from './pages/jerarquias/jerarquias.resolver';
 import { atributoResolver } from './pages/atributo/atributo.resolver';
 import { entidadesResolver } from './pages/entidades/entidades.resolver';
-import { rolesPermisosResolver } from './pages/roles_permisos/roles-permisos.resolver';
+import { RolesPermisosResolver } from './pages/roles_permisos/roles-permisos.resolver';
 import { sitiosResolver } from './pages/sitios/sitios.resolver';
 import { usuariosAplicacionesResolver } from './pages/usuarios-aplicaciones/usuarios-aplicaciones.resolver';
 import { usuariosJerarquiasResolver } from './pages/usuarios-jerarquias/usuarios-jerarquias.resolver';
@@ -137,7 +137,7 @@ export const routes: Routes = [
             (m) => m.RolesPermisosPageComponent
           ),
         canActivate: [authGuard],
-        resolve: { pre: rolesPermisosResolver },
+        resolve: { pre: RolesPermisosResolver },
         data: {
           title: 'Roles-Permisos',
           breadcrumb: 'Roles-Permisos',

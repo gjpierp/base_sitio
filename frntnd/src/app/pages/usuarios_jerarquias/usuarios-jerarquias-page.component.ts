@@ -1,4 +1,11 @@
-import { Component, inject, ChangeDetectorRef, OnInit, NgZone } from '@angular/core';
+import {
+  Component,
+  inject,
+  ChangeDetectorRef,
+  OnInit,
+  NgZone,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -23,6 +30,7 @@ import { NotificationService } from '../../services/notification.service';
   ],
   templateUrl: './usuarios-jerarquias-page.component.html',
   styleUrls: ['./usuarios-jerarquias-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsuariosJerarquiasPageComponent implements OnInit {
   title = 'Usuarios - Jerarquías';

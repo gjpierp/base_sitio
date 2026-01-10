@@ -8,12 +8,14 @@ export interface UiSelectOption {
   disabled?: boolean;
 }
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-selects',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './ui-selects.component.html',
   styleUrl: './ui-selects.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiSelectsComponent {
   private static idCounter = 0;

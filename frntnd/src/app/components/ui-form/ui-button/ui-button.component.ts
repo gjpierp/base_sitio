@@ -2,12 +2,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { RouterLink, Params } from '@angular/router';
 import { NgIf } from '@angular/common';
 
+import { ChangeDetectionStrategy } from '@angular/core';
 @Component({
   selector: 'ui-button',
   standalone: true,
   imports: [RouterLink, NgIf],
   templateUrl: './ui-button.component.html',
   styleUrls: ['./ui-button.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiButtonComponent {
   @Input() label = 'Button';

@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'ui-spinner',
   standalone: true,
   templateUrl: './ui-spinner.component.html',
   styleUrl: './ui-spinner.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UiSpinnerComponent {
   /** Texto accesible anunciado por screen readers */
